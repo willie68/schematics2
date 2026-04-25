@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": "../../../cloud/nxt_willie/Software/github/ai"
+		},
+		{
+			"path": "."
+		},
+		{
+			"path": "../go-micro"
+		},
+		{
+			"path": "../WilliesSchematicsWorld"
+		},
+		{
+			"path": "../LetterBridge"
+		}
+	],
+	"settings": {}
+}

@@ -18,10 +18,15 @@ build/
 *.test
 *.out
 vendor/
+backend/bin/
+backend/.env
 
 # Node / Frontend
 node_modules/
 *.log
+frontend/node_modules/
+frontend/dist/
+frontend/.env
 
-# Data directory (all data files)
+# Data directories
 data/
