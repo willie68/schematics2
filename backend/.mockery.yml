@@ -15,24 +15,6 @@ template-schema: '{{.Template}}.schema.json'
 template-data:
   unroll-variadic: true
 packages:
-  github.com/willie68/MCSPhotoIndex:
+  github.com/willie68/schematic2/backend:
     config:
       all: true
-  github.com/willie68/MCSPhotoIndex/internal/services/videocache:
-    config:
-      pkgname: videocache
-  github.com/willie68/MCSPhotoIndex/internal/services/video:
-    config:
-      pkgname: video
-  github.com/willie68/MCSPhotoIndex/internal/services/checkup:
-    config:
-      pkgname: checkup
-  github.com/willie68/MCSPhotoIndex/internal/services/imagelist:
-    config:
-      pkgname: imagelist
-  github.com/willie68/MCSPhotoIndex/internal/services/reconcile:
-    config:
-      pkgname: reconcile
-  github.com/willie68/MCSPhotoIndex/internal/services/tagimport:
-    config:
-      pkgname: tagimport

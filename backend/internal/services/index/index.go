@@ -6,30 +6,26 @@ import (
 	"sync"
 	"unicode"
 
-	"github.com/willie68/schematic2/backend/internal/store"
+	"github.com/samber/do/v2"
+	"github.com/willie68/schematic2/backend/internal/domain"
 )
-
-type SearchResult struct {
-	Document store.Document `json:"document"`
-	Score    int            `json:"score"`
-}
 
 type InMemoryIndex struct {
 	mu       sync.RWMutex
 	byToken  map[string]map[string]int
-	docByID  map[string]store.Document
+	docByID  map[string]domain.Document
 	tagsByID map[string]map[string]struct{}
 }
 
-func NewInMemoryIndex() *InMemoryIndex {
+func NewInMemoryIndex(_ do.Injector) *InMemoryIndex {
 	return &InMemoryIndex{
 		byToken:  make(map[string]map[string]int),
-		docByID:  make(map[string]store.Document),
+		docByID:  make(map[string]domain.Document),
 		tagsByID: make(map[string]map[string]struct{}),
 	}
 }
 
-func (idx *InMemoryIndex) Upsert(doc store.Document) {
+func (idx *InMemoryIndex) Upsert(doc domain.Document) {
 	idx.mu.Lock()
 	defer idx.mu.Unlock()
 
@@ -48,7 +44,7 @@ func (idx *InMemoryIndex) Upsert(doc store.Document) {
 	}
 }
 
-func (idx *InMemoryIndex) Search(query string, tags []string) []SearchResult {
+func (idx *InMemoryIndex) Search(query string, tags []string) []domain.SearchResult {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 
@@ -67,7 +63,7 @@ func (idx *InMemoryIndex) Search(query string, tags []string) []SearchResult {
 		}
 	}
 
-	results := make([]SearchResult, 0, len(scores))
+	results := make([]domain.SearchResult, 0, len(scores))
 	for docID, score := range scores {
 		doc, ok := idx.docByID[docID]
 		if !ok {
@@ -76,7 +72,7 @@ func (idx *InMemoryIndex) Search(query string, tags []string) []SearchResult {
 		if !hasAllTags(idx.tagsByID[docID], needTags) {
 			continue
 		}
-		results = append(results, SearchResult{Document: doc, Score: score})
+		results = append(results, domain.SearchResult{Document: doc, Score: score})
 	}
 
 	sort.Slice(results, func(i int, j int) bool {

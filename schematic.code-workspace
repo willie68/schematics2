@@ -14,7 +14,12 @@
 		},
 		{
 			"path": "../LetterBridge"
+		},
+		{
+			"path": "../MCSPhotoIndex"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"chat.viewProgressBadge.enabled": true
+	}
 }

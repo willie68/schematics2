@@ -7,7 +7,9 @@
           <div class="muted">Nachfolger von WilliesSchematicsWorld</div>
         </div>
         <nav style="display:flex; gap:0.6rem;">
+          <RouterLink to="/">Start</RouterLink>
           <RouterLink to="/search">Suche</RouterLink>
+          <RouterLink to="/effects">Effektdatenbank</RouterLink>
           <RouterLink to="/login">Login</RouterLink>
         </nav>
       </div>

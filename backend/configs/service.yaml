@@ -1,0 +1,68 @@
+# secret file contains secrets like credentials, access key ... it has the same structure as this config and will be merged on start
+secretfile: "configs/secrets.yaml"
+  
+# http service definition
+http:
+  # name of this service
+  servicename: schematic2
+  # port of the http server
+  port: 8080
+  # port of the https server for payload only
+  sslport: 8443
+  # this is the servicURL from outside
+  serviceURL: https://localhost:8443
+  # other dns names (used for certificate)
+  dnss: 
+    - host.docker.internal
+    - localhost
+  # other ips (used for certificate)
+  ips: 
+    - 127.0.0.1
+  # path to tls certificate file (public)
+  certificate: configs/cert/server.crt
+  # path to tls private key file
+  key: configs/cert/server.key
+
+#configure the healthcheck system
+healthcheck:
+  # period in seconds to start the healtcheck
+  period: 30
+  startdelay: 3
+
+# enable/disable metrics 
+metrics:
+  enable: false
+
+# configure the logging system
+logging:
+  level: debug
+  filename: ""
+  gelf-url:
+  gelf-port:
+
+# managing authentication and authorisation
+auth:
+  type: #jwt
+  properties: 
+    validate: true
+    strict: true
+    tenantClaim: Tenant
+    roleClaim: Roles
+    rolemapping: 
+        object-reader:
+        object-creator:
+        object-admin:
+        tenant-admin:
+        admin:
+
+# active the profiling
+profiling:
+  enable: false
+
+mongodb:
+    hosts:
+      - 192.168.178.14:27017
+    username:
+    password:
+    authDatabase: schematics
+    database: schematics

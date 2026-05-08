@@ -17,6 +17,10 @@ Das Repository ist mit GitHub unter https://github.com/willie68/schematic verkn√
 - `frontend/`: Vue + PrimeVue Web-Frontend
 - `docs/`: Projekt- und Architekturdokumentation
 
+## Build-Dokumentation
+
+- Build-Anleitung: `docs/BUILD.md`
+
 ## Backend API (Start)
 
 - `GET /health`
@@ -24,6 +28,13 @@ Das Repository ist mit GitHub unter https://github.com/willie68/schematic verkn√
 - `GET /api/v1/auth/me`
 - `POST /api/v1/documents/index` (auth required)
 - `GET /api/v1/documents/search` (auth required, `q`, mehrfach `tag`)
+
+## Persistenz
+
+- `domain.Document` wird ueber MongoDB gespeichert.
+- Die Verbindung wird aus `backend/configs/service.yaml` unter `mongodb` gelesen.
+- Wichtige Felder: `hosts`, `username`, `password`, `database`, `authDatabase`.
+- Es gibt keinen InMemory-Fallback mehr: MongoDB ist fuer den Backend-Start erforderlich.
 
 ## Schnellstart
 

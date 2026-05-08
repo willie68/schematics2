@@ -1,0 +1,3 @@
+@echo off
+echo Starting Schematic2 server...
+.\bin\schematic2.exe -c ./configs/service_local.yaml
