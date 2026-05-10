@@ -20,24 +20,31 @@
     >
       <p><strong>Schematic2</strong> ist der Nachfolger von WilliesSchematicsWorld.</p>
       <p>Es ermöglicht das Indexieren, Suchen und Verwalten von Schaltplan-Dokumenten und Effektbeschreibungen.</p>
-      <p style="margin-top:1rem; font-size:0.85rem; color:#888">Version 0.1.0</p>
+      <p style="margin-top:1rem; font-size:0.85rem; color:#888">App Version: {{ APP_VERSION }}, Backend: {{ info.version }}</p>
+      <p>Status: {{ info.status }}</p>
     </Dialog>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Avatar from 'primevue/avatar'
 import Menu from 'primevue/menu'
 import Dialog from 'primevue/dialog'
 import { useAuth } from '../composables/useAuth'
+import { APP_VERSION } from '../config'
+import api from '../services/api'
 
 const router = useRouter()
 const { logout } = useAuth()
 
 const menu = ref(null)
 const infoVisible = ref(false)
+const info = ref({
+  version: 'Loading...',
+  status: 'Loading...',
+})
 
 const items = [
   {
@@ -58,6 +65,27 @@ const items = [
 function toggleMenu(event) {
   menu.value.toggle(event)
 }
+
+async function fetchBackendInfo() {
+  try {
+    const { data } = await api.get('/api/v1/info')
+    info.value = {
+      version: data.version || 'Unknown',
+      status: data.status || 'Unknown',
+    }
+  } catch (err) {
+    info.value = {
+      version: 'Error',
+      status: 'Error',
+    }
+  }
+}
+
+watch(infoVisible, (newVal) => {
+  if (newVal) {
+    fetchBackendInfo()
+  }
+})
 </script>
 
 <style scoped>
