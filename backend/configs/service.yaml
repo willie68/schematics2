@@ -1,6 +1,10 @@
 # secret file contains secrets like credentials, access key ... it has the same structure as this config and will be merged on start
 secretfile: "configs/secrets.yaml"
-  
+
+JWTSecret: ${JWTSecret}
+AdminUser: ${AdminUser}
+AdminPass: ${AdminPass}
+
 # http service definition
 http:
   # name of this service
@@ -66,3 +70,8 @@ mongodb:
     password:
     authDatabase: schematics
     database: schematics
+    directConnection: true
+
+repository:
+  repositoryPath: ./dev_data/repository
+  containerMaxSizeMB: 100

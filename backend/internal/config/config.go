@@ -25,6 +25,7 @@ type Config struct {
 	Auth        Auth           `yaml:"auth"`
 	Profiling   Profiling      `yaml:"profiling"`
 	MongoDB     MongoDB        `yaml:"mongodb"`
+	Repository  Repository     `yaml:"repository"`
 
 	JWTSecret string `yaml:"jwtsecret,omitempty"`
 	AdminUser string `yaml:"adminuser,omitempty"`
@@ -44,15 +45,21 @@ type Profiling struct {
 	Enable bool `yaml:"enable"`
 }
 
+type Repository struct {
+	RepositoryPath     string `yaml:"repositoryPath"`
+	ContainerMaxSizeMB int64  `yaml:"containerMaxSizeMB"`
+}
+
 type MongoDB struct {
-	Hosts        []string `yaml:"hosts"`
-	Host         string   `yaml:"host"`
-	Port         int      `yaml:"port"`
-	Username     string   `yaml:"username"`
-	Password     string   `yaml:"password"`
-	AuthDatabase string   `yaml:"authDatabase"`
-	AuthDB       string   `yaml:"authdb"`
-	Database     string   `yaml:"database"`
+	Hosts            []string `yaml:"hosts"`
+	Host             string   `yaml:"host"`
+	Port             int      `yaml:"port"`
+	Username         string   `yaml:"username"`
+	Password         string   `yaml:"password"`
+	AuthDatabase     string   `yaml:"authDatabase"`
+	AuthDB           string   `yaml:"authdb"`
+	Database         string   `yaml:"database"`
+	DirectConnection bool     `yaml:"directConnection"`
 }
 
 // LoadFromEnv loads the configuration from the default config file.
@@ -86,6 +93,10 @@ func defaultConfig() Config {
 			AuthDatabase: "schematics",
 			AuthDB:       "schematics",
 			Database:     "schematics",
+		},
+		Repository: Repository{
+			RepositoryPath:     "./repository",
+			ContainerMaxSizeMB: 100,
 		},
 		JWTSecret: "change-me-in-production",
 		AdminUser: "admin",

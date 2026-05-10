@@ -6,11 +6,12 @@
           <h1 style="margin-bottom:0.2rem">Schematic2</h1>
           <div class="muted">Nachfolger von WilliesSchematicsWorld</div>
         </div>
-        <nav style="display:flex; gap:0.6rem;">
+        <nav style="display:flex; align-items:center; gap:0.6rem;">
           <RouterLink to="/">Start</RouterLink>
           <RouterLink to="/search">Suche</RouterLink>
           <RouterLink to="/effects">Effektdatenbank</RouterLink>
-          <RouterLink to="/login">Login</RouterLink>
+          <RouterLink v-if="!isLoggedIn" to="/login">Login</RouterLink>
+          <UserMenu v-if="isLoggedIn" />
         </nav>
       </div>
     </header>
@@ -21,4 +22,8 @@
 
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
+import UserMenu from './components/UserMenu.vue'
+import { useAuth } from './composables/useAuth'
+
+const { isLoggedIn } = useAuth()
 </script>

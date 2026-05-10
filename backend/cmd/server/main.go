@@ -27,7 +27,10 @@ type shttpsrv interface {
 func main() {
 	cfg := config.LoadFromEnv()
 
-	internal.InitServices(inj, cfg)
+	err := internal.InitServices(inj, cfg)
+	if err != nil {
+		log.Fatalf("init services: %v", err)
+	}
 
 	router, err := internal.NewRouter(inj)
 	if err != nil {

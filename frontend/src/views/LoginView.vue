@@ -29,8 +29,10 @@ import Password from 'primevue/password'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 import api from '../services/api'
+import { useAuth } from '../composables/useAuth'
 
 const router = useRouter()
+const { setLoggedIn } = useAuth()
 const username = ref('admin')
 const password = ref('admin123')
 const message = ref('')
@@ -44,9 +46,10 @@ async function login() {
       password: password.value,
     })
     localStorage.setItem('schematic2_token', data.token)
+    setLoggedIn(true)
     messageType.value = 'success'
     message.value = 'Login erfolgreich.'
-    router.push('/search')
+    router.push('/')
   } catch (err) {
     messageType.value = 'error'
     message.value = err?.response?.data?.error || 'Login fehlgeschlagen.'

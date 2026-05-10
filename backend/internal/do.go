@@ -11,6 +11,7 @@ import (
 	"github.com/willie68/schematic2/backend/internal/config"
 	"github.com/willie68/schematic2/backend/internal/logging"
 	"github.com/willie68/schematic2/backend/internal/repository/store"
+	"github.com/willie68/schematic2/backend/internal/services/blob"
 	"github.com/willie68/schematic2/backend/internal/services/health"
 	"github.com/willie68/schematic2/backend/internal/services/index"
 	"github.com/willie68/schematic2/backend/internal/services/shttp"
@@ -30,12 +31,19 @@ type Service interface {
 // InitServices initialise the service system
 func InitServices(inj do.Injector, cfg config.Config) error {
 	logger.Debug("initialise services")
+
 	err := InitHelperServices(inj, cfg)
 	if err != nil {
 		return err
 	}
 
-	do.ProvideValue(inj, store.NewMongoDocumentStore(inj))
+	if err = newBlobStore(inj); err != nil {
+		return err
+	}
+
+	if err = newDocumentStore(inj); err != nil {
+		return err
+	}
 	do.ProvideValue(inj, index.NewInMemoryIndex(inj))
 
 	return InitRESTService(inj, cfg)
@@ -43,6 +51,8 @@ func InitServices(inj do.Injector, cfg config.Config) error {
 
 // InitHelperServices initialise the helper services like Healthsystem
 func InitHelperServices(inj do.Injector, cfg config.Config) error {
+	logger.Debug("initialise helper services")
+
 	do.ProvideValue(inj, cfg)
 
 	healthService := health.NewService(cfg.Healthcheck)
@@ -53,12 +63,15 @@ func InitHelperServices(inj do.Injector, cfg config.Config) error {
 
 // InitRESTService initialise REST Services
 func InitRESTService(inj do.Injector, cfg config.Config) error {
+	logger.Debug("init rest services")
+
 	httpService := shttp.New(cfg.HTTP)
 	do.ProvideValue(inj, httpService)
 	return nil
 }
 
 func NewRouter(inj do.Injector) (http.Handler, error) {
+	logger.Debug("create router")
 
 	do.Provide(inj, func(i do.Injector) (*api.Handler, error) {
 		return api.NewHandler(i), nil
@@ -101,5 +114,14 @@ func newDocumentStore(inj do.Injector) error {
 	}
 
 	do.ProvideValue(inj, mongoStore)
+	return nil
+}
+
+func newBlobStore(inj do.Injector) error {
+	blobStore := blob.New(inj)
+	if err := blobStore.Prepare(); err != nil {
+		return err
+	}
+	do.ProvideValue(inj, blobStore)
 	return nil
 }

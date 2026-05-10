@@ -30,3 +30,5 @@ frontend/.env
 
 # Data directories
 data/
+
+backend/dev_data/

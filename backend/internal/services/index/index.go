@@ -36,7 +36,26 @@ func (idx *InMemoryIndex) Upsert(doc domain.Document) {
 	}
 	idx.tagsByID[doc.ID] = tagSet
 
-	for _, token := range tokenize(doc.Title + " " + doc.Text + " " + strings.Join(doc.Tags, " ")) {
+	fileParts := make([]string, 0, len(doc.Files)*2)
+	for _, f := range doc.Files {
+		if f.Name != "" {
+			fileParts = append(fileParts, f.Name)
+		}
+		if f.Type != "" {
+			fileParts = append(fileParts, f.Type)
+		}
+	}
+
+	searchBlob := strings.Join([]string{
+		doc.Manufacturer,
+		doc.Model,
+		doc.Subtitle,
+		doc.Description,
+		strings.Join(doc.Tags, " "),
+		strings.Join(fileParts, " "),
+	}, " ")
+
+	for _, token := range tokenize(searchBlob) {
 		if _, ok := idx.byToken[token]; !ok {
 			idx.byToken[token] = make(map[string]int)
 		}
