@@ -21,7 +21,7 @@ import (
 
 const (
 	// BackendVersion should be synced with HISTORY.md
-	BackendVersion = "0.1.19"
+	BackendVersion = "0.2.0"
 )
 
 type documentStore interface {
