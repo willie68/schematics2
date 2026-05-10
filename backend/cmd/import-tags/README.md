@@ -30,7 +30,16 @@ Jede JSON-Datei im Tags-Verzeichnis muss folgendes Format haben:
 2. Alle bestehenden Tags aus der `tags` Collection löschen
 3. Alle JSON-Dateien aus dem Tags-Verzeichnis lesen
 4. Tags normalisieren (Kleinbuchstaben, Whitespace trimmen)
-5. Tags in die MongoDB importieren
+5. Das "name" Feld wird als `_id` in MongoDB gespeichert
+6. Tags in die MongoDB importieren
+
+**Beispiel MongoDB Document:**
+```json
+{
+  "_id": "effects",
+  "count": 0
+}
+```
 
 ## Beispiel
 

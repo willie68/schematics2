@@ -145,7 +145,7 @@ func importTags(ctx context.Context, tagsCol *mongo.Collection, tagsDir string) 
 		tag.Count = 0
 
 		tags = append(tags, bson.M{
-			"name":  tag.Name,
+			"_id":   tag.Name,
 			"count": tag.Count,
 		})
 	}
