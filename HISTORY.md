@@ -1,5 +1,13 @@
 # History
 
+## 0.1.6 - 2026-05-10
+
+- Backend: Tag-basierte Suche implementiert (ohne Volltext-Query).
+  - Index.Search() behandelt Query-leere Anfragen korrekt.
+  - Nur-Tag-Suche: Gibt alle Dokumente mit den angeforderten Tags zurück.
+  - Kombinierte Suche: Volltext-Query Ergebnisse nach Tags gefiltert (UND-Logik).
+  - Neue Tests fuer alle Such-Szenarien (3 Tests bestehen).
+
 ## 0.1.5 - 2026-05-10
 
 - Frontend SearchView: Enter-Taste triggert Suche.
