@@ -5,7 +5,14 @@
         <div>
           <h1 style="margin-bottom:0.2rem">Schematic2</h1>
           <div class="muted">Nachfolger von WilliesSchematicsWorld</div>
-          <div class="muted" style="font-size:0.85rem">Version {{ APP_VERSION }}</div>
+          <div
+            class="muted"
+            style="font-size:0.85rem; cursor:pointer; user-select:none"
+            @click="showInfoDialog = true"
+            title="Klick für Info"
+          >
+            Version {{ APP_VERSION }}
+          </div>
         </div>
         <nav style="display:flex; align-items:center; gap:0.6rem;">
           <RouterLink to="/">Start</RouterLink>
@@ -19,15 +26,19 @@
 
     <RouterView />
     <Toast />
+    <InfoDialog v-model="showInfoDialog" />
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import UserMenu from './components/UserMenu.vue'
 import Toast from './components/Toast.vue'
+import InfoDialog from './components/InfoDialog.vue'
 import { useAuth } from './composables/useAuth'
 import { APP_VERSION } from './config'
 
 const { isLoggedIn } = useAuth()
+const showInfoDialog = ref(false)
 </script>

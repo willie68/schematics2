@@ -18,6 +18,11 @@ import (
 	"github.com/willie68/schematic2/backend/internal/domain"
 )
 
+const (
+	// BackendVersion should be synced with HISTORY.md
+	BackendVersion = "0.1.15"
+)
+
 type documentStore interface {
 	Upsert(doc domain.Document) error
 	ListTags(ctx context.Context) ([]domain.Tag, error)
@@ -50,6 +55,11 @@ type loginResponse struct {
 	Token string `json:"token"`
 }
 
+type infoResponse struct {
+	Version string `json:"version"`
+	Status  string `json:"status"`
+}
+
 func NewHandler(i do.Injector) *Handler {
 	cfg := do.MustInvoke[config.Config](i)
 	hash, _ := auth.HashPassword(cfg.AdminPass)
@@ -66,6 +76,7 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 	r.Get("/health", h.health)
 
 	r.Route("/api/v1", func(api chi.Router) {
+		api.Get("/info", h.info)
 		api.Post("/auth/login", h.login)
 		api.Get("/tags", h.listTags)
 		api.Get("/tags/suggest", h.suggestTags)
@@ -82,6 +93,13 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 
 func (h *Handler) health(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string]any{"status": "ok"})
+}
+
+func (h *Handler) info(w http.ResponseWriter, r *http.Request) {
+	respondJSON(w, http.StatusOK, infoResponse{
+		Version: BackendVersion,
+		Status:  "ok",
+	})
 }
 
 func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
