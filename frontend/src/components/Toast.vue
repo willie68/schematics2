@@ -1,11 +1,8 @@
 <template>
   <div class="toast-container">
-    <div v-if="toasts && toasts.value && toasts.value.length > 0" style="color: red; padding: 1rem; background: yellow; position: fixed; bottom: 10rem; right: 1.5rem; width: 300px; z-index: 10000;">
-      DEBUG: {{ toasts.value.length }} toasts - {{ toasts.value.map(t => t.message).join(', ') }}
-    </div>
+    <!-- Toasts -->
     <div
-      v-if="toasts && toasts.value"
-      v-for="toast in toasts.value"
+      v-for="toast in displayedToasts"
       :key="toast.id"
       :class="['toast', `toast-${toast.type}`]"
     >
@@ -19,12 +16,126 @@
 
 <script setup>
 import { useToast } from '../composables/useToast'
+import { computed } from 'vue'
 
-console.log('Toast.vue setup called')
 const { toasts, removeToast } = useToast()
-console.log('Toast component mounted, toasts:', toasts)
-console.log('Toast component mounted, toasts.value:', toasts?.value)
+
+// Use computed to ensure Vue reactivity
+const displayedToasts = computed(() => toasts.value)
 </script>
+
+<style scoped>
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.toast {
+  min-width: 300px;
+  max-width: 400px;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  background-color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease-in-out;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+  word-break: break-word;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+  padding: 0;
+  min-width: 2.5rem;
+  text-align: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.toast-close:hover {
+  opacity: 1;
+}
+
+.toast-info {
+  background-color: #dbeafe;
+  color: #1e40af;
+  border-left: 4px solid #3b82f6;
+}
+
+.toast-success {
+  background-color: #dcfce7;
+  color: #166534;
+  border-left: 4px solid #10b981;
+}
+
+.toast-warning {
+  background-color: #fef3c7;
+  color: #92400e;
+  border-left: 4px solid #f59e0b;
+}
+
+.toast-error {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border-left: 4px solid #ef4444;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(450px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-debug {
+  color: red;
+  padding: 1rem;
+  background: yellow;
+  position: fixed;
+  bottom: 10rem;
+  right: 1.5rem;
+  width: 300px;
+  z-index: 10000;
+  border: 2px solid red;
+  font-weight: bold;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+</style>
 
 <style scoped>
 .toast-container {

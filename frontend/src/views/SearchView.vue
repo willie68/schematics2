@@ -36,7 +36,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, nextTick } from 'vue'
 import InputText from 'primevue/inputtext'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
@@ -55,10 +55,6 @@ const selectedTags = ref([])
 const suggestedTags = ref([])
 const results = ref([])
 const showUploadDialog = ref(false)
-
-onMounted(() => {
-  console.log('SearchView mounted, useToast:', useToast)
-})
 
 function toTags() {
   return selectedTags.value
@@ -107,10 +103,8 @@ async function search() {
     // Show toast with search result count
     const count = (data.results || []).length
     const countText = count === 1 ? '1 Dokument' : `${count} Dokumente`
-    console.log('Showing toast:', countText)
     info(`${countText} gefunden`)
   } catch (err) {
-    console.error('Search error:', err)
     info(`Fehler bei der Suche`)
   }
 }
