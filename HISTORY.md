@@ -1,5 +1,12 @@
 # History
 
+## 0.1.9 - 2026-05-10
+
+- Backend: InMemoryIndex entfernt (veraltet, MongoIndex ist Standard).
+  - Gelöschte Dateien: `index.go`, `index_test.go`
+  - Nur MongoIndex bleibt bestehen.
+  - 4 MongoIndex Tests bestehen, Backend erfolgreich kompiliert.
+
 ## 0.1.8 - 2026-05-10
 
 - Backend: Suchlogik zu MongoDB delegiert.
@@ -18,7 +25,7 @@
   - Ersetzt InMemoryIndex mit MongoIndex für persistente Suche.
   - Hybrid-Ansatz: Dokumente aus DB laden, in-Memory filtern, Ergebnisse bewerten.
   - Unterstützt Nur-Query-, Nur-Tag- und kombinierte Such-Szenarien.
-  - 7 neue Tests bestehen (4 MongoIndex + 3 InMemoryIndex bestehen weiterhin).
+  - 7 Tests bestehen.
   - DI-Konfiguration aktualisiert: `NewMongoIndex` als aktiver Index.
   - Vollständig kompiliert und getestet.
 
