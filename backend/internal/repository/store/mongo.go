@@ -22,8 +22,8 @@ const documentsCollection = "documents"
 const tagsCollection = "tags"
 const manufacturersCollection = "manufacturers"
 
-// mongoDocumentStore stores domain.Document in MongoDB.
-type mongoDocumentStore struct {
+// MongoDocumentStore stores domain.Document in MongoDB.
+type MongoDocumentStore struct {
 	cfg      config.MongoDB
 	client   *mongo.Client
 	db       *mongo.Database
@@ -52,15 +52,15 @@ type mongoTag struct {
 	Counter int64  `bson:"counter"`
 }
 
-func NewMongoDocumentStore(inj do.Injector) *mongoDocumentStore {
+func NewMongoDocumentStore(inj do.Injector) *MongoDocumentStore {
 	cfg := do.MustInvoke[config.Config](inj)
-	return &mongoDocumentStore{
+	return &MongoDocumentStore{
 		cfg:    cfg.MongoDB,
 		logger: logging.New("mongo-document-store"),
 	}
 }
 
-func (s *mongoDocumentStore) Prepare() error {
+func (s *MongoDocumentStore) Prepare() error {
 	hosts := s.cfg.GetHosts()
 	if len(hosts) == 0 {
 		return errors.New("no mongo hosts provided")
@@ -130,7 +130,7 @@ func buildMongoURI(cfg config.MongoDB) string {
 	return uri
 }
 
-func (s *mongoDocumentStore) ensureIndexes() error {
+func (s *MongoDocumentStore) ensureIndexes() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
@@ -161,7 +161,7 @@ func (s *mongoDocumentStore) ensureIndexes() error {
 	return err
 }
 
-func (s *mongoDocumentStore) Upsert(doc domain.Document) error {
+func (s *MongoDocumentStore) Upsert(doc domain.Document) error {
 	if s.col == nil {
 		return errors.New("mongodb not initialised")
 	}
@@ -226,7 +226,7 @@ func (s *mongoDocumentStore) Upsert(doc domain.Document) error {
 	return nil
 }
 
-func (s *mongoDocumentStore) fetchDocumentTags(ctx context.Context, id string) ([]string, error) {
+func (s *MongoDocumentStore) fetchDocumentTags(ctx context.Context, id string) ([]string, error) {
 	if s.col == nil {
 		return nil, errors.New("mongodb not initialised")
 	}
@@ -245,7 +245,20 @@ func (s *mongoDocumentStore) fetchDocumentTags(ctx context.Context, id string) (
 	return normalizeTags(prev.Tags), nil
 }
 
-func (s *mongoDocumentStore) updateTagCounters(ctx context.Context, oldTags []string, newTags []string) error {
+// Exists reports whether a document with the given ID already exists in the store.
+func (s *MongoDocumentStore) Exists(ctx context.Context, id string) (bool, error) {
+	if s.col == nil {
+		return false, errors.New("mongodb not initialised")
+	}
+
+	count, err := s.col.CountDocuments(ctx, bson.D{{Key: "_id", Value: id}}, options.Count().SetLimit(1))
+	if err != nil {
+		return false, fmt.Errorf("count document: %w", err)
+	}
+	return count > 0, nil
+}
+
+func (s *MongoDocumentStore) updateTagCounters(ctx context.Context, oldTags []string, newTags []string) error {
 	if s.tagsCol == nil {
 		return errors.New("mongodb tags collection not initialised")
 	}
@@ -289,7 +302,7 @@ func (s *mongoDocumentStore) updateTagCounters(ctx context.Context, oldTags []st
 	return nil
 }
 
-func (s *mongoDocumentStore) rebuildTagCounters() error {
+func (s *MongoDocumentStore) rebuildTagCounters() error {
 	if s.col == nil || s.tagsCol == nil {
 		return errors.New("mongodb not initialised")
 	}
@@ -366,7 +379,7 @@ func toTagSet(tags []string) map[string]struct{} {
 	return set
 }
 
-func (s *mongoDocumentStore) Get(id string) (domain.Document, bool) {
+func (s *MongoDocumentStore) Get(id string) (domain.Document, bool) {
 	if s.col == nil {
 		return domain.Document{}, false
 	}
@@ -399,7 +412,7 @@ func (s *mongoDocumentStore) Get(id string) (domain.Document, bool) {
 	}, true
 }
 
-func (s *mongoDocumentStore) List() []domain.Document {
+func (s *MongoDocumentStore) List() []domain.Document {
 	if s.col == nil {
 		return nil
 	}
@@ -441,7 +454,7 @@ func (s *mongoDocumentStore) List() []domain.Document {
 }
 
 // Search executes a full-text and tag-based search using MongoDB queries
-func (s *mongoDocumentStore) Search(filter domain.SearchFilter) []domain.SearchResult {
+func (s *MongoDocumentStore) Search(filter domain.SearchFilter) []domain.SearchResult {
 	if s.col == nil {
 		return nil
 	}
@@ -523,7 +536,7 @@ func (s *mongoDocumentStore) Search(filter domain.SearchFilter) []domain.SearchR
 	return out
 }
 
-func (s *mongoDocumentStore) ListTags(ctx context.Context) ([]domain.Tag, error) {
+func (s *MongoDocumentStore) ListTags(ctx context.Context) ([]domain.Tag, error) {
 	if s.tagsCol == nil {
 		return nil, errors.New("mongodb tags collection not initialised")
 	}
@@ -550,7 +563,7 @@ func (s *mongoDocumentStore) ListTags(ctx context.Context) ([]domain.Tag, error)
 	return out, nil
 }
 
-func (s *mongoDocumentStore) SuggestTags(ctx context.Context, prefix string, limit int) ([]domain.Tag, error) {
+func (s *MongoDocumentStore) SuggestTags(ctx context.Context, prefix string, limit int) ([]domain.Tag, error) {
 	if s.tagsCol == nil {
 		return nil, errors.New("mongodb tags collection not initialised")
 	}
@@ -601,7 +614,7 @@ func (s *mongoDocumentStore) SuggestTags(ctx context.Context, prefix string, lim
 	return out, nil
 }
 
-func (s *mongoDocumentStore) SuggestManufacturers(ctx context.Context, prefix string, limit int) ([]string, error) {
+func (s *MongoDocumentStore) SuggestManufacturers(ctx context.Context, prefix string, limit int) ([]string, error) {
 	if s.manufCol == nil {
 		return nil, errors.New("mongodb manufacturers collection not initialised")
 	}
@@ -660,7 +673,7 @@ func (s *mongoDocumentStore) SuggestManufacturers(ctx context.Context, prefix st
 	return out, nil
 }
 
-func (s *mongoDocumentStore) updateManufacturer(ctx context.Context, manufacturer string) error {
+func (s *MongoDocumentStore) updateManufacturer(ctx context.Context, manufacturer string) error {
 	if s.manufCol == nil || manufacturer == "" {
 		return nil
 	}
@@ -679,7 +692,7 @@ func (s *mongoDocumentStore) updateManufacturer(ctx context.Context, manufacture
 	return nil
 }
 
-func (s *mongoDocumentStore) Close(ctx context.Context) error {
+func (s *MongoDocumentStore) Close(ctx context.Context) error {
 	if s.client == nil {
 		return nil
 	}
