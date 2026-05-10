@@ -25,25 +25,45 @@ import (
 )
 
 // Service writes binary payloads into rotating container files (*.cnt).
+// Synchronization:
+// - muCurrent: protects currentFile, currentNum, currentSize (rotation management)
+// - containerLocks: per-container locks for concurrent writes to .cnt and .inf files
+//   Each container has its own mutex to prevent simultaneous writes to the same .cnt/.inf
+//   but allow parallel writes to different containers
 type Service struct {
 	cfg          config.Repository
 	log          *slog.Logger
 	dir          string
 	maxSizeBytes int64
 
-	mu          sync.Mutex
+	muCurrent   sync.Mutex       // Protects currentFile, currentNum, currentSize
 	currentFile *os.File
 	currentNum  int
 	currentSize int64
+
+	muLocks        sync.Mutex               // Protects containerLocks map
+	containerLocks map[int]*sync.Mutex      // Per-container locks for .cnt and .inf writes
 }
 
 func New(inj do.Injector) *Service {
 	cfg := do.MustInvoke[config.Config](inj)
 
 	return &Service{
-		cfg: cfg.Repository,
-		log: logging.New("blob-service"),
+		cfg:            cfg.Repository,
+		log:            logging.New("blob-service"),
+		containerLocks: make(map[int]*sync.Mutex),
 	}
+}
+
+// getContainerLock returns the mutex for a specific container, creating it if needed
+func (s *Service) getContainerLock(containerNum int) *sync.Mutex {
+	s.muLocks.Lock()
+	defer s.muLocks.Unlock()
+
+	if s.containerLocks[containerNum] == nil {
+		s.containerLocks[containerNum] = &sync.Mutex{}
+	}
+	return s.containerLocks[containerNum]
 }
 
 func (s *Service) Prepare() error {
@@ -101,31 +121,49 @@ func (s *Service) Save(data []byte, mimeType string) (*domain.ContainerInfo, err
 		return nil, errors.New("data is nil")
 	}
 
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if s.currentFile == nil {
-		if err := s.createNewContainer(); err != nil {
-			return nil, err
-		}
-	}
-
 	compressed, compressionType, err := s.compressData(data)
 	if err != nil {
 		return nil, fmt.Errorf("compress data: %w", err)
 	}
 
-	// Format: [4-byte original-length][1-byte compression-type][variable-length data]
+	// Step 1: Determine which container to use (under muCurrent lock)
 	recordSize := int64(4 + 1 + len(compressed))
-	if s.currentSize+recordSize > s.maxSizeBytes {
-		_ = s.currentFile.Close()
-		s.currentNum++
+	s.muCurrent.Lock()
+
+	if s.currentFile == nil {
 		if err := s.createNewContainer(); err != nil {
+			s.muCurrent.Unlock()
 			return nil, err
 		}
 	}
 
-	offset, err := s.currentFile.Seek(0, io.SeekEnd)
+	// Check if rotation needed
+	if s.currentSize+recordSize > s.maxSizeBytes {
+		_ = s.currentFile.Close()
+		s.currentNum++
+		if err := s.createNewContainer(); err != nil {
+			s.muCurrent.Unlock()
+			return nil, err
+		}
+	}
+
+	containerNum := s.currentNum
+	s.muCurrent.Unlock()
+
+	// Step 2: Get container-specific lock and write to .cnt and .inf
+	containerLock := s.getContainerLock(containerNum)
+	containerLock.Lock()
+	defer containerLock.Unlock()
+
+	// Open container for writing
+	fname := filepath.Join(s.dir, fmt.Sprintf("%d.cnt", containerNum))
+	f, err := os.OpenFile(fname, os.O_RDWR|os.O_CREATE, 0o644)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	offset, err := f.Seek(0, io.SeekEnd)
 	if err != nil {
 		return nil, err
 	}
@@ -133,29 +171,28 @@ func (s *Service) Save(data []byte, mimeType string) (*domain.ContainerInfo, err
 	// Write original length
 	var lenBuf [4]byte
 	binary.BigEndian.PutUint32(lenBuf[:], uint32(len(data)))
-	if _, err = s.currentFile.Write(lenBuf[:]); err != nil {
+	if _, err = f.Write(lenBuf[:]); err != nil {
 		return nil, err
 	}
 
 	// Write compression type
-	if _, err = s.currentFile.Write([]byte{compressionType}); err != nil {
+	if _, err = f.Write([]byte{compressionType}); err != nil {
 		return nil, err
 	}
 
 	// Write compressed data
-	n, err := s.currentFile.Write(compressed)
+	n, err := f.Write(compressed)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = s.currentFile.Sync(); err != nil {
+	// Sync to ensure data is persisted to disk
+	if err = f.Sync(); err != nil {
 		return nil, err
 	}
 
-	s.currentSize += recordSize
-
 	ci := &domain.ContainerInfo{
-		ContainerNumber: s.currentNum,
+		ContainerNumber: containerNum,
 		Offset:          offset,
 		Length:          int64(n + 5), // 4 bytes length + 1 byte compression type + data
 		OriginalLength:  int64(len(data)),
@@ -163,10 +200,19 @@ func (s *Service) Save(data []byte, mimeType string) (*domain.ContainerInfo, err
 		Compressed:      compressionTypeToString(compressionType),
 	}
 
-	// Persist container info to .inf file
-	if err = s.appendContainerInfoEntry(s.currentNum, ci); err != nil {
+	// Persist container info to .inf file (still holding containerLock)
+	if err = s.appendContainerInfoEntry(containerNum, ci); err != nil {
 		return nil, fmt.Errorf("persist container info: %w", err)
 	}
+
+	// Step 3: Update currentSize for rotation tracking (under muCurrent lock)
+	s.muCurrent.Lock()
+	// Only update if this write was to the current container
+	// (it's possible another goroutine already rotated, so check containerNum)
+	if containerNum == s.currentNum {
+		s.currentSize += recordSize
+	}
+	s.muCurrent.Unlock()
 
 	return ci, nil
 }
@@ -214,8 +260,8 @@ func (s *Service) Load(ci *domain.ContainerInfo) ([]byte, error) {
 }
 
 func (s *Service) Close() error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.muCurrent.Lock()
+	defer s.muCurrent.Unlock()
 	if s.currentFile != nil {
 		err := s.currentFile.Close()
 		s.currentFile = nil
@@ -225,10 +271,10 @@ func (s *Service) Close() error {
 }
 
 func (s *Service) Health(ctx context.Context) error {
-	s.mu.Lock()
+	s.muCurrent.Lock()
 	dir := s.dir
 	cur := s.currentNum
-	s.mu.Unlock()
+	s.muCurrent.Unlock()
 
 	if dir == "" {
 		return errors.New("repository path is empty")
@@ -421,6 +467,7 @@ type containerInfoEntry struct {
 }
 
 // appendContainerInfoEntry writes a ContainerInfo entry to the .inf file
+// MUST be called while holding containerLock[containerNum] to ensure atomic writes
 func (s *Service) appendContainerInfoEntry(containerNum int, ci *domain.ContainerInfo) error {
 	infPath := filepath.Join(s.dir, fmt.Sprintf("%d.inf", containerNum))
 
@@ -489,9 +536,6 @@ func (s *Service) LoadContainerInfos(containerNum int) ([]*domain.ContainerInfo,
 
 // ListAllContainerInfos iterates over all containers and returns all ContainerInfo entries
 func (s *Service) ListAllContainerInfos() (map[int][]*domain.ContainerInfo, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	nums, err := s.listContainerNumbers()
 	if err != nil {
 		return nil, fmt.Errorf("list containers: %w", err)
@@ -499,7 +543,14 @@ func (s *Service) ListAllContainerInfos() (map[int][]*domain.ContainerInfo, erro
 
 	result := make(map[int][]*domain.ContainerInfo)
 	for _, num := range nums {
+		// Hold container lock while reading to prevent race with concurrent writes
+		containerLock := s.getContainerLock(num)
+		containerLock.Lock()
+
 		infos, err := s.LoadContainerInfos(num)
+
+		containerLock.Unlock()
+
 		if err != nil {
 			return nil, fmt.Errorf("load container infos for %d: %w", num, err)
 		}
