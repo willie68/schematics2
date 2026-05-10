@@ -1,5 +1,13 @@
 # History
 
+## 0.1.14 - 2026-05-10
+
+- Backend: Manufacturer-Suche case-insensitiv gemacht.
+  - `SuggestManufacturers()` findet jetzt "fend" -> ["Fender", "Fendt", "Airfend"]
+  - MongoDB: `$regex` mit `$options: "i"` für case-insensitive Matching
+  - Hersteller werden weiterhin mit Original-Schreibweise gespeichert (case-preserved)
+  - Frontend erhält die korrekte Groß-/Kleinschreibung in Suggestions
+
 ## 0.1.13 - 2026-05-10
 
 - Backend: Manufacturers Import Tool erstellt.
