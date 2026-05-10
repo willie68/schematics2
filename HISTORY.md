@@ -1,5 +1,20 @@
 # History
 
+## 0.1.4 - 2026-05-10
+
+- Blob-Speicherung: Kompression pro Eintrag mit zstd/gzip/none-Optionen hinzugefuegt.
+  - Konfiguration ueber `repository.compressionType` in `service.yaml` (Standard: "none").
+  - Format: 4-Byte Original-Laenge + 1-Byte Kompressionstyp + komprimierte Daten.
+  - Universelle Lesbarkeit: Service auto-erkennt Kompressionstyp unabhaengig von Konfiguration.
+  - Gemischte Kompressiontypen in einem .cnt-Container moeglich.
+- Blob-Metadaten-Persistierung: .inf JSON-Dateien parallel zu .cnt-Containern.
+  - Jeder .cnt-Container hat zugehorige N.inf-Datei mit Metadaten-Array.
+  - Resilience bei Datenbankausfall: Container-Struktur kann aus .inf-Dateien rekonstruiert werden.
+  - Neue Methoden: `ListAllContainerInfos()` fuer Iteration ueber alle Container und Eintraege.
+- Tests: 6 neue Test-Methoden fuer .inf-Persistierung mit Kompressions-Szenarien.
+  - Alle 16 Blob-Service-Tests erfolgreich (10 urspruengliche + 6 neue).
+  - Validierung: Mehrere Eintraege pro Container, mehrere Container, gemischte Kompressionstypen.
+
 ## 0.1.3 - 2026-05-10
 
 - Frontend Upload-Dialog: Tag-Eingabe mit Chip-List und Autocomplete-Vorschlaege implementiert.
