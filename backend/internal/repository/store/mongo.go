@@ -424,6 +424,89 @@ func (s *mongoDocumentStore) List() []domain.Document {
 	return out
 }
 
+// Search executes a full-text and tag-based search using MongoDB queries
+func (s *mongoDocumentStore) Search(filter domain.SearchFilter) []domain.SearchResult {
+	if s.col == nil {
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Build MongoDB filter
+	var mongoFilter bson.D
+
+	if filter.Query == "" && len(filter.Tags) == 0 {
+		// No filters - return all documents
+		mongoFilter = bson.D{}
+	} else if filter.Query == "" && len(filter.Tags) > 0 {
+		// Tag-only search: all tags must match
+		mongoFilter = bson.D{
+			{Key: "tags", Value: bson.D{
+				{Key: "$all", Value: filter.Tags},
+			}},
+		}
+	} else if filter.Query != "" && len(filter.Tags) == 0 {
+		// Full-text search only
+		mongoFilter = bson.D{
+			{Key: "$text", Value: bson.D{
+				{Key: "$search", Value: filter.Query},
+			}},
+		}
+	} else {
+		// Both query and tags: combine with AND
+		mongoFilter = bson.D{
+			{Key: "$and", Value: []bson.D{
+				{
+					{Key: "$text", Value: bson.D{
+						{Key: "$search", Value: filter.Query},
+					}},
+				},
+				{
+					{Key: "tags", Value: bson.D{
+						{Key: "$all", Value: filter.Tags},
+					}},
+				},
+			}},
+		}
+	}
+
+	opts := options.Find().SetSort(bson.D{{Key: "_id", Value: 1}})
+	cur, err := s.col.Find(ctx, mongoFilter, opts)
+	if err != nil {
+		s.logger.Error("search documents failed", "error", err)
+		return nil
+	}
+	defer cur.Close(ctx)
+
+	var docs []mongoDocument
+	if err = cur.All(ctx, &docs); err != nil {
+		s.logger.Error("decode search results failed", "error", err)
+		return nil
+	}
+
+	out := make([]domain.SearchResult, 0, len(docs))
+	for _, d := range docs {
+		out = append(out, domain.SearchResult{
+			Document: domain.Document{
+				ID:             d.ID,
+				CreatedAt:      d.CreatedAt,
+				LastModifiedAt: d.LastModifiedAt,
+				Manufacturer:   d.Manufacturer,
+				Model:          d.Model,
+				Subtitle:       d.Subtitle,
+				Tags:           d.Tags,
+				Description:    d.Description,
+				PrivateFile:    d.PrivateFile,
+				Owner:          d.Owner,
+				Files:          d.Files,
+			},
+		})
+	}
+
+	return out
+}
+
 func (s *mongoDocumentStore) ListTags(ctx context.Context) ([]domain.Tag, error) {
 	if s.tagsCol == nil {
 		return nil, errors.New("mongodb tags collection not initialised")

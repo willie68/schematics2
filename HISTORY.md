@@ -1,5 +1,17 @@
 # History
 
+## 0.1.8 - 2026-05-10
+
+- Backend: Suchlogik zu MongoDB delegiert.
+  - Entfernt alle in-Memory Filterung in MongoIndex.
+  - Neue `SearchFilter` Domain-Klasse für standardisierte Such-Parameter.
+  - MongoDocumentStore.Search() implementiert echte MongoDB-Queries (bson.D).
+  - Tag-Filter: Normalisierung + `$all` Operator für UND-Logik.
+  - Text-Filter: Unterstützung für MongoDB Text-Index.
+  - MongoIndex.Search() nur noch Normalisierung + Filter-Konstruktion.
+  - Score entfernt (nicht nötig, Sortierung nach _id).
+  - Alle 7 Tests bestehen, Backend erfolgreich kompiliert.
+
 ## 0.1.7 - 2026-05-10
 
 - Backend: MongoDB-basierter Index implementiert.

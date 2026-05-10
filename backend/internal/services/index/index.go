@@ -75,57 +75,57 @@ func (idx *InMemoryIndex) Search(query string, tags []string) []domain.SearchRes
 		}
 	}
 
-	scores := make(map[string]int)
+	var matchingDocIDs []string
 
 	// If query is empty, search by tags only
 	if query == "" {
 		if len(needTags) == 0 {
 			// No query and no tags - return all documents
 			for docID := range idx.docByID {
-				scores[docID] = 0
+				matchingDocIDs = append(matchingDocIDs, docID)
 			}
 		} else {
 			// Only tags - return documents with matching tags
 			for docID, tagSet := range idx.tagsByID {
 				if hasAllTags(tagSet, needTags) {
-					scores[docID] = 0
+					matchingDocIDs = append(matchingDocIDs, docID)
 				}
 			}
 		}
 	} else {
 		// Query-based search
+		matchingByQuery := make(map[string]struct{})
 		for _, token := range tokenize(query) {
-			for docID, score := range idx.byToken[token] {
-				scores[docID] += score
+			for docID := range idx.byToken[token] {
+				matchingByQuery[docID] = struct{}{}
 			}
 		}
 
 		// If we have tags, filter results by tags
 		if len(needTags) > 0 {
-			filtered := make(map[string]int)
-			for docID, score := range scores {
+			for docID := range matchingByQuery {
 				if hasAllTags(idx.tagsByID[docID], needTags) {
-					filtered[docID] = score
+					matchingDocIDs = append(matchingDocIDs, docID)
 				}
 			}
-			scores = filtered
+		} else {
+			for docID := range matchingByQuery {
+				matchingDocIDs = append(matchingDocIDs, docID)
+			}
 		}
 	}
 
-	results := make([]domain.SearchResult, 0, len(scores))
-	for docID, score := range scores {
+	results := make([]domain.SearchResult, 0, len(matchingDocIDs))
+	for _, docID := range matchingDocIDs {
 		doc, ok := idx.docByID[docID]
 		if !ok {
 			continue
 		}
-		results = append(results, domain.SearchResult{Document: doc, Score: score})
+		results = append(results, domain.SearchResult{Document: doc})
 	}
 
 	sort.Slice(results, func(i int, j int) bool {
-		if results[i].Score == results[j].Score {
-			return results[i].Document.ID < results[j].Document.ID
-		}
-		return results[i].Score > results[j].Score
+		return results[i].Document.ID < results[j].Document.ID
 	})
 	return results
 }

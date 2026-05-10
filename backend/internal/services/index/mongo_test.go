@@ -1,6 +1,7 @@
 package index
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,8 +14,56 @@ type MockDocumentStore struct {
 	docs []domain.Document
 }
 
-func (m *MockDocumentStore) List() []domain.Document {
-	return m.docs
+func (m *MockDocumentStore) Search(filter domain.SearchFilter) []domain.SearchResult {
+	results := make([]domain.SearchResult, 0)
+
+	// Normalize tags for comparison
+	requiredTags := make(map[string]struct{})
+	for _, t := range filter.Tags {
+		requiredTags[strings.ToLower(strings.TrimSpace(t))] = struct{}{}
+	}
+
+	// Filter documents
+	for _, doc := range m.docs {
+		// Check tag filter
+		if len(requiredTags) > 0 {
+			// All tags must match
+			docTagSet := make(map[string]struct{})
+			for _, tag := range doc.Tags {
+				docTagSet[strings.ToLower(strings.TrimSpace(tag))] = struct{}{}
+			}
+			
+			match := true
+			for reqTag := range requiredTags {
+				if _, exists := docTagSet[reqTag]; !exists {
+					match = false
+					break
+				}
+			}
+			if !match {
+				continue
+			}
+		}
+
+		// Check text filter
+		if filter.Query != "" {
+			searchText := strings.ToLower(strings.Join([]string{
+				doc.Manufacturer,
+				doc.Model,
+				doc.Subtitle,
+				doc.Description,
+				strings.Join(doc.Tags, " "),
+			}, " "))
+			
+			if !strings.Contains(searchText, strings.ToLower(filter.Query)) {
+				continue
+			}
+		}
+
+		results = append(results, domain.SearchResult{Document: doc})
+	}
+
+	return results
 }
 
 func NewMongoIndexWithMockStore(docs []domain.Document) *MongoIndex {
