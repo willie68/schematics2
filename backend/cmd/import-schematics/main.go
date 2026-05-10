@@ -191,6 +191,7 @@ func importDocument(
 			docFiles = append(docFiles, domain.DocumentFile{
 				Name:     filename,
 				MIMEType: mimeTypeForFile(filename),
+				Type:     "schematic",
 			})
 			continue
 		}
@@ -207,6 +208,7 @@ func importDocument(
 		docFile := domain.DocumentFile{
 			Name:     filename,
 			MIMEType: mimeType,
+			Type:     "schematic",
 		}
 
 		if !dryRun && blobSvc != nil {
