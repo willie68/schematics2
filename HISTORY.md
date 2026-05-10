@@ -11,9 +11,14 @@
   - Jeder .cnt-Container hat zugehorige N.inf-Datei mit Metadaten-Array.
   - Resilience bei Datenbankausfall: Container-Struktur kann aus .inf-Dateien rekonstruiert werden.
   - Neue Methoden: `ListAllContainerInfos()` fuer Iteration ueber alle Container und Eintraege.
-- Tests: 6 neue Test-Methoden fuer .inf-Persistierung mit Kompressions-Szenarien.
-  - Alle 16 Blob-Service-Tests erfolgreich (10 urspruengliche + 6 neue).
-  - Validierung: Mehrere Eintraege pro Container, mehrere Container, gemischte Kompressionstypen.
+- Thread-Safety: Pro-Container Mutex-Locks fuer sichere konkurrierende Zugriffe.
+  - `muCurrent`: Schutz fuer Rotation-Logik (currentFile, currentNum, currentSize).
+  - `containerLocks`: Pro-Container Locks fuer atomare Writes zu .cnt und .inf.
+  - Ermöglicht echte Parallelität: Parallel writes zu verschiedenen Containern, Serialisierung bei gleicher Container.
+  - Schutz gegen Datenverlust durch gleichzeitige Schreibvorgaenge.
+- Tests: 8 neue Test-Methoden (6 fuer .inf-Persistierung + 2 fuer Concurrency).
+  - Alle 18 Blob-Service-Tests erfolgreich (14 urspruengliche + 6 inf + 2 concurrent).
+  - Validierung: .inf-Persistierung, Kompressions-Szenarien, parallele Loads, Serialisierung.
 
 ## 0.1.3 - 2026-05-10
 
