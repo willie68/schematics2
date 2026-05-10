@@ -29,7 +29,6 @@
       <Column field="document.id" header="ID" />
       <Column field="document.manufacturer" header="Hersteller" />
       <Column field="document.model" header="Model" />
-      <Column field="score" header="Score" />
     </DataTable>
 
     <UploadDialog v-model="showUploadDialog" @uploaded="search" />
@@ -37,7 +36,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onMounted } from 'vue'
 import InputText from 'primevue/inputtext'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
@@ -56,6 +55,10 @@ const selectedTags = ref([])
 const suggestedTags = ref([])
 const results = ref([])
 const showUploadDialog = ref(false)
+
+onMounted(() => {
+  console.log('SearchView mounted, useToast:', useToast)
+})
 
 function toTags() {
   return selectedTags.value
@@ -94,15 +97,21 @@ async function handleTagKeydown(event) {
 }
 
 async function search() {
-  const params = new URLSearchParams()
-  params.set('q', query.value)
-  toTags().forEach((tag) => params.append('tag', tag))
-  const { data } = await api.get(`/api/v1/documents/search?${params.toString()}`)
-  results.value = data.results || []
-  
-  // Show toast with search result count
-  const count = (data.results || []).length
-  const countText = count === 1 ? '1 Dokument' : `${count} Dokumente`
-  info(`${countText} gefunden`)
+  try {
+    const params = new URLSearchParams()
+    params.set('q', query.value)
+    toTags().forEach((tag) => params.append('tag', tag))
+    const { data } = await api.get(`/api/v1/documents/search?${params.toString()}`)
+    results.value = data.results || []
+    
+    // Show toast with search result count
+    const count = (data.results || []).length
+    const countText = count === 1 ? '1 Dokument' : `${count} Dokumente`
+    console.log('Showing toast:', countText)
+    info(`${countText} gefunden`)
+  } catch (err) {
+    console.error('Search error:', err)
+    info(`Fehler bei der Suche`)
+  }
 }
 </script>

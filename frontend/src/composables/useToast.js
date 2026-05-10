@@ -7,7 +7,9 @@ export function useToast() {
   function showToast(message, type = 'info', duration = 5000) {
     const id = nextId++
     const toast = { id, message, type }
+    console.log('showToast called:', message, 'toasts.value before:', toasts.value)
     toasts.value.push(toast)
+    console.log('toasts.value after push:', toasts.value)
 
     if (duration > 0) {
       setTimeout(() => {

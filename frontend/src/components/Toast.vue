@@ -1,17 +1,18 @@
 <template>
   <div class="toast-container">
-    <TransitionGroup name="toast" tag="div">
-      <div
-        v-for="toast in toasts.value"
-        :key="toast.id"
-        :class="['toast', `toast-${toast.type}`]"
-      >
-        <div class="toast-content">
-          <span>{{ toast.message }}</span>
-          <button class="toast-close" @click="removeToast(toast.id)">✕</button>
-        </div>
+    <div v-if="toasts.value.length > 0" style="color: red; padding: 1rem; background: yellow; position: fixed; bottom: 10rem; right: 1.5rem; width: 300px;">
+      DEBUG: {{ toasts.value.length }} toasts - {{ toasts.value.map(t => t.message).join(', ') }}
+    </div>
+    <div
+      v-for="toast in toasts.value"
+      :key="toast.id"
+      :class="['toast', `toast-${toast.type}`]"
+    >
+      <div class="toast-content">
+        <span>{{ toast.message }}</span>
+        <button class="toast-close" @click="removeToast(toast.id)">✕</button>
       </div>
-    </TransitionGroup>
+    </div>
   </div>
 </template>
 
@@ -19,6 +20,7 @@
 import { useToast } from '../composables/useToast'
 
 const { toasts, removeToast } = useToast()
+console.log('Toast component mounted, toasts:', toasts)
 </script>
 
 <style scoped>
