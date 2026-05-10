@@ -5,6 +5,7 @@
         <div>
           <h1 style="margin-bottom:0.2rem">Schematic2</h1>
           <div class="muted">Nachfolger von WilliesSchematicsWorld</div>
+          <div class="muted" style="font-size:0.85rem">Version {{ APP_VERSION }}</div>
         </div>
         <nav style="display:flex; align-items:center; gap:0.6rem;">
           <RouterLink to="/">Start</RouterLink>
@@ -26,6 +27,7 @@ import { RouterLink, RouterView } from 'vue-router'
 import UserMenu from './components/UserMenu.vue'
 import Toast from './components/Toast.vue'
 import { useAuth } from './composables/useAuth'
+import { APP_VERSION } from './config'
 
 const { isLoggedIn } = useAuth()
 </script>
