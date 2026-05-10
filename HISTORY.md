@@ -1,5 +1,12 @@
 # History
 
+## 0.1.15 - 2026-05-10
+
+- Frontend: Versionsnummer im Header angezeigt.
+  - Neue Datei: `frontend/src/config.js` mit APP_VERSION Konstante.
+  - App-Header zeigt "Version 0.1.15" unter dem Untertitel an.
+  - Version manuell mit HISTORY.md synchronisieren.
+
 ## 0.1.14 - 2026-05-10
 
 - Backend: Manufacturer-Suche case-insensitiv gemacht.
