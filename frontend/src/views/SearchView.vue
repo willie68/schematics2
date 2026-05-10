@@ -46,8 +46,10 @@ import Column from 'primevue/column'
 import UploadDialog from '../components/UploadDialog.vue'
 import api from '../services/api'
 import { useAuth } from '../composables/useAuth'
+import { useToast } from '../composables/useToast'
 
 const { isLoggedIn } = useAuth()
+const { info } = useToast()
 
 const query = ref('')
 const selectedTags = ref([])
@@ -97,5 +99,10 @@ async function search() {
   toTags().forEach((tag) => params.append('tag', tag))
   const { data } = await api.get(`/api/v1/documents/search?${params.toString()}`)
   results.value = data.results || []
+  
+  // Show toast with search result count
+  const count = (data.results || []).length
+  const countText = count === 1 ? '1 Dokument' : `${count} Dokumente`
+  info(`${countText} gefunden`)
 }
 </script>

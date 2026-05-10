@@ -1,7 +1,6 @@
 package index
 
 import (
-	"fmt"
 	"log/slog"
 	"strings"
 
@@ -23,24 +22,10 @@ type MongoIndex struct {
 func NewMongoIndex(inj do.Injector) *MongoIndex {
 	// Invoke the document store - it will be whatever was registered (mongoDocumentStore)
 	// We use a generic interface to avoid direct type dependency
-	docStore, err := do.Invoke[interface {
-		Search(filter domain.SearchFilter) []domain.SearchResult
-	}](inj)
-	if err != nil {
-		// If we can't get a proper store, create a dummy one that will fail
-		panic(fmt.Sprintf("failed to get document store: %v", err))
-	}
-
 	return &MongoIndex{
-		docStore: docStore,
+		docStore: do.MustInvokeAs[docStoreInterface](inj),
 		logger:   logging.New("mongo-index"),
 	}
-}
-
-// Upsert updates the index with a document (no-op for MongoDB as it's stored directly in DB)
-func (idx *MongoIndex) Upsert(doc domain.Document) {
-	// In MongoDB-based index, documents are already persisted in the document store.
-	// This method is kept for interface compatibility but performs no additional indexing.
 }
 
 // Search performs full-text and tag-based search using MongoDB queries

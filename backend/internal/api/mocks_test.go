@@ -5,6 +5,8 @@
 package api_test
 
 import (
+	"context"
+
 	mock "github.com/stretchr/testify/mock"
 	"github.com/willie68/schematic2/backend/internal/domain"
 )
@@ -34,6 +36,142 @@ type mockdocumentStore_Expecter struct {
 
 func (_m *mockdocumentStore) EXPECT() *mockdocumentStore_Expecter {
 	return &mockdocumentStore_Expecter{mock: &_m.Mock}
+}
+
+// ListTags provides a mock function for the type mockdocumentStore
+func (_mock *mockdocumentStore) ListTags(ctx context.Context) ([]domain.Tag, error) {
+	ret := _mock.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListTags")
+	}
+
+	var r0 []domain.Tag
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context) ([]domain.Tag, error)); ok {
+		return returnFunc(ctx)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context) []domain.Tag); ok {
+		r0 = returnFunc(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]domain.Tag)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = returnFunc(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// mockdocumentStore_ListTags_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListTags'
+type mockdocumentStore_ListTags_Call struct {
+	*mock.Call
+}
+
+// ListTags is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *mockdocumentStore_Expecter) ListTags(ctx interface{}) *mockdocumentStore_ListTags_Call {
+	return &mockdocumentStore_ListTags_Call{Call: _e.mock.On("ListTags", ctx)}
+}
+
+func (_c *mockdocumentStore_ListTags_Call) Run(run func(ctx context.Context)) *mockdocumentStore_ListTags_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		run(
+			arg0,
+		)
+	})
+	return _c
+}
+
+func (_c *mockdocumentStore_ListTags_Call) Return(tags []domain.Tag, err error) *mockdocumentStore_ListTags_Call {
+	_c.Call.Return(tags, err)
+	return _c
+}
+
+func (_c *mockdocumentStore_ListTags_Call) RunAndReturn(run func(ctx context.Context) ([]domain.Tag, error)) *mockdocumentStore_ListTags_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SuggestTags provides a mock function for the type mockdocumentStore
+func (_mock *mockdocumentStore) SuggestTags(ctx context.Context, prefix string, limit int) ([]domain.Tag, error) {
+	ret := _mock.Called(ctx, prefix, limit)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SuggestTags")
+	}
+
+	var r0 []domain.Tag
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int) ([]domain.Tag, error)); ok {
+		return returnFunc(ctx, prefix, limit)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int) []domain.Tag); ok {
+		r0 = returnFunc(ctx, prefix, limit)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]domain.Tag)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, int) error); ok {
+		r1 = returnFunc(ctx, prefix, limit)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// mockdocumentStore_SuggestTags_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SuggestTags'
+type mockdocumentStore_SuggestTags_Call struct {
+	*mock.Call
+}
+
+// SuggestTags is a helper method to define mock.On call
+//   - ctx context.Context
+//   - prefix string
+//   - limit int
+func (_e *mockdocumentStore_Expecter) SuggestTags(ctx interface{}, prefix interface{}, limit interface{}) *mockdocumentStore_SuggestTags_Call {
+	return &mockdocumentStore_SuggestTags_Call{Call: _e.mock.On("SuggestTags", ctx, prefix, limit)}
+}
+
+func (_c *mockdocumentStore_SuggestTags_Call) Run(run func(ctx context.Context, prefix string, limit int)) *mockdocumentStore_SuggestTags_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 int
+		if args[2] != nil {
+			arg2 = args[2].(int)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *mockdocumentStore_SuggestTags_Call) Return(tags []domain.Tag, err error) *mockdocumentStore_SuggestTags_Call {
+	_c.Call.Return(tags, err)
+	return _c
+}
+
+func (_c *mockdocumentStore_SuggestTags_Call) RunAndReturn(run func(ctx context.Context, prefix string, limit int) ([]domain.Tag, error)) *mockdocumentStore_SuggestTags_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 // Upsert provides a mock function for the type mockdocumentStore
@@ -210,5 +348,100 @@ func (_c *mockdocumentIndex_Upsert_Call) Return() *mockdocumentIndex_Upsert_Call
 
 func (_c *mockdocumentIndex_Upsert_Call) RunAndReturn(run func(doc domain.Document)) *mockdocumentIndex_Upsert_Call {
 	_c.Run(run)
+	return _c
+}
+
+// newMockblobStore creates a new instance of mockblobStore. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
+// The first argument is typically a *testing.T value.
+func newMockblobStore(t interface {
+	mock.TestingT
+	Cleanup(func())
+}) *mockblobStore {
+	mock := &mockblobStore{}
+	mock.Mock.Test(t)
+
+	t.Cleanup(func() { mock.AssertExpectations(t) })
+
+	return mock
+}
+
+// mockblobStore is an autogenerated mock type for the blobStore type
+type mockblobStore struct {
+	mock.Mock
+}
+
+type mockblobStore_Expecter struct {
+	mock *mock.Mock
+}
+
+func (_m *mockblobStore) EXPECT() *mockblobStore_Expecter {
+	return &mockblobStore_Expecter{mock: &_m.Mock}
+}
+
+// Save provides a mock function for the type mockblobStore
+func (_mock *mockblobStore) Save(data []byte, mimeType string) (*domain.ContainerInfo, error) {
+	ret := _mock.Called(data, mimeType)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Save")
+	}
+
+	var r0 *domain.ContainerInfo
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func([]byte, string) (*domain.ContainerInfo, error)); ok {
+		return returnFunc(data, mimeType)
+	}
+	if returnFunc, ok := ret.Get(0).(func([]byte, string) *domain.ContainerInfo); ok {
+		r0 = returnFunc(data, mimeType)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*domain.ContainerInfo)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func([]byte, string) error); ok {
+		r1 = returnFunc(data, mimeType)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// mockblobStore_Save_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Save'
+type mockblobStore_Save_Call struct {
+	*mock.Call
+}
+
+// Save is a helper method to define mock.On call
+//   - data []byte
+//   - mimeType string
+func (_e *mockblobStore_Expecter) Save(data interface{}, mimeType interface{}) *mockblobStore_Save_Call {
+	return &mockblobStore_Save_Call{Call: _e.mock.On("Save", data, mimeType)}
+}
+
+func (_c *mockblobStore_Save_Call) Run(run func(data []byte, mimeType string)) *mockblobStore_Save_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 []byte
+		if args[0] != nil {
+			arg0 = args[0].([]byte)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *mockblobStore_Save_Call) Return(containerInfo *domain.ContainerInfo, err error) *mockblobStore_Save_Call {
+	_c.Call.Return(containerInfo, err)
+	return _c
+}
+
+func (_c *mockblobStore_Save_Call) RunAndReturn(run func(data []byte, mimeType string) (*domain.ContainerInfo, error)) *mockblobStore_Save_Call {
+	_c.Call.Return(run)
 	return _c
 }

@@ -17,12 +17,14 @@
     </header>
 
     <RouterView />
+    <Toast />
   </div>
 </template>
 
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
 import UserMenu from './components/UserMenu.vue'
+import Toast from './components/Toast.vue'
 import { useAuth } from './composables/useAuth'
 
 const { isLoggedIn } = useAuth()

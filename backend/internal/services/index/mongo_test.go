@@ -32,7 +32,7 @@ func (m *MockDocumentStore) Search(filter domain.SearchFilter) []domain.SearchRe
 			for _, tag := range doc.Tags {
 				docTagSet[strings.ToLower(strings.TrimSpace(tag))] = struct{}{}
 			}
-			
+
 			match := true
 			for reqTag := range requiredTags {
 				if _, exists := docTagSet[reqTag]; !exists {
@@ -54,7 +54,7 @@ func (m *MockDocumentStore) Search(filter domain.SearchFilter) []domain.SearchRe
 				doc.Description,
 				strings.Join(doc.Tags, " "),
 			}, " "))
-			
+
 			if !strings.Contains(searchText, strings.ToLower(filter.Query)) {
 				continue
 			}

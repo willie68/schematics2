@@ -25,7 +25,6 @@ type documentStore interface {
 }
 
 type documentIndex interface {
-	Upsert(doc domain.Document)
 	Search(query string, tags []string) []domain.SearchResult
 }
 
@@ -153,7 +152,6 @@ func (h *Handler) indexDocument(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusInternalServerError, "save document")
 		return
 	}
-	h.index.Upsert(doc)
 	respondJSON(w, http.StatusCreated, map[string]any{"status": "indexed", "id": doc.ID})
 }
 
