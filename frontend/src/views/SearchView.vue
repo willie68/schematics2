@@ -5,57 +5,75 @@
 
     <div style="display:grid; gap:0.8rem; margin-bottom:1rem;">
       <InputText v-model="query" placeholder="Suche nach Begriffen" />
-      <InputText v-model="tagInput" placeholder="Tags, z. B. netzteil, smps, reparatur" />
+      <AutoComplete
+        v-model="selectedTags"
+        :suggestions="suggestedTags"
+        @complete="onTagSuggest"
+        placeholder="Tags auswählen"
+        multiple
+        forceSelection
+        style="width:100%"
+      />
       <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
         <Button label="Suchen" icon="pi pi-search" @click="search" />
-        <Button label="Beispiel indexieren" icon="pi pi-plus" severity="secondary" @click="seed" />
+        <Button v-if="isLoggedIn" label="Upload" icon="pi pi-upload" severity="secondary" @click="showUploadDialog = true" />
       </div>
     </div>
 
     <DataTable :value="results" stripedRows>
       <Column field="document.id" header="ID" />
-      <Column field="document.title" header="Titel" />
-      <Column field="document.path" header="Datei" />
+      <Column field="document.manufacturer" header="Hersteller" />
+      <Column field="document.model" header="Model" />
       <Column field="score" header="Score" />
     </DataTable>
+
+    <UploadDialog v-model="showUploadDialog" @uploaded="search" />
   </section>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import InputText from 'primevue/inputtext'
+import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import UploadDialog from '../components/UploadDialog.vue'
 import api from '../services/api'
+import { useAuth } from '../composables/useAuth'
+
+const { isLoggedIn } = useAuth()
 
 const query = ref('')
-const tagInput = ref('')
+const selectedTags = ref([])
+const suggestedTags = ref([])
 const results = ref([])
+const showUploadDialog = ref(false)
 
 function toTags() {
-  return tagInput.value
-    .split(',')
-    .map((x) => x.trim())
+  return selectedTags.value
+    .map((tag) => String(tag || '').trim())
     .filter(Boolean)
 }
 
-async function seed() {
-  const token = localStorage.getItem('schematic2_token')
-  if (!token) {
-    alert('Bitte zuerst einloggen.')
+async function onTagSuggest(event) {
+  const queryText = (event.query || '').trim()
+  if (!queryText) {
+    suggestedTags.value = []
     return
   }
 
-  await api.post('/api/v1/documents/index', {
-    id: `doc-${Date.now()}`,
-    title: 'SMPS Netzteil Schaltplan',
-    path: 'docs/netzteil/smps-v2.pdf',
-    tags: ['netzteil', 'smps', 'reparatur'],
-    text: 'Schaltplan und Service-Dokumentation für Schaltnetzteil Revision 2.',
-  })
-
-  await search()
+  try {
+    const { data } = await api.get('/api/v1/tags/suggest', {
+      params: { q: queryText, limit: 10 },
+    })
+    suggestedTags.value = (data.tags || [])
+      .map((tag) => (typeof tag === 'string' ? tag : tag?.name))
+      .map((tag) => String(tag || '').trim())
+      .filter(Boolean)
+  } catch (_err) {
+    suggestedTags.value = []
+  }
 }
 
 async function search() {
