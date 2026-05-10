@@ -1,9 +1,10 @@
 <template>
   <div class="toast-container">
-    <div v-if="toasts.value.length > 0" style="color: red; padding: 1rem; background: yellow; position: fixed; bottom: 10rem; right: 1.5rem; width: 300px;">
+    <div v-if="toasts && toasts.value && toasts.value.length > 0" style="color: red; padding: 1rem; background: yellow; position: fixed; bottom: 10rem; right: 1.5rem; width: 300px; z-index: 10000;">
       DEBUG: {{ toasts.value.length }} toasts - {{ toasts.value.map(t => t.message).join(', ') }}
     </div>
     <div
+      v-if="toasts && toasts.value"
       v-for="toast in toasts.value"
       :key="toast.id"
       :class="['toast', `toast-${toast.type}`]"
@@ -19,8 +20,10 @@
 <script setup>
 import { useToast } from '../composables/useToast'
 
+console.log('Toast.vue setup called')
 const { toasts, removeToast } = useToast()
 console.log('Toast component mounted, toasts:', toasts)
+console.log('Toast component mounted, toasts.value:', toasts?.value)
 </script>
 
 <style scoped>

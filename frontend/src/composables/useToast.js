@@ -1,15 +1,17 @@
 import { ref } from 'vue'
 
-const toasts = ref([])
+// Global state for toasts
+const toastsState = ref([])
 let nextId = 0
 
 export function useToast() {
   function showToast(message, type = 'info', duration = 5000) {
     const id = nextId++
     const toast = { id, message, type }
-    console.log('showToast called:', message, 'toasts.value before:', toasts.value)
-    toasts.value.push(toast)
-    console.log('toasts.value after push:', toasts.value)
+    console.log('showToast called with:', message)
+    console.log('toastsState.value:', toastsState.value)
+    toastsState.value.push(toast)
+    console.log('toastsState.value after push:', toastsState.value)
 
     if (duration > 0) {
       setTimeout(() => {
@@ -21,9 +23,10 @@ export function useToast() {
   }
 
   function removeToast(id) {
-    const index = toasts.value.findIndex((t) => t.id === id)
+    console.log('removeToast called with id:', id)
+    const index = toastsState.value.findIndex((t) => t.id === id)
     if (index !== -1) {
-      toasts.value.splice(index, 1)
+      toastsState.value.splice(index, 1)
     }
   }
 
@@ -44,7 +47,7 @@ export function useToast() {
   }
 
   return {
-    toasts,
+    toasts: toastsState,
     showToast,
     removeToast,
     success,
