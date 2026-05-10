@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"regexp"
 	"strings"
 	"time"
 
@@ -19,15 +20,17 @@ import (
 
 const documentsCollection = "documents"
 const tagsCollection = "tags"
+const manufacturersCollection = "manufacturers"
 
 // mongoDocumentStore stores domain.Document in MongoDB.
 type mongoDocumentStore struct {
-	cfg     config.MongoDB
-	client  *mongo.Client
-	db      *mongo.Database
-	col     *mongo.Collection
-	tagsCol *mongo.Collection
-	logger  *slog.Logger
+	cfg       config.MongoDB
+	client    *mongo.Client
+	db        *mongo.Database
+	col       *mongo.Collection
+	tagsCol   *mongo.Collection
+	manufCol  *mongo.Collection
+	logger    *slog.Logger
 }
 
 type mongoDocument struct {
@@ -89,6 +92,7 @@ func (s *mongoDocumentStore) Prepare() error {
 	s.db = client.Database(s.cfg.Database)
 	s.col = s.db.Collection(documentsCollection)
 	s.tagsCol = s.db.Collection(tagsCollection)
+	s.manufCol = s.db.Collection(manufacturersCollection)
 
 	if err = s.ensureIndexes(); err != nil {
 		_ = client.Disconnect(context.Background())
@@ -145,6 +149,15 @@ func (s *mongoDocumentStore) ensureIndexes() error {
 	}
 
 	_, err = s.tagsCol.Indexes().CreateMany(ctx, tagIndexes)
+	if err != nil {
+		return err
+	}
+
+	manufIndexes := []mongo.IndexModel{
+		{Keys: bson.D{{Key: "_id", Value: 1}}},
+	}
+
+	_, err = s.manufCol.Indexes().CreateMany(ctx, manufIndexes)
 	return err
 }
 
@@ -204,6 +217,9 @@ func (s *mongoDocumentStore) Upsert(doc domain.Document) error {
 		return fmt.Errorf("upsert document: %w", err)
 	}
 	if err = s.updateTagCounters(ctx, oldTags, payload.Tags); err != nil {
+		return err
+	}
+	if err = s.updateManufacturer(ctx, payload.Manufacturer); err != nil {
 		return err
 	}
 
@@ -583,6 +599,81 @@ func (s *mongoDocumentStore) SuggestTags(ctx context.Context, prefix string, lim
 	}
 
 	return out, nil
+}
+
+func (s *mongoDocumentStore) SuggestManufacturers(ctx context.Context, prefix string, limit int) ([]string, error) {
+	if s.manufCol == nil {
+		return nil, errors.New("mongodb manufacturers collection not initialised")
+	}
+
+	if limit <= 0 {
+		limit = 10
+	}
+
+	prefix = strings.TrimSpace(prefix)
+	if prefix == "" {
+		opts := options.Find().SetSort(bson.D{{Key: "_id", Value: 1}}).SetLimit(int64(limit))
+		cur, err := s.manufCol.Find(ctx, bson.D{}, opts)
+		if err != nil {
+			return nil, fmt.Errorf("suggest manufacturers: %w", err)
+		}
+		defer cur.Close(ctx)
+
+		var docs []bson.M
+		if err = cur.All(ctx, &docs); err != nil {
+			return nil, fmt.Errorf("decode manufacturers: %w", err)
+		}
+
+		out := make([]string, 0, len(docs))
+		for _, doc := range docs {
+			if id, ok := doc["_id"].(string); ok {
+				out = append(out, id)
+			}
+		}
+		return out, nil
+	}
+
+	// Case-sensitive regex for manufacturers (unlike tags which are case-insensitive)
+	filter := bson.D{{Key: "_id", Value: bson.D{{Key: "$regex", Value: "^" + regexp.QuoteMeta(prefix)}}}}
+	opts := options.Find().SetSort(bson.D{{Key: "_id", Value: 1}}).SetLimit(int64(limit))
+	cur, err := s.manufCol.Find(ctx, filter, opts)
+	if err != nil {
+		return nil, fmt.Errorf("suggest manufacturers: %w", err)
+	}
+	defer cur.Close(ctx)
+
+	var docs []bson.M
+	if err = cur.All(ctx, &docs); err != nil {
+		return nil, fmt.Errorf("decode manufacturers: %w", err)
+	}
+
+	out := make([]string, 0, len(docs))
+	for _, doc := range docs {
+		if id, ok := doc["_id"].(string); ok {
+			out = append(out, id)
+		}
+	}
+
+	return out, nil
+}
+
+func (s *mongoDocumentStore) updateManufacturer(ctx context.Context, manufacturer string) error {
+	if s.manufCol == nil || manufacturer == "" {
+		return nil
+	}
+
+	// Just ensure the manufacturer exists in the collection (upsert)
+	_, err := s.manufCol.UpdateOne(
+		ctx,
+		bson.D{{Key: "_id", Value: manufacturer}},
+		bson.D{{Key: "$setOnInsert", Value: bson.D{{Key: "_id", Value: manufacturer}}}},
+		options.UpdateOne().SetUpsert(true),
+	)
+	if err != nil {
+		return fmt.Errorf("update manufacturer: %w", err)
+	}
+
+	return nil
 }
 
 func (s *mongoDocumentStore) Close(ctx context.Context) error {

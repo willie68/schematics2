@@ -3,10 +3,17 @@
     <div style="display:grid; gap:1rem;">
       <!-- Manufacturer & Model -->
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.8rem;">
-        <span class="p-float-label">
-          <InputText id="manufacturer" v-model="form.manufacturer" style="width:100%" />
-          <label for="manufacturer">Hersteller *</label>
-        </span>
+        <div>
+          <label style="display:block; margin-bottom:0.3rem; font-size:0.85rem">Hersteller *</label>
+          <AutoComplete
+            v-model="form.manufacturer"
+            :suggestions="suggestedManufacturers"
+            @complete="onManufacturerSuggest"
+            placeholder="Hersteller eingeben..."
+            :typeahead="false"
+            style="width:100%"
+          />
+        </div>
         <span class="p-float-label">
           <InputText id="model" v-model="form.model" style="width:100%" />
           <label for="model">Modell *</label>
@@ -125,6 +132,7 @@ const errorMessage = ref('')
 const suggestedTags = ref([])
 const selectedTags = ref([])
 const currentTagQuery = ref('')
+const suggestedManufacturers = ref([])
 
 const docTypes = [
   { label: 'Schaltplan', value: 'schematic' },
@@ -191,6 +199,26 @@ async function onTagSuggest(event) {
       .filter(Boolean)
   } catch (err) {
     suggestedTags.value = []
+  }
+}
+
+async function onManufacturerSuggest(event) {
+  const query = event.query || ''
+
+  if (!query) {
+    suggestedManufacturers.value = []
+    return
+  }
+
+  try {
+    const { data } = await api.get('/api/v1/manufacturers/suggest', {
+      params: { q: query, limit: 10 },
+    })
+    suggestedManufacturers.value = (data.manufacturers || [])
+      .map((m) => String(m || '').trim())
+      .filter(Boolean)
+  } catch (err) {
+    suggestedManufacturers.value = []
   }
 }
 

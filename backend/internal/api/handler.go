@@ -22,6 +22,7 @@ type documentStore interface {
 	Upsert(doc domain.Document) error
 	ListTags(ctx context.Context) ([]domain.Tag, error)
 	SuggestTags(ctx context.Context, prefix string, limit int) ([]domain.Tag, error)
+	SuggestManufacturers(ctx context.Context, prefix string, limit int) ([]string, error)
 }
 
 type documentIndex interface {
@@ -68,6 +69,7 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 		api.Post("/auth/login", h.login)
 		api.Get("/tags", h.listTags)
 		api.Get("/tags/suggest", h.suggestTags)
+		api.Get("/manufacturers/suggest", h.suggestManufacturers)
 
 		api.Group(func(protected chi.Router) {
 			protected.Use(h.authMiddleware)
@@ -267,4 +269,24 @@ func (h *Handler) suggestTags(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusOK, map[string]any{"tags": tags, "count": len(tags)})
+}
+
+func (h *Handler) suggestManufacturers(w http.ResponseWriter, r *http.Request) {
+	prefix := r.URL.Query().Get("q")
+	limitStr := r.URL.Query().Get("limit")
+	limit := 10
+
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
+
+	manufacturers, err := h.docStore.SuggestManufacturers(r.Context(), prefix, limit)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "suggest manufacturers failed")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]any{"manufacturers": manufacturers, "count": len(manufacturers)})
 }
