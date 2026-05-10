@@ -24,13 +24,13 @@ const manufacturersCollection = "manufacturers"
 
 // mongoDocumentStore stores domain.Document in MongoDB.
 type mongoDocumentStore struct {
-	cfg       config.MongoDB
-	client    *mongo.Client
-	db        *mongo.Database
-	col       *mongo.Collection
-	tagsCol   *mongo.Collection
-	manufCol  *mongo.Collection
-	logger    *slog.Logger
+	cfg      config.MongoDB
+	client   *mongo.Client
+	db       *mongo.Database
+	col      *mongo.Collection
+	tagsCol  *mongo.Collection
+	manufCol *mongo.Collection
+	logger   *slog.Logger
 }
 
 type mongoDocument struct {
@@ -633,8 +633,11 @@ func (s *mongoDocumentStore) SuggestManufacturers(ctx context.Context, prefix st
 		return out, nil
 	}
 
-	// Case-sensitive regex for manufacturers (unlike tags which are case-insensitive)
-	filter := bson.D{{Key: "_id", Value: bson.D{{Key: "$regex", Value: "^" + regexp.QuoteMeta(prefix)}}}}
+	// Case-insensitive regex for manufacturer search (stored with case preservation)
+	filter := bson.D{{Key: "_id", Value: bson.D{
+		{Key: "$regex", Value: "^" + regexp.QuoteMeta(prefix)},
+		{Key: "$options", Value: "i"},
+	}}}
 	opts := options.Find().SetSort(bson.D{{Key: "_id", Value: 1}}).SetLimit(int64(limit))
 	cur, err := s.manufCol.Find(ctx, filter, opts)
 	if err != nil {

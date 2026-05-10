@@ -62,9 +62,10 @@ Imported manufacturers from 402 JSON files
 | Aspekt | Tags | Manufacturers |
 |--------|------|---|
 | **Collection** | `tags` | `manufacturers` |
-| **Normalisierung** | Kleinbuchstaben | Case-Preserved |
+| **Speicherung** | Normalform (Kleinbuchstaben) | **Case-Preserved** (Original-Schreibweise) |
+| **Suche** | Case-Insensitiv | **Case-Insensitiv** |
 | **Feld-Name** | `_id` | `_id` |
-| **Beispiel** | `{"_id": "effects"}` | `{"_id": "Samsung"}` |
+| **Beispiel** | `{"_id": "effects"}` | `{"_id": "Samsung"}` gespeichert, aber mit "samsung" findbar |
 
 ## Fehlerbehandlung
 
