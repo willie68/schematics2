@@ -14,10 +14,10 @@
             style="width:100%"
           />
         </div>
-        <span class="p-float-label">
-          <InputText id="model" v-model="form.model" style="width:100%" />
-          <label for="model">Modell *</label>
-        </span>
+        <div>
+          <label style="display:block; margin-bottom:0.3rem; font-size:0.85rem">Modell *</label>
+          <InputText v-model="form.model" placeholder="Modell eingeben..." style="width:100%" />
+        </div>
       </div>
 
       <!-- Subtitle -->
