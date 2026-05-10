@@ -1,5 +1,16 @@
 # History
 
+## 0.1.10 - 2026-05-10
+
+- Frontend: Toast-Benachrichtigungssystem implementiert.
+  - Neues `useToast` Komposable für Toast-Verwaltung.
+  - Toast-Komponente mit Stapelung von rechts unten nach oben.
+  - Automatisches Verschwinden nach 5 Sekunden.
+  - Toast-Typen: success, error, info, warning.
+  - Toast in App.vue integriert.
+  - Bei Suche: Toast mit Anzahl gefundener Dokumente anzeigen.
+  - Frontend erfolgreich kompiliert.
+
 ## 0.1.9 - 2026-05-10
 
 - Backend: InMemoryIndex entfernt (veraltet, MongoIndex ist Standard).
