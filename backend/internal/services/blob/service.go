@@ -26,23 +26,23 @@ import (
 
 // Service writes binary payloads into rotating container files (*.cnt).
 // Synchronization:
-// - muCurrent: protects currentFile, currentNum, currentSize (rotation management)
-// - containerLocks: per-container locks for concurrent writes to .cnt and .inf files
-//   Each container has its own mutex to prevent simultaneous writes to the same .cnt/.inf
-//   but allow parallel writes to different containers
+//   - muCurrent: protects currentFile, currentNum, currentSize (rotation management)
+//   - containerLocks: per-container locks for concurrent writes to .cnt and .inf files
+//     Each container has its own mutex to prevent simultaneous writes to the same .cnt/.inf
+//     but allow parallel writes to different containers
 type Service struct {
 	cfg          config.Repository
 	log          *slog.Logger
 	dir          string
 	maxSizeBytes int64
 
-	muCurrent   sync.Mutex       // Protects currentFile, currentNum, currentSize
+	muCurrent   sync.Mutex // Protects currentFile, currentNum, currentSize
 	currentFile *os.File
 	currentNum  int
 	currentSize int64
 
-	muLocks        sync.Mutex               // Protects containerLocks map
-	containerLocks map[int]*sync.Mutex      // Per-container locks for .cnt and .inf writes
+	muLocks        sync.Mutex          // Protects containerLocks map
+	containerLocks map[int]*sync.Mutex // Per-container locks for .cnt and .inf writes
 }
 
 func New(inj do.Injector) *Service {

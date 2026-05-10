@@ -4,11 +4,16 @@
     <p class="muted">Durchsuche Schaltpläne, Dokumentationen und PDFs über Tags und Volltext.</p>
 
     <div style="display:grid; gap:0.8rem; margin-bottom:1rem;">
-      <InputText v-model="query" placeholder="Suche nach Begriffen" />
+      <InputText 
+        v-model="query" 
+        placeholder="Suche nach Begriffen"
+        @keydown.enter="search"
+      />
       <AutoComplete
         v-model="selectedTags"
         :suggestions="suggestedTags"
         @complete="onTagSuggest"
+        @keydown.enter="handleTagKeydown"
         placeholder="Tags auswählen"
         multiple
         forceSelection
@@ -32,7 +37,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import InputText from 'primevue/inputtext'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
@@ -73,6 +78,16 @@ async function onTagSuggest(event) {
       .filter(Boolean)
   } catch (_err) {
     suggestedTags.value = []
+  }
+}
+
+// Handle Enter key in tag input: first Enter closes the tag (if suggestion is open),
+// subsequent Enter triggers search when field is focused but no suggestion is active
+async function handleTagKeydown(event) {
+  if (event.key === 'Enter') {
+    // Wait for the tag selection to complete (if a suggestion was selected)
+    await nextTick()
+    search()
   }
 }
 
