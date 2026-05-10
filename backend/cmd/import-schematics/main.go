@@ -182,6 +182,19 @@ func importDocument(
 	var docFiles []domain.DocumentFile
 	for filename := range bk.Files {
 		filePath := filepath.Join(docDir, filename)
+
+		if dryRun {
+			// In dry-run mode only check existence, do not read file contents
+			if _, err := os.Stat(filePath); err != nil {
+				log.Printf("warning: document %q: file %q not found on disk: %v", bk.ID, filename, err)
+			}
+			docFiles = append(docFiles, domain.DocumentFile{
+				Name:     filename,
+				MIMEType: mimeTypeForFile(filename),
+			})
+			continue
+		}
+
 		fileData, err := os.ReadFile(filePath)
 		if err != nil {
 			// File referenced in JSON but not present on disk – warn and skip
