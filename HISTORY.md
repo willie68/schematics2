@@ -1,5 +1,17 @@
 # History
 
+## 0.1.12 - 2026-05-10
+
+- Backend & Frontend: Manufacturers Collection System implementiert.
+  - MongoDB: Neue `manufacturers` Collection für persistente Hersteller-Verwaltung.
+  - Backend: `SuggestManufacturers()` Methode für Prefix-basierte Autocomplete.
+  - Backend: `updateManufacturer()` bei jedem Document-Save auto-hinzufügen.
+  - Backend: GET `/api/v1/manufacturers/suggest` Endpoint implementiert.
+  - Frontend: AutoComplete für Hersteller-Feld in UploadDialog.
+  - Frontend: `onManufacturerSuggest()` für API-Aufrufe.
+  - **Wichtig:** Hersteller sind Case-Sensitive (anders als Tags die normalisiert sind).
+  - Frontend erfolgreich kompiliert und deployed in backend/internal/webclient.
+
 ## 0.1.11 - 2026-05-10
 
 - Backend: Tag-Import Tool erstellt.
