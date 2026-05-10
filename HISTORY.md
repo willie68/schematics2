@@ -1,5 +1,15 @@
 # History
 
+## 0.1.7 - 2026-05-10
+
+- Backend: MongoDB-basierter Index implementiert.
+  - Ersetzt InMemoryIndex mit MongoIndex für persistente Suche.
+  - Hybrid-Ansatz: Dokumente aus DB laden, in-Memory filtern, Ergebnisse bewerten.
+  - Unterstützt Nur-Query-, Nur-Tag- und kombinierte Such-Szenarien.
+  - 7 neue Tests bestehen (4 MongoIndex + 3 InMemoryIndex bestehen weiterhin).
+  - DI-Konfiguration aktualisiert: `NewMongoIndex` als aktiver Index.
+  - Vollständig kompiliert und getestet.
+
 ## 0.1.6 - 2026-05-10
 
 - Backend: Tag-basierte Suche implementiert (ohne Volltext-Query).

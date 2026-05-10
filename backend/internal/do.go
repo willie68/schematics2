@@ -44,7 +44,7 @@ func InitServices(inj do.Injector, cfg config.Config) error {
 	if err = newDocumentStore(inj); err != nil {
 		return err
 	}
-	do.ProvideValue(inj, index.NewInMemoryIndex(inj))
+	do.ProvideValue(inj, index.NewMongoIndex(inj))
 
 	return InitRESTService(inj, cfg)
 }
