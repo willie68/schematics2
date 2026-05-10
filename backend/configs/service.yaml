@@ -75,3 +75,6 @@ mongodb:
 repository:
   repositoryPath: ./dev_data/repository
   containerMaxSizeMB: 100
+  # Compression type for binary data in containers
+  # Options: "none" (default), "gzip", "zstd" (recommended for already-compressed formats like PDF, JPEG, TIF)
+  compressionType: "zstd"

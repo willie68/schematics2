@@ -1,8 +1,11 @@
 package blob
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -14,6 +17,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/klauspost/compress/zstd"
 	"github.com/samber/do/v2"
 	"github.com/willie68/schematic2/backend/internal/config"
 	"github.com/willie68/schematic2/backend/internal/domain"
@@ -106,7 +110,14 @@ func (s *Service) Save(data []byte, mimeType string) (*domain.ContainerInfo, err
 		}
 	}
 
-	if s.currentSize+4+int64(len(data)) > s.maxSizeBytes {
+	compressed, compressionType, err := s.compressData(data)
+	if err != nil {
+		return nil, fmt.Errorf("compress data: %w", err)
+	}
+
+	// Format: [4-byte original-length][1-byte compression-type][variable-length data]
+	recordSize := int64(4 + 1 + len(compressed))
+	if s.currentSize+recordSize > s.maxSizeBytes {
 		_ = s.currentFile.Close()
 		s.currentNum++
 		if err := s.createNewContainer(); err != nil {
@@ -119,13 +130,20 @@ func (s *Service) Save(data []byte, mimeType string) (*domain.ContainerInfo, err
 		return nil, err
 	}
 
+	// Write original length
 	var lenBuf [4]byte
 	binary.BigEndian.PutUint32(lenBuf[:], uint32(len(data)))
 	if _, err = s.currentFile.Write(lenBuf[:]); err != nil {
 		return nil, err
 	}
 
-	n, err := s.currentFile.Write(data)
+	// Write compression type
+	if _, err = s.currentFile.Write([]byte{compressionType}); err != nil {
+		return nil, err
+	}
+
+	// Write compressed data
+	n, err := s.currentFile.Write(compressed)
 	if err != nil {
 		return nil, err
 	}
@@ -134,14 +152,23 @@ func (s *Service) Save(data []byte, mimeType string) (*domain.ContainerInfo, err
 		return nil, err
 	}
 
-	s.currentSize += int64(n) + 4
+	s.currentSize += recordSize
 
-	return &domain.ContainerInfo{
+	ci := &domain.ContainerInfo{
 		ContainerNumber: s.currentNum,
 		Offset:          offset,
-		Length:          int64(n),
+		Length:          int64(n + 5), // 4 bytes length + 1 byte compression type + data
+		OriginalLength:  int64(len(data)),
 		MIMEType:        mimeType,
-	}, nil
+		Compressed:      compressionTypeToString(compressionType),
+	}
+
+	// Persist container info to .inf file
+	if err = s.appendContainerInfoEntry(s.currentNum, ci); err != nil {
+		return nil, fmt.Errorf("persist container info: %w", err)
+	}
+
+	return ci, nil
 }
 
 func (s *Service) Load(ci *domain.ContainerInfo) ([]byte, error) {
@@ -160,22 +187,30 @@ func (s *Service) Load(ci *domain.ContainerInfo) ([]byte, error) {
 		return nil, err
 	}
 
+	// Read original length
 	var lenBuf [4]byte
 	if _, err = io.ReadFull(f, lenBuf[:]); err != nil {
 		return nil, err
 	}
+	originalLen := int64(binary.BigEndian.Uint32(lenBuf[:]))
 
-	dataLen := int64(binary.BigEndian.Uint32(lenBuf[:]))
-	if dataLen <= 0 {
-		return nil, errors.New("invalid data length in container")
+	// Read compression type
+	var compressionBuf [1]byte
+	if _, err = io.ReadFull(f, compressionBuf[:]); err != nil {
+		return nil, err
 	}
+	compressionType := compressionBuf[0]
 
-	buf := make([]byte, dataLen)
-	if _, err = io.ReadFull(f, buf); err != nil {
+	// Read compressed data
+	// Actual compressed size is Length - 5 (4 bytes for original length + 1 byte for compression type)
+	compressedSize := ci.Length - 5
+	compressed := make([]byte, compressedSize)
+	if _, err = io.ReadFull(f, compressed); err != nil {
 		return nil, err
 	}
 
-	return buf, nil
+	// Decompress if needed
+	return s.decompressData(compressed, compressionType, int(originalLen))
 }
 
 func (s *Service) Close() error {
@@ -271,4 +306,207 @@ func (s *Service) listContainerNumbers() ([]int, error) {
 	sort.Ints(nums)
 
 	return nums, nil
+}
+
+// Compression type constants
+const (
+	compressionNone byte = 0x00
+	compressionZstd byte = 0x01
+	compressionGzip byte = 0x02
+)
+
+func (s *Service) compressData(data []byte) ([]byte, byte, error) {
+	compressionType := s.cfg.CompressionType
+	if compressionType == "" {
+		compressionType = "none"
+	}
+
+	switch strings.ToLower(compressionType) {
+	case "none":
+		return data, compressionNone, nil
+
+	case "zstd":
+		encoder, err := zstd.NewWriter(nil)
+		if err != nil {
+			return nil, 0, fmt.Errorf("create zstd encoder: %w", err)
+		}
+		defer encoder.Close()
+
+		compressed := encoder.EncodeAll(data, nil)
+		return compressed, compressionZstd, nil
+
+	case "gzip":
+		buf := bytes.Buffer{}
+		writer := gzip.NewWriter(&buf)
+		if _, err := writer.Write(data); err != nil {
+			_ = writer.Close()
+			return nil, 0, fmt.Errorf("gzip encode: %w", err)
+		}
+		if err := writer.Close(); err != nil {
+			return nil, 0, fmt.Errorf("gzip close: %w", err)
+		}
+		return buf.Bytes(), compressionGzip, nil
+
+	default:
+		return nil, 0, fmt.Errorf("unknown compression type: %q", compressionType)
+	}
+}
+
+func (s *Service) decompressData(compressed []byte, compressionType byte, expectedLen int) ([]byte, error) {
+	switch compressionType {
+	case compressionNone:
+		return compressed, nil
+
+	case compressionZstd:
+		decoder, err := zstd.NewReader(bytes.NewReader(compressed))
+		if err != nil {
+			return nil, fmt.Errorf("create zstd decoder: %w", err)
+		}
+		defer decoder.Close()
+
+		decompressed, err := io.ReadAll(decoder)
+		if err != nil {
+			return nil, fmt.Errorf("zstd decode: %w", err)
+		}
+
+		if len(decompressed) != expectedLen {
+			return nil, fmt.Errorf("decompressed size mismatch: got %d, expected %d", len(decompressed), expectedLen)
+		}
+
+		return decompressed, nil
+
+	case compressionGzip:
+		reader, err := gzip.NewReader(bytes.NewReader(compressed))
+		if err != nil {
+			return nil, fmt.Errorf("create gzip reader: %w", err)
+		}
+		defer reader.Close()
+
+		decompressed, err := io.ReadAll(reader)
+		if err != nil {
+			return nil, fmt.Errorf("gzip decode: %w", err)
+		}
+
+		if len(decompressed) != expectedLen {
+			return nil, fmt.Errorf("decompressed size mismatch: got %d, expected %d", len(decompressed), expectedLen)
+		}
+
+		return decompressed, nil
+
+	default:
+		return nil, fmt.Errorf("unknown compression type: 0x%02x", compressionType)
+	}
+}
+
+func compressionTypeToString(ct byte) string {
+	switch ct {
+	case compressionNone:
+		return "none"
+	case compressionZstd:
+		return "zstd"
+	case compressionGzip:
+		return "gzip"
+	default:
+		return "unknown"
+	}
+}
+
+// containerInfoEntry is the JSON-serializable format for .inf files
+type containerInfoEntry struct {
+	Offset         int64  `json:"offset"`
+	Length         int64  `json:"length"`
+	OriginalLength int64  `json:"originalLength"`
+	MIMEType       string `json:"mimeType,omitempty"`
+	Compressed     string `json:"compressed,omitempty"`
+}
+
+// appendContainerInfoEntry writes a ContainerInfo entry to the .inf file
+func (s *Service) appendContainerInfoEntry(containerNum int, ci *domain.ContainerInfo) error {
+	infPath := filepath.Join(s.dir, fmt.Sprintf("%d.inf", containerNum))
+
+	// Load existing entries
+	var entries []containerInfoEntry
+	if data, err := os.ReadFile(infPath); err == nil {
+		if err = json.Unmarshal(data, &entries); err != nil {
+			s.log.Warn("failed to parse existing .inf file, starting fresh", "path", infPath, "error", err)
+			entries = nil
+		}
+	}
+
+	// Append new entry
+	entries = append(entries, containerInfoEntry{
+		Offset:         ci.Offset,
+		Length:         ci.Length,
+		OriginalLength: ci.OriginalLength,
+		MIMEType:       ci.MIMEType,
+		Compressed:     ci.Compressed,
+	})
+
+	// Write back to file
+	data, err := json.MarshalIndent(entries, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal .inf data: %w", err)
+	}
+
+	if err = os.WriteFile(infPath, data, 0o644); err != nil {
+		return fmt.Errorf("write .inf file: %w", err)
+	}
+
+	return nil
+}
+
+// LoadContainerInfos loads all ContainerInfo entries for a specific container from its .inf file
+func (s *Service) LoadContainerInfos(containerNum int) ([]*domain.ContainerInfo, error) {
+	infPath := filepath.Join(s.dir, fmt.Sprintf("%d.inf", containerNum))
+
+	data, err := os.ReadFile(infPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil // Container exists but has no .inf file (pre-compression containers)
+		}
+		return nil, fmt.Errorf("read .inf file: %w", err)
+	}
+
+	var entries []containerInfoEntry
+	if err = json.Unmarshal(data, &entries); err != nil {
+		return nil, fmt.Errorf("unmarshal .inf data: %w", err)
+	}
+
+	result := make([]*domain.ContainerInfo, len(entries))
+	for i, entry := range entries {
+		result[i] = &domain.ContainerInfo{
+			ContainerNumber: containerNum,
+			Offset:          entry.Offset,
+			Length:          entry.Length,
+			OriginalLength:  entry.OriginalLength,
+			MIMEType:        entry.MIMEType,
+			Compressed:      entry.Compressed,
+		}
+	}
+
+	return result, nil
+}
+
+// ListAllContainerInfos iterates over all containers and returns all ContainerInfo entries
+func (s *Service) ListAllContainerInfos() (map[int][]*domain.ContainerInfo, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	nums, err := s.listContainerNumbers()
+	if err != nil {
+		return nil, fmt.Errorf("list containers: %w", err)
+	}
+
+	result := make(map[int][]*domain.ContainerInfo)
+	for _, num := range nums {
+		infos, err := s.LoadContainerInfos(num)
+		if err != nil {
+			return nil, fmt.Errorf("load container infos for %d: %w", num, err)
+		}
+		if infos != nil {
+			result[num] = infos
+		}
+	}
+
+	return result, nil
 }

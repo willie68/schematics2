@@ -40,6 +40,18 @@ Das Repository ist mit GitHub unter https://github.com/willie68/schematic verkn√
 - Tags werden normalisiert (Kleinbuchstaben, Whitespace-Trimming, Duplikat-Entfernung) vor der Speicherung.
 - Tag-Counter werden in einer separaten Collection `tags` ueber Upsert aktualisiert.
 
+## Blob-Speicherung (Dateien)
+
+- Dateien werden in rotierenden Container-Dateien (`*.cnt`) im Repository-Verzeichnis gespeichert.
+- Container-Format: `[4-byte original-length][1-byte compression-type][variable-length data]`
+- Container rotieren, wenn die konfigurierte maximale Groesse erreicht wird.
+- Komprimierung ist optional und pro Datei konfigurierbar:
+  - `"none"` (Standard): Keine Komprimierung
+  - `"gzip"`: Standard-Komprimierung (gut f√ºr Text)
+  - `"zstd"` (empfohlen): Zstandard-Komprimierung (besser bei bereits komprimierten Formaten wie PDF, JPEG, TIF)
+- Ein Container kann gemischte komprimierte und unkomprimierte Daten enthalten.
+- Kompression ist in `backend/configs/service.yaml` unter `repository.compressionType` konfigurierbar.
+
 ## Schnellstart
 
 ### 1) Backend

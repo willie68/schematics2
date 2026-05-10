@@ -46,8 +46,9 @@ type Profiling struct {
 }
 
 type Repository struct {
-	RepositoryPath     string `yaml:"repositoryPath"`
-	ContainerMaxSizeMB int64  `yaml:"containerMaxSizeMB"`
+	RepositoryPath      string `yaml:"repositoryPath"`
+	ContainerMaxSizeMB  int64  `yaml:"containerMaxSizeMB"`
+	CompressionType     string `yaml:"compressionType"` // "none", "gzip", "zstd"
 }
 
 type MongoDB struct {

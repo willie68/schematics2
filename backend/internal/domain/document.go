@@ -11,7 +11,9 @@ type ContainerInfo struct {
 	ContainerNumber int    `json:"containerNumber" bson:"containerNumber"`
 	Offset          int64  `json:"offset" bson:"offset"`
 	Length          int64  `json:"length" bson:"length"`
+	OriginalLength  int64  `json:"originalLength" bson:"originalLength"` // Length before compression
 	MIMEType        string `json:"mimetype,omitempty" bson:"mimetype,omitempty"`
+	Compressed      string `json:"compressed,omitempty" bson:"compressed,omitempty"` // "none", "gzip", "zstd"
 }
 
 type DocumentFile struct {
