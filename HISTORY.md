@@ -1,5 +1,12 @@
 # History
 
+## 0.1.5 - 2026-05-10
+
+- Frontend SearchView: Enter-Taste triggert Suche.
+  - Suchfeld: Enter führt Suche direkt aus.
+  - Tags-Feld: Erstes Enter schließt Tag ab (wenn Suggestion offen), zweites Enter triggert Suche.
+  - Ermöglicht nahtlose Tastatur-Navigation ohne Button-Klick.
+
 ## 0.1.4 - 2026-05-10
 
 - Blob-Speicherung: Kompression pro Eintrag mit zstd/gzip/none-Optionen hinzugefuegt.
