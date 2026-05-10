@@ -1,5 +1,17 @@
 # History
 
+## 0.1.3 - 2026-05-10
+
+- Frontend Upload-Dialog: Tag-Eingabe mit Chip-List und Autocomplete-Vorschlaege implementiert.
+  - Enter erzeugt neue Tags, Auswahl uebernimmt vorhandene Tags.
+  - Duplikat-Schutz auf Tag-Namen (case-insensitive).
+- Frontend Suche: Tag-Eingabe von Freitext zu Multi-Select-Autocomplete umgestellt.
+  - Nur vordefinierte Tags sind zulässig (forceSelection).
+  - Auswahl als Chips sichtbar und entfernbar.
+- Backend: `indexDocument`-Handler robust gegen Tags als Strings oder Objekte gemacht.
+  - `parseTags()` Hilfsfunktion extrahiert Tag-Namen korrekt unabhaengig vom Format.
+  - Deduplizierung und Normalisierung erfolgen serverseitig.
+
 ## 0.1.2 - 2026-05-08
 
 - MongoDB-basierter Document-Store fuer `domain.Document` implementiert.
