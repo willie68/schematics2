@@ -21,6 +21,18 @@ Das Repository ist mit GitHub unter https://github.com/willie68/schematic verkn√
 
 - Build-Anleitung: `docs/BUILD.md`
 
+## Backend-Tools
+
+### Tag-Import
+Tags aus JSON-Dateien in MongoDB importieren:
+
+```bash
+cd backend
+go run cmd/import-tags/main.go [-tags-dir testdata/tags]
+```
+
+Siehe `backend/cmd/import-tags/README.md` f√ºr Details.
+
 ## Backend API (Start)
 
 - `GET /health`

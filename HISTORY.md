@@ -1,5 +1,13 @@
 # History
 
+## 0.1.11 - 2026-05-10
+
+- Backend: Tag-Import Tool erstellt.
+  - Neues Tool: `cmd/import-tags` zum Importieren von Tag-JSON-Dateien.
+  - Liest 169 Tags aus `testdata/tags` und importiert sie in MongoDB.
+  - Tags werden normalisiert (Kleinbuchstaben, Whitespace-Trimming).
+  - Alle existierenden Tags werden vor Import gelöscht.
+
 ## 0.1.10 - 2026-05-10
 
 - Frontend: Toast-Benachrichtigungssystem implementiert.
