@@ -2,7 +2,7 @@
   <div class="toast-container">
     <TransitionGroup name="toast" tag="div">
       <div
-        v-for="toast in toasts"
+        v-for="toast in toasts.value"
         :key="toast.id"
         :class="['toast', `toast-${toast.type}`]"
       >
