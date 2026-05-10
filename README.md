@@ -33,6 +33,16 @@ go run cmd/import-tags/main.go [-tags-dir testdata/tags]
 
 Siehe `backend/cmd/import-tags/README.md` für Details.
 
+### Manufacturers-Import
+Hersteller aus JSON-Dateien in MongoDB importieren:
+
+```bash
+cd backend
+go run cmd/import-manufacturers/main.go [-manufacturers-dir testdata/manufacturers]
+```
+
+Siehe `backend/cmd/import-manufacturers/README.md` für Details.
+
 ## Backend API (Start)
 
 - `GET /health`

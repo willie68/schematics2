@@ -1,5 +1,14 @@
 # History
 
+## 0.1.13 - 2026-05-10
+
+- Backend: Manufacturers Import Tool erstellt.
+  - Neues Tool: `cmd/import-manufacturers` zum Importieren von Hersteller-JSON-Dateien.
+  - Liest 390+ Hersteller aus `testdata/manufacturers` und importiert sie in MongoDB.
+  - **Case-Preserved**: Hersteller behalten Original-Schreibweise (anders als Tags).
+  - Alle existierenden Hersteller werden vor Import gelöscht.
+  - MongoDB-Struktur: `{_id: "Samsung"}` (ohne separate Name-Feld).
+
 ## 0.1.12 - 2026-05-10
 
 - Backend & Frontend: Manufacturers Collection System implementiert.
