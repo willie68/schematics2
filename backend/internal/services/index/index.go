@@ -76,9 +76,39 @@ func (idx *InMemoryIndex) Search(query string, tags []string) []domain.SearchRes
 	}
 
 	scores := make(map[string]int)
-	for _, token := range tokenize(query) {
-		for docID, score := range idx.byToken[token] {
-			scores[docID] += score
+
+	// If query is empty, search by tags only
+	if query == "" {
+		if len(needTags) == 0 {
+			// No query and no tags - return all documents
+			for docID := range idx.docByID {
+				scores[docID] = 0
+			}
+		} else {
+			// Only tags - return documents with matching tags
+			for docID, tagSet := range idx.tagsByID {
+				if hasAllTags(tagSet, needTags) {
+					scores[docID] = 0
+				}
+			}
+		}
+	} else {
+		// Query-based search
+		for _, token := range tokenize(query) {
+			for docID, score := range idx.byToken[token] {
+				scores[docID] += score
+			}
+		}
+
+		// If we have tags, filter results by tags
+		if len(needTags) > 0 {
+			filtered := make(map[string]int)
+			for docID, score := range scores {
+				if hasAllTags(idx.tagsByID[docID], needTags) {
+					filtered[docID] = score
+				}
+			}
+			scores = filtered
 		}
 	}
 
@@ -86,9 +116,6 @@ func (idx *InMemoryIndex) Search(query string, tags []string) []domain.SearchRes
 	for docID, score := range scores {
 		doc, ok := idx.docByID[docID]
 		if !ok {
-			continue
-		}
-		if !hasAllTags(idx.tagsByID[docID], needTags) {
 			continue
 		}
 		results = append(results, domain.SearchResult{Document: doc, Score: score})
