@@ -1,6 +1,6 @@
 {
   "name": "schematic2-frontend",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,8 +11,10 @@
   },
   "dependencies": {
     "axios": "^1.11.0",
+    "panzoom": "^9.4.4",
     "primeicons": "^7.0.0",
     "primevue": "^3.53.1",
+    "viewerjs": "^1.11.7",
     "vue": "^3.5.18",
     "vue-router": "^4.5.1"
   },

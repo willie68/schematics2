@@ -1,18 +1,16 @@
 <template>
   <section class="card" style="max-width: 520px; margin: 0 auto;">
-    <h2>Login</h2>
-    <p class="muted">Authentifizierung für Indexierung und Administration.</p>
+    <h2>Anmeldung</h2>
+    <div style="display:grid; gap:1.5rem;">
+      <div style="box-sizing:border-box; width:100%;">
+        <label for="user" style="display:block; font-weight:500; font-size:0.95rem; margin-bottom:0.5rem;">Benutzername</label>
+        <InputText id="user" v-model="username" style="width:100%; min-height:42px; box-sizing:border-box;" />
+      </div>
 
-    <div style="display:grid; gap:0.8rem;">
-      <span class="p-float-label">
-        <InputText id="user" v-model="username" style="width:100%" />
-        <label for="user">Benutzername</label>
-      </span>
-
-      <span class="p-float-label">
-        <Password id="pass" v-model="password" :feedback="false" toggleMask style="width:100%" />
-        <label for="pass">Passwort</label>
-      </span>
+      <div style="box-sizing:border-box; width:100%;">
+        <label for="pass" style="display:block; font-weight:500; font-size:0.95rem; margin-bottom:0.5rem;">Passwort</label>
+        <Password id="pass" v-model="password" :feedback="false" toggleMask style="width:100%; min-height:42px; box-sizing:border-box;" />
+      </div>
 
       <Button label="Einloggen" icon="pi pi-sign-in" @click="login" />
     </div>
@@ -56,3 +54,22 @@ async function login() {
   }
 }
 </script>
+
+<style scoped>
+:deep(.p-inputtext),
+:deep(.p-password) {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+:deep(.p-password .p-password-input) {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+:deep(.p-password) {
+  display: flex !important;
+  width: 100% !important;
+}
+</style>
+

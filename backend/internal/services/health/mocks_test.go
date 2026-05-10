@@ -2,11 +2,10 @@
 // github.com/vektra/mockery
 // template: testify
 
-package health_test
+package health
 
 import (
 	mock "github.com/stretchr/testify/mock"
-	"github.com/willie68/schematic2/backend/internal/services/health"
 )
 
 // NewMockCheck creates a new instance of MockCheck. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
@@ -161,7 +160,7 @@ func (_m *MockRegisterer) EXPECT() *MockRegisterer_Expecter {
 }
 
 // Register provides a mock function for the type MockRegisterer
-func (_mock *MockRegisterer) Register(check health.Check) {
+func (_mock *MockRegisterer) Register(check Check) {
 	_mock.Called(check)
 	return
 }
@@ -172,16 +171,16 @@ type MockRegisterer_Register_Call struct {
 }
 
 // Register is a helper method to define mock.On call
-//   - check health.Check
+//   - check Check
 func (_e *MockRegisterer_Expecter) Register(check interface{}) *MockRegisterer_Register_Call {
 	return &MockRegisterer_Register_Call{Call: _e.mock.On("Register", check)}
 }
 
-func (_c *MockRegisterer_Register_Call) Run(run func(check health.Check)) *MockRegisterer_Register_Call {
+func (_c *MockRegisterer_Register_Call) Run(run func(check Check)) *MockRegisterer_Register_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 health.Check
+		var arg0 Check
 		if args[0] != nil {
-			arg0 = args[0].(health.Check)
+			arg0 = args[0].(Check)
 		}
 		run(
 			arg0,
@@ -195,7 +194,7 @@ func (_c *MockRegisterer_Register_Call) Return() *MockRegisterer_Register_Call {
 	return _c
 }
 
-func (_c *MockRegisterer_Register_Call) RunAndReturn(run func(check health.Check)) *MockRegisterer_Register_Call {
+func (_c *MockRegisterer_Register_Call) RunAndReturn(run func(check Check)) *MockRegisterer_Register_Call {
 	_c.Run(run)
 	return _c
 }

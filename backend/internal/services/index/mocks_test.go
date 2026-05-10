@@ -2,7 +2,7 @@
 // github.com/vektra/mockery
 // template: testify
 
-package index_test
+package index
 
 import (
 	mock "github.com/stretchr/testify/mock"
@@ -37,20 +37,18 @@ func (_m *mockdocStoreInterface) EXPECT() *mockdocStoreInterface_Expecter {
 }
 
 // Search provides a mock function for the type mockdocStoreInterface
-func (_mock *mockdocStoreInterface) Search(filter domain.SearchFilter) []domain.SearchResult {
+func (_mock *mockdocStoreInterface) Search(filter domain.SearchFilter) domain.PagedSearchResult {
 	ret := _mock.Called(filter)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Search")
 	}
 
-	var r0 []domain.SearchResult
-	if returnFunc, ok := ret.Get(0).(func(domain.SearchFilter) []domain.SearchResult); ok {
+	var r0 domain.PagedSearchResult
+	if returnFunc, ok := ret.Get(0).(func(domain.SearchFilter) domain.PagedSearchResult); ok {
 		r0 = returnFunc(filter)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]domain.SearchResult)
-		}
+		r0 = ret.Get(0).(domain.PagedSearchResult)
 	}
 	return r0
 }
@@ -79,12 +77,12 @@ func (_c *mockdocStoreInterface_Search_Call) Run(run func(filter domain.SearchFi
 	return _c
 }
 
-func (_c *mockdocStoreInterface_Search_Call) Return(searchResults []domain.SearchResult) *mockdocStoreInterface_Search_Call {
-	_c.Call.Return(searchResults)
+func (_c *mockdocStoreInterface_Search_Call) Return(pagedSearchResult domain.PagedSearchResult) *mockdocStoreInterface_Search_Call {
+	_c.Call.Return(pagedSearchResult)
 	return _c
 }
 
-func (_c *mockdocStoreInterface_Search_Call) RunAndReturn(run func(filter domain.SearchFilter) []domain.SearchResult) *mockdocStoreInterface_Search_Call {
+func (_c *mockdocStoreInterface_Search_Call) RunAndReturn(run func(filter domain.SearchFilter) domain.PagedSearchResult) *mockdocStoreInterface_Search_Call {
 	_c.Call.Return(run)
 	return _c
 }

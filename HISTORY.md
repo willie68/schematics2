@@ -1,5 +1,104 @@
 # History
 
+## 0.2.0 - 2026-05-10
+
+- **Frontend**: Professioneller Image Viewer mit Zoom, Pan, Rotate und Download
+  - Implementierung: PrimeVue native `Image` Komponente mit Preview-Overlay
+  - Features: 
+    - Zoom in/out mit Scrollrad oder Preview-Controls
+    - 90° Rotation left/right ohne manuelles Sync-Problem
+    - Pan (Drag) funktioniert nach Rotation korrekt
+    - Download-Button zum Speichern von Dateien
+  - Images skalieren proportional (`object-fit: contain`) für vollständige Anzeige
+  - Cleanup: Entfernte externe Libs (panzoom, viewerjs) → nur noch PrimeVue
+- **SearchView.vue**: Vereinfachte Button-Toolbars (nur Download-Button, sonst direkt auf Bild klicken)
+
+## 0.1.19 - 2026-05-10
+
+- Backend & Frontend: User Management System mit Email-Registrierung und Flood Protection.
+  - **Domain**: User struct mit Email, Password (hashed), FirstName, LastName, Address (Street, ZipCode, City).
+  - **MongoDB**: Neue `users` Collection mit eindeutigem Email-Index für Duplikat-Vermeidung.
+  - **Backend Services**: 
+    - `users.Service` mit Rate Limiting (10 Sekunden Mindestdauer pro Request, sequenziell).
+    - `Register()` Method: Validiert alle Felder, hasht Passwort, speichert mit Flood-Protection.
+    - `Authenticate()` Method: Validiert Email/Passwort gegen gespeicherte Benutzer.
+  - **Backend API**:
+    - `POST /api/v1/auth/register` (öffentlich): Registriert neuen Benutzer mit 10s Mindestdauer.
+    - `POST /api/v1/auth/login` (erweitert): Unterstützt sowohl Admin als auch Email-Login.
+  - **Frontend**:
+    - `RegisterView.vue`: Vollständiges Registrierungsformular mit Adressangaben (Street, ZipCode, City).
+    - `LoginView.vue`: Tabs für Admin-Login und Email-Login.
+  - **Tests**: 15 Unit Tests für User Service (erfolg, validierung, duplikate, authentifizierung).
+  - **Dependencies**: `github.com/google/uuid` für UUID-Generierung.
+
+## 0.1.18 - 2026-05-10
+
+- Frontend & Backend: Private Documents Filter korrekt implementiert.
+  - Domain: SearchFilter um `IsAuthenticated` bool erweitert für Authentifizierungs-Status.
+  - Backend: `/documents/search` prüft Authentifizierung und wendet Filter an:
+    - **Gäste**: Nur `privateFile == false` Dokumente sichtbar (vollständig blockiert)
+    - **Angemeldete ohne Filter**: Alle Dokumente sichtbar (keine Einschränkung)
+    - **Angemeldete mit Private-Filter Button aktiv**: Nur `privateFile == true` Dokumente
+  - Frontend: Private Button wird für Gäste `:disabled` gesetzt (keine Änderung möglich)
+  - Frontend: search() setzt `privateOnly = false` für Gäste vor API-Call (doppelte Sicherheit)
+  - Sicherheit: Mehrschichtig - Handler-Logik + MongoDB Filter + Frontend UI
+  - Tests: Alle aktualisiert und bestanden (isAuthenticated Parameter hinzugefügt)
+  - Bugfix: `isAuthenticated()` mit sicherer Typ-Assertion `ok` pattern
+
+## 0.1.17 - 2026-05-10
+
+- Frontend & Backend: Private Documents Filter für Gäste deaktiviert.
+  - Frontend: Lock-Icon Button ist für Gäste `:disabled` (nicht sichtbar/klickbar).
+  - Frontend: `search()` setzt `privateOnly = false` automatisch für Gäste vor API-Call.
+  - Backend: `/documents/search` Endpoint ist jetzt öffentlich (nicht protected).
+  - Backend: `isAuthenticated()` Hilfsfunktion prüft ob Request authentifiziert ist.
+  - Backend: Handler erzwingt `privateOnly = false` für Gäste (kein Auth-Context).
+  - Result: Gäste können nur öffentliche Dokumente suchen, nicht private.
+  - Sicherheit: Mehrschichtig - Frontend GUI + Backend API Validation.
+
+## 0.1.16 - 2026-05-10
+
+- Frontend: Vollständiger Paginierungs-Stack mit Skip/Limit.
+  - Limit ComboBox: [10, 20, 50, 100] Dokumente pro Seite.
+  - Prev/Next Buttons für Seiten-Navigation.
+  - Paginierungs-Counter: "X–Y of Z Dokumente".
+  - API-Integration: ?skip=X&limit=20 Query-Parameter.
+
+- Frontend & Backend: Tabellen-Redesign mit erweiterten Spalten.
+  - Entfernt: ID-Spalte.
+  - Neu: Subtitle, Tags (Badge-Chips mit grauem Hintergrund), PrivateFile (Lock-Icon), Owner.
+  - Manufacturer, Model, Subtitle, Owner: Sortierbar.
+  - Tags, PrivateFile: Nicht sortierbar.
+
+- Frontend: Layout-Optimierungen.
+  - Suchfelder: Gleichbreite 2-Spalten Grid (1fr 1fr auto auto auto).
+  - Private Filter Button: Lock-Icon mit Warning-Severity wenn aktiv.
+  - Search/Upload Buttons: Inline mit Icon-only + Tooltips.
+  - Limit-Auswahl: Separate rechts-ausgerichtete Reihe.
+
+- Frontend: Tag-Autocomplete Enter-Key Bug behoben.
+  - Entfernt: handleTagKeydown() Konflikt mit PrimeVue native Enter-Handling.
+  - Result: PrimeVue selektiert Tag korrekt bei Enter-Taste.
+
+- Backend & Frontend: Server-Side Sorting implementiert.
+  - Domain: SearchFilter um SortField/SortOrder erweitert.
+  - MongoDB: Dynamische Sort-Feldwahl und Richtung via options.Find().SetSort().
+  - InMemoryIndex: Feld-basierte In-Memory Sortierung (manufacturer/model/subtitle/owner).
+  - Frontend: DataTable @sort Event triggert Backend mit sortField/sortOrder Parametern.
+  - Tests: mongo_test.go, index.go, handler.go, mocks_test.go alle aktualisiert und passing.
+
+- Backend & Frontend: Private Documents Filter implementiert.
+  - Frontend: Neuer Lock-Icon Button vor dem Search-Button.
+  - Frontend: Nur für angemeldete Benutzer sichtbar.
+  - Frontend: Toggle-State mit visueller Rückmeldung (warning severity when active).
+  - Backend: SearchFilter um PrivateOnly bool erweitert.
+  - Backend: MongoStore Filter kombiniert privateFile==true mit anderen Filtern via $and.
+  - Backend: InMemoryIndex filtert privateFile bei jedem Matching-Szenario.
+  - API: Handler parst ?privateOnly=true Query-Parameter.
+  - Tests: Alle Mocks und Handler-Aufrufe mit neuer Signatur aktualisiert.
+
+- Build Status: go build ./... erfolgreich, go test ./internal/... all passing.
+
 ## 0.1.15 - 2026-05-10
 
 - Frontend: Versionsnummer im Header angezeigt und klickbar.

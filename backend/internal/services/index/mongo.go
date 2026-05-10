@@ -11,7 +11,7 @@ import (
 
 // docStoreInterface defines the interface for the document store
 type docStoreInterface interface {
-	Search(filter domain.SearchFilter) []domain.SearchResult
+	Search(filter domain.SearchFilter) domain.PagedSearchResult
 }
 
 type MongoIndex struct {
@@ -20,8 +20,6 @@ type MongoIndex struct {
 }
 
 func NewMongoIndex(inj do.Injector) *MongoIndex {
-	// Invoke the document store - it will be whatever was registered (mongoDocumentStore)
-	// We use a generic interface to avoid direct type dependency
 	return &MongoIndex{
 		docStore: do.MustInvokeAs[docStoreInterface](inj),
 		logger:   logging.New("mongo-index"),
@@ -29,8 +27,7 @@ func NewMongoIndex(inj do.Injector) *MongoIndex {
 }
 
 // Search performs full-text and tag-based search using MongoDB queries
-func (idx *MongoIndex) Search(query string, tags []string) []domain.SearchResult {
-	// Normalize tags
+func (idx *MongoIndex) Search(query string, tags []string, skip, limit int64, sortField string, sortOrder int, privateOnly, isAuthenticated bool, username string) domain.PagedSearchResult {
 	normTags := make([]string, 0, len(tags))
 	for _, t := range tags {
 		trimmed := strings.ToLower(strings.TrimSpace(t))
@@ -39,17 +36,17 @@ func (idx *MongoIndex) Search(query string, tags []string) []domain.SearchResult
 		}
 	}
 
-	// Build search filter
 	filter := domain.SearchFilter{
-		Query: query,
-		Tags:  normTags,
+		Query:           query,
+		Tags:            normTags,
+		Skip:            skip,
+		Limit:           limit,
+		SortField:       sortField,
+		SortOrder:       sortOrder,
+		PrivateOnly:     privateOnly,
+		IsAuthenticated: isAuthenticated,
+		Username:        username,
 	}
 
-	// Delegate to document store for MongoDB query execution
-	results := idx.docStore.Search(filter)
-	if results == nil {
-		return []domain.SearchResult{}
-	}
-
-	return results
+	return idx.docStore.Search(filter)
 }

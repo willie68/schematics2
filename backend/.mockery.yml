@@ -7,7 +7,7 @@ generate: true
 include-auto-generated: false
 log-level: info
 structname: '{{.Mock}}{{.InterfaceName}}'
-pkgname: '{{.SrcPackageName}}_test'
+pkgname: '{{.SrcPackageName}}'
 recursive: true
 require-template-schema-exists: true
 template: testify

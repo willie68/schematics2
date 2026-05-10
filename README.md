@@ -4,17 +4,24 @@ Schematic2 ist der Nachfolger von WilliesSchematicsWorld als Monorepo.
 
 Das Repository ist mit GitHub unter https://github.com/willie68/schematic verknüpft.
 
+## Features
+
+- **Dokumentsuche**: Web-Frontend zur Suche in Schaltplänen, Dokumentationen und weiteren Dateien (PNG, JPG, PDF, ...)
+- **Tag-System**: Vorindizierung über Tags und Volltextsuche über indizierte Inhalte
+- **Image Viewer**: Native Zoom, Pan, Rotate, und Download für Bilddateien
+- **Authentifizierung**: Eigener Authentifizierungs- und Autorisierungsdienst mit User Registration
+- **Private Documents**: Unterstützung für private und öffentliche Dokumente
+
 ## Ziele
 
-- Web-Frontend zur Suche in Schaltplänen, Dokumentationen und weiteren Dateien (PNG, JPG, PDF, ...)
-- Vorindizierung über Tags
-- Volltextsuche über indizierte Inhalte
-- Eigener Authentifizierungs- und Autorisierungsdienst
+- Dezentrales Dokumentenmanagementsystem für Schaltpläne und technische Dokumente
+- Benutzerfreundliche Suche und Kategorisierung
+- Sichere Verwaltung privater Dokumente
 
 ## Monorepo-Struktur
 
 - `backend/`: Go REST API (go-micro-orientierter Aufbau mit `internal/` und DI über `do`)
-- `frontend/`: Vue + PrimeVue Web-Frontend
+- `frontend/`: Vue 3.5 + PrimeVue 3.53 Web-Frontend
 - `docs/`: Projekt- und Architekturdokumentation
 
 ## Build-Dokumentation
@@ -47,13 +54,45 @@ Siehe `backend/cmd/import-manufacturers/README.md` für Details.
 
 - `GET /health`
 - `GET /api/v1/info` - Backend Version und Status
-- `POST /api/v1/auth/login`
-- `GET /api/v1/auth/me`
+- `POST /api/v1/auth/login` - Admin oder Email-Login mit Benutzername/Email und Passwort
+- `POST /api/v1/auth/register` - Registriere neuen Benutzer (öffentlich, Rate-Limited: 10s Mindestdauer)
+- `GET /api/v1/auth/me` - Aktuell authentifizierter Benutzer (JWT erforderlich)
 - `GET /api/v1/tags` - Liste alle Tags auf
 - `GET /api/v1/tags/suggest?q=<prefix>&limit=<n>` - Schlag Tags vor (Prefix-Match, case-insensitiv, normalisiert)
 - `GET /api/v1/manufacturers/suggest?q=<prefix>&limit=<n>` - Schlag Hersteller vor (Prefix-Match, case-insensitiv, case-preserved)
 - `POST /api/v1/documents/index` (auth required) - Indexiere ein Dokument mit Tags
 - `GET /api/v1/documents/search?q=<query>&tag=<t1>&tag=<t2>` (auth required) - Suche mit Volltext und Tags
+
+### Authentifizierung
+
+- **Admin-Login**: Username `admin` mit Passwort (aus Env-Var `ADMIN_PASS`)
+- **Email-Login**: Email und Passwort für selbstregistrierte Benutzer
+- **JWT Token**: Wird in `Authorization: Bearer <token>` Header gesendet
+- **Token-Dauer**: 24 Stunden
+
+### Benutzerregistrierung
+
+```bash
+POST /api/v1/auth/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "securePassword123",
+  "firstName": "John",
+  "lastName": "Doe",
+  "street": "123 Main St",
+  "zipCode": "12345",
+  "city": "TestCity"
+}
+```
+
+**Anforderungen:**
+- Email (eindeutig in der Datenbank)
+- Passwort (mindestens 8 Zeichen)
+- Alle Adressfelder erforderlich
+- **Flood-Protection**: Jede Registrierung dauert mindestens 10 Sekunden, nur ein Request gleichzeitig
+
 
 ## Persistenz
 

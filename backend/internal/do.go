@@ -15,6 +15,7 @@ import (
 	"github.com/willie68/schematic2/backend/internal/services/health"
 	"github.com/willie68/schematic2/backend/internal/services/index"
 	"github.com/willie68/schematic2/backend/internal/services/shttp"
+	"github.com/willie68/schematic2/backend/internal/services/users"
 	"github.com/willie68/schematic2/backend/internal/webclient"
 )
 
@@ -45,6 +46,10 @@ func InitServices(inj do.Injector, cfg config.Config) error {
 		return err
 	}
 	do.ProvideValue(inj, index.NewMongoIndex(inj))
+
+	if err = newUserService(inj); err != nil {
+		return err
+	}
 
 	return InitRESTService(inj, cfg)
 }
@@ -111,7 +116,7 @@ func ShutdownServices(inj do.Injector) {
 }
 
 func newDocumentStore(inj do.Injector) error {
-	mongoStore := store.NewMongoDocumentStore(inj)
+	mongoStore := store.NewMongoStore(inj)
 	if err := mongoStore.Prepare(); err != nil {
 		return err
 	}
@@ -126,5 +131,13 @@ func newBlobStore(inj do.Injector) error {
 		return err
 	}
 	do.ProvideValue(inj, blobStore)
+	return nil
+}
+
+func newUserService(inj do.Injector) error {
+	// Use 10 seconds minimum duration for each registration request
+	userSvc := users.NewService(inj, 10*time.Second)
+	do.ProvideValue(inj, userSvc)
+
 	return nil
 }

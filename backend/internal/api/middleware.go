@@ -11,6 +11,21 @@ import (
 type ctxSubjectKey struct{}
 type ctxRolesKey struct{}
 
+// isAuthenticated checks if the request has a valid authentication context
+func (h *Handler) isAuthenticated(r *http.Request) bool {
+	subject, ok := r.Context().Value(ctxSubjectKey{}).(string)
+	return ok && subject != ""
+}
+
+// getAuthenticatedUser returns the username from the context, or empty string if not authenticated
+func (h *Handler) getAuthenticatedUser(r *http.Request) string {
+	subject, ok := r.Context().Value(ctxSubjectKey{}).(string)
+	if !ok {
+		return ""
+	}
+	return subject
+}
+
 func (h *Handler) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")

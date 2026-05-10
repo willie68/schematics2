@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"regexp"
 	"strings"
 	"time"
 
@@ -21,15 +20,17 @@ import (
 const documentsCollection = "documents"
 const tagsCollection = "tags"
 const manufacturersCollection = "manufacturers"
+const usersCollection = "users"
 
-// MongoDocumentStore stores domain.Document in MongoDB.
-type MongoDocumentStore struct {
+// MongoStore stores domain.Document in MongoDB.
+type MongoStore struct {
 	cfg      config.MongoDB
 	client   *mongo.Client
 	db       *mongo.Database
 	col      *mongo.Collection
 	tagsCol  *mongo.Collection
 	manufCol *mongo.Collection
+	usersCol *mongo.Collection
 	logger   *slog.Logger
 }
 
@@ -52,15 +53,15 @@ type mongoTag struct {
 	Counter int64  `bson:"counter"`
 }
 
-func NewMongoDocumentStore(inj do.Injector) *MongoDocumentStore {
+func NewMongoStore(inj do.Injector) *MongoStore {
 	cfg := do.MustInvoke[config.Config](inj)
-	return &MongoDocumentStore{
+	return &MongoStore{
 		cfg:    cfg.MongoDB,
-		logger: logging.New("mongo-document-store"),
+		logger: logging.New("mongo-store"),
 	}
 }
 
-func (s *MongoDocumentStore) Prepare() error {
+func (s *MongoStore) Prepare() error {
 	hosts := s.cfg.GetHosts()
 	if len(hosts) == 0 {
 		return errors.New("no mongo hosts provided")
@@ -93,6 +94,7 @@ func (s *MongoDocumentStore) Prepare() error {
 	s.col = s.db.Collection(documentsCollection)
 	s.tagsCol = s.db.Collection(tagsCollection)
 	s.manufCol = s.db.Collection(manufacturersCollection)
+	s.usersCol = s.db.Collection(usersCollection)
 
 	if err = s.ensureIndexes(); err != nil {
 		_ = client.Disconnect(context.Background())
@@ -130,7 +132,7 @@ func buildMongoURI(cfg config.MongoDB) string {
 	return uri
 }
 
-func (s *MongoDocumentStore) ensureIndexes() error {
+func (s *MongoStore) ensureIndexes() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
@@ -158,10 +160,22 @@ func (s *MongoDocumentStore) ensureIndexes() error {
 	}
 
 	_, err = s.manufCol.Indexes().CreateMany(ctx, manufIndexes)
+	if err != nil {
+		return err
+	}
+
+	userIndexes := []mongo.IndexModel{
+		{
+			Keys:    bson.D{{Key: "email", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		},
+	}
+
+	_, err = s.usersCol.Indexes().CreateMany(ctx, userIndexes)
 	return err
 }
 
-func (s *MongoDocumentStore) Upsert(doc domain.Document) error {
+func (s *MongoStore) Upsert(doc domain.Document) error {
 	if s.col == nil {
 		return errors.New("mongodb not initialised")
 	}
@@ -226,7 +240,7 @@ func (s *MongoDocumentStore) Upsert(doc domain.Document) error {
 	return nil
 }
 
-func (s *MongoDocumentStore) fetchDocumentTags(ctx context.Context, id string) ([]string, error) {
+func (s *MongoStore) fetchDocumentTags(ctx context.Context, id string) ([]string, error) {
 	if s.col == nil {
 		return nil, errors.New("mongodb not initialised")
 	}
@@ -245,8 +259,37 @@ func (s *MongoDocumentStore) fetchDocumentTags(ctx context.Context, id string) (
 	return normalizeTags(prev.Tags), nil
 }
 
+func (s *MongoStore) GetByID(ctx context.Context, id string) (domain.Document, error) {
+	if s.col == nil {
+		return domain.Document{}, errors.New("mongodb not initialised")
+	}
+
+	var mdoc mongoDocument
+	err := s.col.FindOne(ctx, bson.D{{Key: "_id", Value: id}}).Decode(&mdoc)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return domain.Document{}, fmt.Errorf("document not found")
+	}
+	if err != nil {
+		return domain.Document{}, fmt.Errorf("find document: %w", err)
+	}
+
+	return domain.Document{
+		ID:             mdoc.ID,
+		CreatedAt:      mdoc.CreatedAt,
+		LastModifiedAt: mdoc.LastModifiedAt,
+		Manufacturer:   mdoc.Manufacturer,
+		Model:          mdoc.Model,
+		Subtitle:       mdoc.Subtitle,
+		Tags:           mdoc.Tags,
+		Description:    mdoc.Description,
+		PrivateFile:    mdoc.PrivateFile,
+		Owner:          mdoc.Owner,
+		Files:          mdoc.Files,
+	}, nil
+}
+
 // Exists reports whether a document with the given ID already exists in the store.
-func (s *MongoDocumentStore) Exists(ctx context.Context, id string) (bool, error) {
+func (s *MongoStore) Exists(ctx context.Context, id string) (bool, error) {
 	if s.col == nil {
 		return false, errors.New("mongodb not initialised")
 	}
@@ -258,7 +301,7 @@ func (s *MongoDocumentStore) Exists(ctx context.Context, id string) (bool, error
 	return count > 0, nil
 }
 
-func (s *MongoDocumentStore) updateTagCounters(ctx context.Context, oldTags []string, newTags []string) error {
+func (s *MongoStore) updateTagCounters(ctx context.Context, oldTags []string, newTags []string) error {
 	if s.tagsCol == nil {
 		return errors.New("mongodb tags collection not initialised")
 	}
@@ -302,7 +345,7 @@ func (s *MongoDocumentStore) updateTagCounters(ctx context.Context, oldTags []st
 	return nil
 }
 
-func (s *MongoDocumentStore) rebuildTagCounters() error {
+func (s *MongoStore) rebuildTagCounters() error {
 	if s.col == nil || s.tagsCol == nil {
 		return errors.New("mongodb not initialised")
 	}
@@ -379,7 +422,7 @@ func toTagSet(tags []string) map[string]struct{} {
 	return set
 }
 
-func (s *MongoDocumentStore) Get(id string) (domain.Document, bool) {
+func (s *MongoStore) Get(id string) (domain.Document, bool) {
 	if s.col == nil {
 		return domain.Document{}, false
 	}
@@ -412,7 +455,7 @@ func (s *MongoDocumentStore) Get(id string) (domain.Document, bool) {
 	}, true
 }
 
-func (s *MongoDocumentStore) List() []domain.Document {
+func (s *MongoStore) List() []domain.Document {
 	if s.col == nil {
 		return nil
 	}
@@ -454,9 +497,9 @@ func (s *MongoDocumentStore) List() []domain.Document {
 }
 
 // Search executes a full-text and tag-based search using MongoDB queries
-func (s *MongoDocumentStore) Search(filter domain.SearchFilter) []domain.SearchResult {
+func (s *MongoStore) Search(filter domain.SearchFilter) domain.PagedSearchResult {
 	if s.col == nil {
-		return nil
+		return domain.PagedSearchResult{Results: []domain.SearchResult{}}
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -466,24 +509,20 @@ func (s *MongoDocumentStore) Search(filter domain.SearchFilter) []domain.SearchR
 	var mongoFilter bson.D
 
 	if filter.Query == "" && len(filter.Tags) == 0 {
-		// No filters - return all documents
 		mongoFilter = bson.D{}
 	} else if filter.Query == "" && len(filter.Tags) > 0 {
-		// Tag-only search: all tags must match
 		mongoFilter = bson.D{
 			{Key: "tags", Value: bson.D{
 				{Key: "$all", Value: filter.Tags},
 			}},
 		}
 	} else if filter.Query != "" && len(filter.Tags) == 0 {
-		// Full-text search only
 		mongoFilter = bson.D{
 			{Key: "$text", Value: bson.D{
 				{Key: "$search", Value: filter.Query},
 			}},
 		}
 	} else {
-		// Both query and tags: combine with AND
 		mongoFilter = bson.D{
 			{Key: "$and", Value: []bson.D{
 				{
@@ -500,18 +539,82 @@ func (s *MongoDocumentStore) Search(filter domain.SearchFilter) []domain.SearchR
 		}
 	}
 
-	opts := options.Find().SetSort(bson.D{{Key: "_id", Value: 1}})
+	// Add privateFile filter based on authentication and privateOnly flag
+	// Guests: only public documents (privateFile != true)
+	// Authenticated with privateOnly=false: public documents + own private documents
+	// Authenticated with privateOnly=true: only own private documents
+	var privateFileFilter bson.D
+	if !filter.IsAuthenticated {
+		// Guests: only public documents
+		privateFileFilter = bson.D{{Key: "privateFile", Value: bson.D{{Key: "$ne", Value: true}}}}
+	} else if filter.PrivateOnly {
+		// Authenticated with private filter ON: only own private documents
+		privateFileFilter = bson.D{
+			{Key: "$and", Value: []bson.D{
+				{{Key: "privateFile", Value: true}},
+				{{Key: "owner", Value: filter.Username}},
+			}},
+		}
+	} else {
+		// Authenticated with private filter OFF: public documents + own private documents
+		privateFileFilter = bson.D{
+			{Key: "$or", Value: []bson.D{
+				{{Key: "privateFile", Value: bson.D{{Key: "$ne", Value: true}}}},
+				{
+					{Key: "$and", Value: []bson.D{
+						{{Key: "privateFile", Value: true}},
+						{{Key: "owner", Value: filter.Username}},
+					}},
+				},
+			}},
+		}
+	}
+
+	if len(mongoFilter) == 0 {
+		mongoFilter = privateFileFilter
+	} else {
+		mongoFilter = bson.D{
+			{Key: "$and", Value: []bson.D{
+				mongoFilter,
+				privateFileFilter,
+			}},
+		}
+	}
+
+	// Count total matching documents
+	total, err := s.col.CountDocuments(ctx, mongoFilter)
+	if err != nil {
+		s.logger.Error("count search results failed", "error", err)
+		return domain.PagedSearchResult{Results: []domain.SearchResult{}}
+	}
+
+	sortField := "_id"
+	if filter.SortField != "" {
+		sortField = filter.SortField
+	}
+	sortOrder := 1
+	if filter.SortOrder == -1 {
+		sortOrder = -1
+	}
+	opts := options.Find().SetSort(bson.D{{Key: sortField, Value: sortOrder}})
+	if filter.Skip > 0 {
+		opts.SetSkip(filter.Skip)
+	}
+	if filter.Limit > 0 {
+		opts.SetLimit(filter.Limit)
+	}
+
 	cur, err := s.col.Find(ctx, mongoFilter, opts)
 	if err != nil {
 		s.logger.Error("search documents failed", "error", err)
-		return nil
+		return domain.PagedSearchResult{Results: []domain.SearchResult{}}
 	}
 	defer cur.Close(ctx)
 
 	var docs []mongoDocument
 	if err = cur.All(ctx, &docs); err != nil {
 		s.logger.Error("decode search results failed", "error", err)
-		return nil
+		return domain.PagedSearchResult{Results: []domain.SearchResult{}}
 	}
 
 	out := make([]domain.SearchResult, 0, len(docs))
@@ -533,166 +636,15 @@ func (s *MongoDocumentStore) Search(filter domain.SearchFilter) []domain.SearchR
 		})
 	}
 
-	return out
+	return domain.PagedSearchResult{
+		Results: out,
+		Total:   total,
+		Skip:    filter.Skip,
+		Limit:   filter.Limit,
+	}
 }
 
-func (s *MongoDocumentStore) ListTags(ctx context.Context) ([]domain.Tag, error) {
-	if s.tagsCol == nil {
-		return nil, errors.New("mongodb tags collection not initialised")
-	}
-
-	opts := options.Find().SetSort(bson.D{{Key: "counter", Value: -1}})
-	cur, err := s.tagsCol.Find(ctx, bson.D{}, opts)
-	if err != nil {
-		s.logger.Error("list tags failed", "error", err)
-		return nil, fmt.Errorf("list tags: %w", err)
-	}
-	defer cur.Close(ctx)
-
-	var mongoTags []mongoTag
-	if err = cur.All(ctx, &mongoTags); err != nil {
-		s.logger.Error("decode tag list failed", "error", err)
-		return nil, fmt.Errorf("decode tags: %w", err)
-	}
-
-	out := make([]domain.Tag, 0, len(mongoTags))
-	for _, t := range mongoTags {
-		out = append(out, domain.Tag{Name: t.Tag, Counter: t.Counter})
-	}
-
-	return out, nil
-}
-
-func (s *MongoDocumentStore) SuggestTags(ctx context.Context, prefix string, limit int) ([]domain.Tag, error) {
-	if s.tagsCol == nil {
-		return nil, errors.New("mongodb tags collection not initialised")
-	}
-
-	if limit <= 0 {
-		limit = 10
-	}
-
-	prefix = strings.ToLower(strings.TrimSpace(prefix))
-	if prefix == "" {
-		opts := options.Find().SetSort(bson.D{{Key: "counter", Value: -1}}).SetLimit(int64(limit))
-		cur, err := s.tagsCol.Find(ctx, bson.D{}, opts)
-		if err != nil {
-			return nil, fmt.Errorf("suggest tags: %w", err)
-		}
-		defer cur.Close(ctx)
-
-		var mongoTags []mongoTag
-		if err = cur.All(ctx, &mongoTags); err != nil {
-			return nil, fmt.Errorf("decode tags: %w", err)
-		}
-
-		out := make([]domain.Tag, 0, len(mongoTags))
-		for _, t := range mongoTags {
-			out = append(out, domain.Tag{Name: t.Tag, Counter: t.Counter})
-		}
-		return out, nil
-	}
-
-	filter := bson.D{{Key: "_id", Value: bson.D{{Key: "$regex", Value: "^" + prefix}}}}
-	opts := options.Find().SetSort(bson.D{{Key: "counter", Value: -1}}).SetLimit(int64(limit))
-	cur, err := s.tagsCol.Find(ctx, filter, opts)
-	if err != nil {
-		return nil, fmt.Errorf("suggest tags: %w", err)
-	}
-	defer cur.Close(ctx)
-
-	var mongoTags []mongoTag
-	if err = cur.All(ctx, &mongoTags); err != nil {
-		return nil, fmt.Errorf("decode tags: %w", err)
-	}
-
-	out := make([]domain.Tag, 0, len(mongoTags))
-	for _, t := range mongoTags {
-		out = append(out, domain.Tag{Name: t.Tag, Counter: t.Counter})
-	}
-
-	return out, nil
-}
-
-func (s *MongoDocumentStore) SuggestManufacturers(ctx context.Context, prefix string, limit int) ([]string, error) {
-	if s.manufCol == nil {
-		return nil, errors.New("mongodb manufacturers collection not initialised")
-	}
-
-	if limit <= 0 {
-		limit = 10
-	}
-
-	prefix = strings.TrimSpace(prefix)
-	if prefix == "" {
-		opts := options.Find().SetSort(bson.D{{Key: "_id", Value: 1}}).SetLimit(int64(limit))
-		cur, err := s.manufCol.Find(ctx, bson.D{}, opts)
-		if err != nil {
-			return nil, fmt.Errorf("suggest manufacturers: %w", err)
-		}
-		defer cur.Close(ctx)
-
-		var docs []bson.M
-		if err = cur.All(ctx, &docs); err != nil {
-			return nil, fmt.Errorf("decode manufacturers: %w", err)
-		}
-
-		out := make([]string, 0, len(docs))
-		for _, doc := range docs {
-			if id, ok := doc["_id"].(string); ok {
-				out = append(out, id)
-			}
-		}
-		return out, nil
-	}
-
-	// Case-insensitive regex for manufacturer search (stored with case preservation)
-	filter := bson.D{{Key: "_id", Value: bson.D{
-		{Key: "$regex", Value: "^" + regexp.QuoteMeta(prefix)},
-		{Key: "$options", Value: "i"},
-	}}}
-	opts := options.Find().SetSort(bson.D{{Key: "_id", Value: 1}}).SetLimit(int64(limit))
-	cur, err := s.manufCol.Find(ctx, filter, opts)
-	if err != nil {
-		return nil, fmt.Errorf("suggest manufacturers: %w", err)
-	}
-	defer cur.Close(ctx)
-
-	var docs []bson.M
-	if err = cur.All(ctx, &docs); err != nil {
-		return nil, fmt.Errorf("decode manufacturers: %w", err)
-	}
-
-	out := make([]string, 0, len(docs))
-	for _, doc := range docs {
-		if id, ok := doc["_id"].(string); ok {
-			out = append(out, id)
-		}
-	}
-
-	return out, nil
-}
-
-func (s *MongoDocumentStore) updateManufacturer(ctx context.Context, manufacturer string) error {
-	if s.manufCol == nil || manufacturer == "" {
-		return nil
-	}
-
-	// Just ensure the manufacturer exists in the collection (upsert)
-	_, err := s.manufCol.UpdateOne(
-		ctx,
-		bson.D{{Key: "_id", Value: manufacturer}},
-		bson.D{{Key: "$setOnInsert", Value: bson.D{{Key: "_id", Value: manufacturer}}}},
-		options.UpdateOne().SetUpsert(true),
-	)
-	if err != nil {
-		return fmt.Errorf("update manufacturer: %w", err)
-	}
-
-	return nil
-}
-
-func (s *MongoDocumentStore) Close(ctx context.Context) error {
+func (s *MongoStore) Close(ctx context.Context) error {
 	if s.client == nil {
 		return nil
 	}

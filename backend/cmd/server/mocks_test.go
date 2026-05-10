@@ -2,7 +2,7 @@
 // github.com/vektra/mockery
 // template: testify
 
-package main_test
+package main
 
 import (
 	"net/http"

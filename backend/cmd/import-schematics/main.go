@@ -68,7 +68,7 @@ func main() {
 	do.ProvideValue(inj, cfg)
 
 	var blobSvc *blob.Service
-	var docStore *store.MongoDocumentStore
+	var docStore *store.MongoStore
 
 	if !*dryRun {
 		blobSvc = blob.New(inj)
@@ -77,7 +77,7 @@ func main() {
 		}
 		do.ProvideValue(inj, blobSvc)
 
-		docStore = store.NewMongoDocumentStore(inj)
+		docStore = store.NewMongoStore(inj)
 		if err := docStore.Prepare(); err != nil {
 			log.Fatalf("prepare document store: %v", err)
 		}
@@ -143,7 +143,7 @@ var errSkipped = errors.New("skipped")
 func importDocument(
 	docDir string,
 	blobSvc *blob.Service,
-	docStore *store.MongoDocumentStore,
+	docStore *store.MongoStore,
 	skipExisting bool,
 	dryRun bool,
 	_ any, // log handler – kept for future structured log attachment

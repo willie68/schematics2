@@ -16,11 +16,12 @@ import (
 	"github.com/willie68/schematic2/backend/internal/auth"
 	"github.com/willie68/schematic2/backend/internal/config"
 	"github.com/willie68/schematic2/backend/internal/domain"
+	"github.com/willie68/schematic2/backend/internal/services/users"
 )
 
 const (
 	// BackendVersion should be synced with HISTORY.md
-	BackendVersion = "0.1.15"
+	BackendVersion = "0.1.19"
 )
 
 type documentStore interface {
@@ -28,14 +29,21 @@ type documentStore interface {
 	ListTags(ctx context.Context) ([]domain.Tag, error)
 	SuggestTags(ctx context.Context, prefix string, limit int) ([]domain.Tag, error)
 	SuggestManufacturers(ctx context.Context, prefix string, limit int) ([]string, error)
+	GetByID(ctx context.Context, id string) (domain.Document, error)
+}
+
+type userStore interface {
+	CreateUser(ctx context.Context, user domain.User) error
+	GetUserByEmail(ctx context.Context, email string) (domain.User, bool)
 }
 
 type documentIndex interface {
-	Search(query string, tags []string) []domain.SearchResult
+	Search(query string, tags []string, skip, limit int64, sortField string, sortOrder int, privateOnly, isAuthenticated bool, username string) domain.PagedSearchResult
 }
 
 type blobStore interface {
 	Save(data []byte, mimeType string) (*domain.ContainerInfo, error)
+	Load(ci *domain.ContainerInfo) ([]byte, error)
 }
 
 type Handler struct {
@@ -43,6 +51,7 @@ type Handler struct {
 	docStore documentStore
 	index    documentIndex
 	blob     blobStore
+	userSvc  *users.Service
 	adminPW  string
 }
 
@@ -68,6 +77,7 @@ func NewHandler(i do.Injector) *Handler {
 		docStore: do.MustInvokeAs[documentStore](i),
 		index:    do.MustInvokeAs[documentIndex](i),
 		blob:     do.MustInvokeAs[blobStore](i),
+		userSvc:  do.MustInvokeAs[*users.Service](i),
 		adminPW:  hash,
 	}
 }
@@ -78,15 +88,17 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 	r.Route("/api/v1", func(api chi.Router) {
 		api.Get("/info", h.info)
 		api.Post("/auth/login", h.login)
+		api.Post("/auth/register", h.register)
 		api.Get("/tags", h.listTags)
 		api.Get("/tags/suggest", h.suggestTags)
 		api.Get("/manufacturers/suggest", h.suggestManufacturers)
+		api.Get("/documents/search", h.searchDocuments)
+		api.Get("/documents/{id}/files/{filename}", h.downloadFile)
 
 		api.Group(func(protected chi.Router) {
 			protected.Use(h.authMiddleware)
 			protected.Get("/auth/me", h.me)
 			protected.Post("/documents/index", h.indexDocument)
-			protected.Get("/documents/search", h.searchDocuments)
 		})
 	})
 }
@@ -108,22 +120,65 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "invalid payload")
 		return
 	}
-	if req.Username != h.cfg.AdminUser {
-		respondError(w, http.StatusUnauthorized, "invalid credentials")
+
+	// Check if it's an admin login
+	if req.Username == h.cfg.AdminUser {
+		if err := auth.CheckPassword(h.adminPW, req.Password); err != nil {
+			respondError(w, http.StatusUnauthorized, "invalid credentials")
+			return
+		}
+
+		token, err := auth.IssueToken(h.cfg.JWTSecret, req.Username, []string{"admin"}, 24*time.Hour)
+		if err != nil {
+			respondError(w, http.StatusInternalServerError, "issue token")
+			return
+		}
+
+		respondJSON(w, http.StatusOK, loginResponse{Token: token})
 		return
 	}
-	if err := auth.CheckPassword(h.adminPW, req.Password); err != nil {
+
+	// Try regular user login (email as username)
+	user, err := h.userSvc.Authenticate(r.Context(), req.Username, req.Password)
+	if err != nil {
 		respondError(w, http.StatusUnauthorized, "invalid credentials")
 		return
 	}
 
-	token, err := auth.IssueToken(h.cfg.JWTSecret, req.Username, []string{"admin"}, 24*time.Hour)
+	token, err := auth.IssueToken(h.cfg.JWTSecret, user.Email, []string{"user"}, 24*time.Hour)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "issue token")
 		return
 	}
 
 	respondJSON(w, http.StatusOK, loginResponse{Token: token})
+}
+
+func (h *Handler) register(w http.ResponseWriter, r *http.Request) {
+	var req users.RegisterRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid payload")
+		return
+	}
+
+	user, err := h.userSvc.Register(r.Context(), req)
+	if err != nil {
+		// Check if it's a validation error
+		statusCode := http.StatusInternalServerError
+		if strings.Contains(err.Error(), "email already exists") || strings.Contains(err.Error(), "required") || strings.Contains(err.Error(), "at least 8 characters") {
+			statusCode = http.StatusBadRequest
+		}
+		respondError(w, statusCode, err.Error())
+		return
+	}
+
+	respondJSON(w, http.StatusCreated, map[string]any{
+		"id":        user.ID,
+		"email":     user.Email,
+		"firstName": user.FirstName,
+		"lastName":  user.LastName,
+		"created":   user.Created,
+	})
 }
 
 func (h *Handler) me(w http.ResponseWriter, r *http.Request) {
@@ -255,8 +310,106 @@ func decodeBase64File(input string) ([]byte, error) {
 func (h *Handler) searchDocuments(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	tags := r.URL.Query()["tag"]
-	results := h.index.Search(query, tags)
-	respondJSON(w, http.StatusOK, map[string]any{"results": results, "count": len(results)})
+	skip := parseInt64Param(r, "skip", 0)
+	limit := parseInt64Param(r, "limit", 20)
+	sortField := r.URL.Query().Get("sortField")
+	sortOrder := 1
+	if r.URL.Query().Get("sortOrder") == "-1" {
+		sortOrder = -1
+	}
+	privateOnly := r.URL.Query().Get("privateOnly") == "true"
+
+	// Extract username from Authorization header (if present)
+	username := ""
+	isAuthenticated := false
+	authHeader := r.Header.Get("Authorization")
+	if authHeader != "" {
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) == 2 && strings.EqualFold(parts[0], "Bearer") {
+			claims, err := auth.VerifyToken(h.cfg.JWTSecret, parts[1])
+			if err == nil {
+				isAuthenticated = true
+				username = claims.Subject
+			}
+		}
+	}
+
+	paged := h.index.Search(query, tags, skip, limit, sortField, sortOrder, privateOnly, isAuthenticated, username)
+	respondJSON(w, http.StatusOK, map[string]any{
+		"results": paged.Results,
+		"count":   len(paged.Results),
+		"total":   paged.Total,
+		"skip":    paged.Skip,
+		"limit":   paged.Limit,
+	})
+}
+
+func (h *Handler) downloadFile(w http.ResponseWriter, r *http.Request) {
+	docID := chi.URLParam(r, "id")
+	filename := chi.URLParam(r, "filename")
+
+	if strings.TrimSpace(docID) == "" || strings.TrimSpace(filename) == "" {
+		respondError(w, http.StatusBadRequest, "id and filename are required")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	// Load the document
+	doc, err := h.docStore.GetByID(ctx, docID)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "document not found")
+		return
+	}
+
+	// Check if user has access (guest can only see public, authenticated can see public + own private)
+	isAuthenticated := h.isAuthenticated(r)
+	username := h.getAuthenticatedUser(r)
+
+	if doc.PrivateFile {
+		if !isAuthenticated || username != doc.Owner {
+			respondError(w, http.StatusForbidden, "access denied")
+			return
+		}
+	}
+
+	// Find the file
+	var file *domain.DocumentFile
+	for i := range doc.Files {
+		if doc.Files[i].Name == filename {
+			file = &doc.Files[i]
+			break
+		}
+	}
+
+	if file == nil {
+		respondError(w, http.StatusNotFound, "file not found")
+		return
+	}
+
+	// Load file data from blob store
+	if file.Container == nil {
+		respondError(w, http.StatusInternalServerError, "file has no container info")
+		return
+	}
+
+	data, err := h.blob.Load(file.Container)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to load file")
+		return
+	}
+
+	// Return as JSON with base64-encoded data
+	w.Header().Set("Content-Type", "application/json")
+	response := map[string]any{
+		"name":     file.Name,
+		"type":     file.Type,
+		"mimetype": file.MIMEType,
+		"page":     file.Page,
+		"data":     base64.StdEncoding.EncodeToString(data),
+	}
+	json.NewEncoder(w).Encode(response)
 }
 
 func (h *Handler) listTags(w http.ResponseWriter, r *http.Request) {

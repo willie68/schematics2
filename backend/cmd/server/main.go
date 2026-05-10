@@ -9,6 +9,7 @@ import (
 
 	"github.com/samber/do/v2"
 	"github.com/willie68/schematic2/backend/internal"
+	"github.com/willie68/schematic2/backend/internal/api"
 	"github.com/willie68/schematic2/backend/internal/config"
 	"github.com/willie68/schematic2/backend/internal/logging"
 	"github.com/willie68/schematic2/backend/internal/services/health"
@@ -26,6 +27,8 @@ type shttpsrv interface {
 
 func main() {
 	cfg := config.LoadFromEnv()
+
+	logger.Info("starting schematic2 backend", "version", api.BackendVersion, "http_port", cfg.HTTP.Port, "https_port", cfg.HTTP.SSLPort)
 
 	err := internal.InitServices(inj, cfg)
 	if err != nil {
