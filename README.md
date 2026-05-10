@@ -46,6 +46,7 @@ Siehe `backend/cmd/import-manufacturers/README.md` für Details.
 ## Backend API (Start)
 
 - `GET /health`
+- `GET /api/v1/info` - Backend Version und Status
 - `POST /api/v1/auth/login`
 - `GET /api/v1/auth/me`
 - `GET /api/v1/tags` - Liste alle Tags auf

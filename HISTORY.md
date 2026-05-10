@@ -2,9 +2,16 @@
 
 ## 0.1.15 - 2026-05-10
 
-- Frontend: Versionsnummer im Header angezeigt.
+- Frontend: Versionsnummer im Header angezeigt und klickbar.
   - Neue Datei: `frontend/src/config.js` mit APP_VERSION Konstante.
   - App-Header zeigt "Version 0.1.15" unter dem Untertitel an.
+  - Version ist klickbar und öffnet Info-Dialog (cursor:pointer).
+  - Neue Komponente: `frontend/src/components/InfoDialog.vue`
+  
+- Backend: Neuer `/api/v1/info` Endpoint mit Versionsinformation.
+  - Neue Konstante: `BackendVersion = "0.1.15"` in handler.go
+  - Endpoint gibt JSON mit Version und Status zurück: `{"version":"0.1.15", "status":"ok"}`
+  - Info-Dialog zeigt Backend-Version und Live-Status an.
   - Version manuell mit HISTORY.md synchronisieren.
 
 ## 0.1.14 - 2026-05-10
