@@ -26,7 +26,7 @@
           :severity="privateOnly ? 'warning' : 'secondary'"
           v-tooltip.bottom="privateOnly ? 'Nur private' : 'Private Filter'"
           @click="togglePrivateAndSearch" />
-        <Button icon="pi pi-search" v-tooltip.bottom="'Suchen'" @click="search" />
+        <Button icon="pi pi-search" v-tooltip.bottom="'Suchen'" @click="search" :loading="isSearching" />
         <Button v-if="isLoggedIn" icon="pi pi-upload" v-tooltip.bottom="'Upload'" severity="secondary" @click="showUploadDialog = true" />
       </div>
       <div style="display:flex; justify-content:flex-end; align-items:center; gap:0.4rem;">
@@ -283,6 +283,7 @@ const selectedFile = ref(null)
 const showDetailPanel = ref(false)
 const expandDetailPanel = ref(false)
 const hideSearchResults = ref(false)
+const isSearching = ref(false)
 
 // Image Viewer - PrimeVue Image
 const imageRef = ref(null)
@@ -352,6 +353,8 @@ function togglePrivateAndSearch() {
 
 async function search() {
   try {
+    isSearching.value = true
+    
     // Reset detail panel when searching
     selectedDocument.value = null
     selectedFile.value = null
@@ -384,6 +387,8 @@ async function search() {
     info(`${countText} gefunden`)
   } catch (err) {
     info(`Fehler bei der Suche`)
+  } finally {
+    isSearching.value = false
   }
 }
 

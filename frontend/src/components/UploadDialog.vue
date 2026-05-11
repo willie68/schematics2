@@ -1,5 +1,5 @@
 <template>
-  <Dialog v-model:visible="visible" header="Dokument hochladen" :modal="true" style="width: 600px">
+  <Dialog v-model:visible="visible" header="Dokument hochladen" :modal="true" style="width: 1000px">
     <div style="display:grid; gap:1rem;">
       <!-- Manufacturer & Model -->
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.8rem;">
@@ -77,21 +77,44 @@
 
       <!-- File Input -->
       <div>
-        <label style="display:block; margin-bottom:0.3rem; font-size:0.85rem">Datei *</label>
+        <label style="display:block; margin-bottom:0.3rem; font-size:0.85rem">Dateien *</label>
         <FileUpload
           name="file"
           @select="onFileSelect"
           :show-upload-button="false"
           :show-cancel-button="false"
           accept=".pdf,.jpg,.jpeg,.png,.gif"
+          multiple
           style="width:100%"
         />
       </div>
 
-      <!-- Document Type -->
+      <!-- File List with Types -->
       <div v-if="form.files.length > 0">
-        <label style="display:block; margin-bottom:0.3rem; font-size:0.85rem">Dokumenttyp *</label>
-        <Dropdown v-model="form.files[0].type" :options="docTypes" option-label="label" option-value="value" style="width:100%" />
+        <label style="display:block; margin-bottom:0.5rem; font-size:0.85rem">Dateitypen *</label>
+        <div style="display:grid; gap:0.8rem;">
+          <div v-for="(file, index) in form.files" :key="index" style="display:grid; grid-template-columns: 1fr 200px auto; gap:0.5rem; align-items:center; padding:0.8rem; border:1px solid #e0e0e0; border-radius:4px;">
+            <div style="display:flex; flex-direction:column; gap:0.2rem;">
+              <span style="font-weight:500; font-size:0.95rem;">{{ file.name }}</span>
+              <span style="font-size:0.85rem; color:#666;">{{ file.mimetype }}</span>
+            </div>
+            <Dropdown 
+              v-model="form.files[index].type" 
+              :options="docTypes" 
+              option-label="label" 
+              option-value="value" 
+              placeholder="Typ wählen..."
+            />
+            <Button 
+              icon="pi pi-trash" 
+              severity="danger" 
+              text 
+              rounded 
+              size="small" 
+              @click="removeFile(index)"
+            />
+          </div>
+        </div>
       </div>
 
       <!-- Error Message -->
@@ -262,19 +285,29 @@ function removeTag(tag) {
 }
 
 async function onFileSelect(event) {
-  const file = event.files[0]
-  if (file) {
-    const data = await fileToBase64(file)
-    form.value.files = [
-      {
+  const newFiles = event.files || []
+  
+  // Get list of file names already added
+  const existingNames = new Set(form.value.files.map(f => f.name))
+  
+  // Only add files that are not already in the list
+  for (const file of newFiles) {
+    if (!existingNames.has(file.name)) {
+      const data = await fileToBase64(file)
+      form.value.files.push({
         name: file.name,
         page: 1,
         mimetype: file.type,
-        type: 'schematic',
+        type: '', // User must select
         data,
-      },
-    ]
+      })
+      existingNames.add(file.name)
+    }
   }
+}
+
+function removeFile(index) {
+  form.value.files.splice(index, 1)
 }
 
 function fileToBase64(file) {
@@ -309,13 +342,16 @@ async function submit() {
   }
 
   if (form.value.files.length === 0) {
-    errorMessage.value = 'Bitte wählen Sie eine Datei aus'
+    errorMessage.value = 'Bitte wählen Sie mindestens eine Datei aus'
     return
   }
 
-  if (!form.value.files[0].type) {
-    errorMessage.value = 'Bitte wählen Sie einen Dokumenttyp aus'
-    return
+  // Check that all files have a type selected
+  for (let i = 0; i < form.value.files.length; i++) {
+    if (!form.value.files[i].type) {
+      errorMessage.value = `Bitte wählen Sie einen Dokumenttyp für "${form.value.files[i].name}" aus`
+      return
+    }
   }
 
   if (form.value.privateFile && !form.value.owner.trim()) {

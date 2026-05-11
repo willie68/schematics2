@@ -54,3 +54,21 @@ func (s *MongoStore) GetUserByEmail(ctx context.Context, email string) (domain.U
 
 	return user, true
 }
+
+// UpdateUser updates an existing user in the database
+func (s *MongoStore) UpdateUser(ctx context.Context, user domain.User) error {
+	if s.usersCol == nil {
+		return errors.New("mongodb users collection not initialised")
+	}
+
+	result, err := s.usersCol.ReplaceOne(ctx, bson.D{{Key: "_id", Value: user.ID}}, user)
+	if err != nil {
+		return fmt.Errorf("update user: %w", err)
+	}
+
+	if result.MatchedCount == 0 {
+		return errors.New("user not found")
+	}
+
+	return nil
+}

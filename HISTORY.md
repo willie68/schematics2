@@ -1,5 +1,43 @@
 # History
 
+## 0.2.3 - 2026-05-11
+
+- **Backend & Domain**: Effects Import mit Blob-Storage und Validierung.
+  - Domain erweitert: `Effect.Image` (string) → `Effect.Images` ([]*ContainerInfo) für multiple Bilder
+  - Neue Collection `effects` in MongoDB
+  - Import-Tool: `cmd/import-effects/main.go` - einzelner Import für effects
+  - Integriert in `cmd/import-all/main.go` - effects können selektiv importiert werden
+  - Validierung: 
+    - `effectType` wird gegen `effecttypes` Collection validiert
+    - `manufacturer` wird gegen `manufacturers` Collection validiert oder neu erstellt
+  - Bilder-Handling: `image` Dateien werden ins Blob-Repository gespeichert (wie Schematics)
+  - foreignId wird ignoriert
+  - 67 Effects erfolgreich importierbar
+
+## 0.2.2 - 2026-05-11
+
+- **Backend**: Effect Types Import mit automatischem Bild-Handling.
+  - Neue Collection `effecttypes` in MongoDB für Effekt-Typen
+  - Import-Tool: `cmd/import-effecttypes/main.go` - einzelner Import für effect types
+  - Integriert in `cmd/import-all/main.go` - effect types können selektiv importiert werden
+  - Bilder-Handling: `typeImage` Dateien werden automatisch nach `internal/repository/effecttypes` kopiert
+  - Go Embed: `internal/repository/effecttypes/embedd.go` mit `//go:embed` für Zugriff auf eingebettete Bilder
+  - Funktion `GetImage(filename)`, `ListImages()`, `GetImages()` für Bild-Zugriff zur Laufzeit
+  - Mapping: `nls` aus Backup wird zu `i18n` in Go/MongoDB, `foreignId` wird ignoriert
+  - 20 Effect Types erfolgreich importierbar
+
+## 0.2.1 - 2026-05-11
+
+- **Backend**: Vereinheitlichte Import-Tools mit neuem `cmd/import-all` Command.
+  - Consolidation: 3 separate import Commands (`import-tags`, `import-manufacturers`, `import-schematics`) in einem Command kombiniert
+  - Flexibilität: Optionale Flags zum selektiven Importieren (nur bestimmte Datentypen)
+  - Convenience: Base-Ordner mit Unterverzeichnis-Struktur für alle Daten:
+    - `base-dir/manufacturers/` - Hersteller JSON Dateien
+    - `base-dir/tags/` - Tags JSON Dateien
+    - `base-dir/schematics/` - Schematic-Verzeichnisse
+  - Flags: `-base-dir`, `-manufacturers`, `-tags`, `-schematics`, `-dry-run`, `-skip-existing`, `-max-errors`
+  - Legacy: Alte Commands bleiben für Backward-Kompatibilität erhalten
+
 ## 0.2.0 - 2026-05-10
 
 - **Frontend**: Professioneller Image Viewer mit Zoom, Pan, Rotate und Download

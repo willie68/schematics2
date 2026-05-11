@@ -35,6 +35,7 @@ type documentStore interface {
 type userStore interface {
 	CreateUser(ctx context.Context, user domain.User) error
 	GetUserByEmail(ctx context.Context, email string) (domain.User, bool)
+	UpdateUser(ctx context.Context, user domain.User) error
 }
 
 type documentIndex interface {
@@ -46,13 +47,19 @@ type blobStore interface {
 	Load(ci *domain.ContainerInfo) ([]byte, error)
 }
 
+type usersService interface {
+	Register(ctx context.Context, req users.RegisterRequest) (domain.User, error)
+	Authenticate(ctx context.Context, email, password string) (domain.User, error)
+}
+
 type Handler struct {
-	cfg      config.Config
-	docStore documentStore
-	index    documentIndex
-	blob     blobStore
-	userSvc  *users.Service
-	adminPW  string
+	cfg       config.Config
+	docStore  documentStore
+	index     documentIndex
+	blob      blobStore
+	userSvc   usersService
+	userStore userStore
+	adminPW   string
 }
 
 type loginRequest struct {
@@ -69,16 +76,22 @@ type infoResponse struct {
 	Status  string `json:"status"`
 }
 
+type changePasswordRequest struct {
+	OldPassword string `json:"oldPassword"`
+	NewPassword string `json:"newPassword"`
+}
+
 func NewHandler(i do.Injector) *Handler {
 	cfg := do.MustInvoke[config.Config](i)
 	hash, _ := auth.HashPassword(cfg.AdminPass)
 	return &Handler{
-		cfg:      cfg,
-		docStore: do.MustInvokeAs[documentStore](i),
-		index:    do.MustInvokeAs[documentIndex](i),
-		blob:     do.MustInvokeAs[blobStore](i),
-		userSvc:  do.MustInvokeAs[*users.Service](i),
-		adminPW:  hash,
+		cfg:       cfg,
+		docStore:  do.MustInvokeAs[documentStore](i),
+		index:     do.MustInvokeAs[documentIndex](i),
+		blob:      do.MustInvokeAs[blobStore](i),
+		userSvc:   do.MustInvokeAs[usersService](i),
+		userStore: do.MustInvokeAs[userStore](i),
+		adminPW:   hash,
 	}
 }
 
@@ -97,7 +110,8 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 
 		api.Group(func(protected chi.Router) {
 			protected.Use(h.authMiddleware)
-			protected.Get("/auth/me", h.me)
+			protected.Get("/users/me", h.me)
+			protected.Post("/users/change-password", h.changePassword)
 			protected.Post("/documents/index", h.indexDocument)
 		})
 	})
@@ -184,9 +198,98 @@ func (h *Handler) register(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) me(w http.ResponseWriter, r *http.Request) {
 	sub, _ := r.Context().Value(ctxSubjectKey{}).(string)
 	roles, _ := r.Context().Value(ctxRolesKey{}).([]string)
+
+	// If admin, return minimal response
+	for _, role := range roles {
+		if role == "admin" {
+			respondJSON(w, http.StatusOK, map[string]any{
+				"email": "admin",
+			})
+			return
+		}
+	}
+
+	// For regular users, fetch complete user data from database
+	user, exists := h.userStore.GetUserByEmail(r.Context(), sub)
+	if !exists {
+		respondError(w, http.StatusNotFound, "user not found")
+		return
+	}
+
+	// Return user data without password
 	respondJSON(w, http.StatusOK, map[string]any{
-		"subject": sub,
-		"roles":   roles,
+		"id":        user.ID,
+		"email":     user.Email,
+		"firstName": user.FirstName,
+		"lastName":  user.LastName,
+		"address":   user.Address,
+		"created":   user.Created,
+		"updated":   user.Updated,
+	})
+}
+
+func (h *Handler) changePassword(w http.ResponseWriter, r *http.Request) {
+	sub, _ := r.Context().Value(ctxSubjectKey{}).(string)
+	roles, _ := r.Context().Value(ctxRolesKey{}).([]string)
+
+	// Admin cannot change password via this endpoint
+	for _, role := range roles {
+		if role == "admin" {
+			respondError(w, http.StatusForbidden, "admin password change not supported")
+			return
+		}
+	}
+
+	var req changePasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid payload")
+		return
+	}
+
+	// Validate input
+	if req.OldPassword == "" {
+		respondError(w, http.StatusBadRequest, "old password required")
+		return
+	}
+	if req.NewPassword == "" {
+		respondError(w, http.StatusBadRequest, "new password required")
+		return
+	}
+	if len(req.NewPassword) < 8 {
+		respondError(w, http.StatusBadRequest, "new password must be at least 8 characters long")
+		return
+	}
+
+	// Get current user from database
+	user, exists := h.userStore.GetUserByEmail(r.Context(), sub)
+	if !exists {
+		respondError(w, http.StatusNotFound, "user not found")
+		return
+	}
+
+	// Verify old password
+	if err := auth.CheckPassword(user.Password, req.OldPassword); err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid current password")
+		return
+	}
+
+	// Hash new password
+	hashedPassword, err := auth.HashPassword(req.NewPassword)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to hash password")
+		return
+	}
+
+	// Update password in database
+	user.Password = hashedPassword
+	user.Updated = time.Now().UTC().Unix()
+	if err := h.userStore.UpdateUser(r.Context(), user); err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to update password")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]any{
+		"message": "password changed successfully",
 	})
 }
 
@@ -363,10 +466,22 @@ func (h *Handler) downloadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if user has access (guest can only see public, authenticated can see public + own private)
-	isAuthenticated := h.isAuthenticated(r)
-	username := h.getAuthenticatedUser(r)
+	// Extract authentication from Authorization header
+	username := ""
+	isAuthenticated := false
+	authHeader := r.Header.Get("Authorization")
+	if authHeader != "" {
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) == 2 && strings.EqualFold(parts[0], "Bearer") {
+			claims, err := auth.VerifyToken(h.cfg.JWTSecret, parts[1])
+			if err == nil {
+				isAuthenticated = true
+				username = claims.Subject
+			}
+		}
+	}
 
+	// Check if user has access (guest can only see public, authenticated can see public + own private)
 	if doc.PrivateFile {
 		if !isAuthenticated || username != doc.Owner {
 			respondError(w, http.StatusForbidden, "access denied")

@@ -30,25 +30,58 @@ Das Repository ist mit GitHub unter https://github.com/willie68/schematic verkn�
 
 ## Backend-Tools
 
-### Tag-Import
-Tags aus JSON-Dateien in MongoDB importieren:
+### Unified Import (Tags, Manufacturers, Schematics, Effect Types, Effects)
 
-```bash
-cd backend
-go run cmd/import-tags/main.go [-tags-dir testdata/tags]
+Alle Daten in einem Command importieren. Der Base-Ordner muss folgende Struktur haben:
+
+```
+base-dir/
+├── manufacturers/       # JSON Dateien mit Herstellern
+├── tags/               # JSON Dateien mit Tags
+├── schematics/         # Verzeichnisse mit schematic.json und Dateien
+├── effecttypes/        # Verzeichnisse mit effecttype.json und Bildern
+└── effects/            # Verzeichnisse mit effect.json und Bildern
 ```
 
-Siehe `backend/cmd/import-tags/README.md` für Details.
-
-### Manufacturers-Import
-Hersteller aus JSON-Dateien in MongoDB importieren:
-
+**Standard-Import (alle Daten):**
 ```bash
 cd backend
-go run cmd/import-manufacturers/main.go [-manufacturers-dir testdata/manufacturers]
+go run cmd/import-all/main.go -base-dir ./testdata
 ```
 
-Siehe `backend/cmd/import-manufacturers/README.md` für Details.
+**Nur spezifische Daten importieren:**
+```bash
+# Nur Effects
+go run cmd/import-all/main.go -base-dir ./testdata -manufacturers=false -tags=false -schematics=false -effecttypes=false
+
+# Nur Tags und Hersteller
+go run cmd/import-all/main.go -base-dir ./testdata -schematics=false -effecttypes=false -effects=false
+```
+
+**Weitere Flags:**
+- `-dry-run` - Nur validieren, keine Änderungen schreiben
+- `-skip-existing` - Existierende Dokumente überspringen (default: true)
+- `-max-errors` - Maximale Fehleranzahl vor Abbruch (default: 50, 0=unbegrenzt)
+
+**Effect Types & Effects Import Details:**
+- JSON Struktur: `effecttype.json` / `effect.json` in jedem Verzeichnis
+- Effect Type Bilder: Werden nach `internal/repository/effecttypes` kopiert, Go Embed eingebunden
+- Effect Bilder: Werden ins Blob-Repository gespeichert (mit ContainerInfo)
+- Effect Validierung: 
+  - `effectType` wird gegen die `effecttypes` Collection validiert
+  - `manufacturer` wird gegen die `manufacturers` Collection validiert (oder neu erstellt)
+- Domain: `Effect.Image` → `Effect.Images` (Array von ContainerInfo für Blob-Storage)
+
+### Legacy: Einzelne Import-Commands
+
+Die folgenden separaten Commands sind deprecated, aber noch vorhanden:
+- `cmd/import-tags/main.go` - Nur Tags importieren
+- `cmd/import-manufacturers/main.go` - Nur Hersteller importieren
+- `cmd/import-schematics/main.go` - Nur Schematics importieren
+- `cmd/import-effecttypes/main.go` - Nur Effect Types importieren
+- `cmd/import-effects/main.go` - Nur Effects importieren
+
+Für neue Importe bitte `cmd/import-all/main.go` verwenden!
 
 ## Backend API (Start)
 
