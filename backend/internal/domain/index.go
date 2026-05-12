@@ -11,6 +11,13 @@ type PagedSearchResult struct {
 	Limit   int64          `json:"limit"`
 }
 
+type PagedEffects struct {
+	Items []Effect `json:"items"`
+	Total int64    `json:"total"`
+	Skip  int64    `json:"skip"`
+	Limit int64    `json:"limit"`
+}
+
 // SearchFilter represents the internal search model for MongoDB queries
 type SearchFilter struct {
 	Query           string   // Full-text query (can be empty)

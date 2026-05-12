@@ -24,14 +24,16 @@ const usersCollection = "users"
 
 // MongoStore stores domain.Document in MongoDB.
 type MongoStore struct {
-	cfg      config.MongoDB
-	client   *mongo.Client
-	db       *mongo.Database
-	col      *mongo.Collection
-	tagsCol  *mongo.Collection
-	manufCol *mongo.Collection
-	usersCol *mongo.Collection
-	logger   *slog.Logger
+	cfg            config.MongoDB
+	client         *mongo.Client
+	db             *mongo.Database
+	col            *mongo.Collection
+	tagsCol        *mongo.Collection
+	manufCol       *mongo.Collection
+	usersCol       *mongo.Collection
+	effectsCol     *mongo.Collection
+	effectTypesCol *mongo.Collection
+	logger         *slog.Logger
 }
 
 type mongoDocument struct {
@@ -95,6 +97,8 @@ func (s *MongoStore) Prepare() error {
 	s.tagsCol = s.db.Collection(tagsCollection)
 	s.manufCol = s.db.Collection(manufacturersCollection)
 	s.usersCol = s.db.Collection(usersCollection)
+	s.effectsCol = s.db.Collection(effectsCollection)
+	s.effectTypesCol = s.db.Collection(effectTypesCollection)
 
 	if err = s.ensureIndexes(); err != nil {
 		_ = client.Disconnect(context.Background())

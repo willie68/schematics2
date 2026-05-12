@@ -4,6 +4,8 @@ Schematic2 ist der Nachfolger von WilliesSchematicsWorld als Monorepo.
 
 Das Repository ist mit GitHub unter https://github.com/willie68/schematic verknüpft.
 
+**Version: 0.2.7**
+
 ## Features
 
 - **Dokumentsuche**: Web-Frontend zur Suche in Schaltplänen, Dokumentationen und weiteren Dateien (PNG, JPG, PDF, ...)
@@ -11,6 +13,10 @@ Das Repository ist mit GitHub unter https://github.com/willie68/schematic verkn�
 - **Image Viewer**: Native Zoom, Pan, Rotate, und Download für Bilddateien
 - **Authentifizierung**: Eigener Authentifizierungs- und Autorisierungsdienst mit User Registration
 - **Private Documents**: Unterstützung für private und öffentliche Dokumente
+- **Effektdatenbank**: Verwaltung und Suche von Effekten mit Sortierung
+  - i18n German Übersetzungen für Effekt-Typen
+  - Sortierung nach Typ, Hersteller, Modell, Spannung, Strom
+  - Bild-Upload und Anschluss-Information
 
 ## Ziele
 
@@ -96,6 +102,20 @@ Für neue Importe bitte `cmd/import-all/main.go` verwenden!
 - `POST /api/v1/documents/index` (auth required) - Indexiere ein Dokument mit Tags
 - `GET /api/v1/documents/search?q=<query>&tag=<t1>&tag=<t2>` (auth required) - Suche mit Volltext und Tags
 
+### Effects API
+
+- `GET /api/v1/effects/search?q=<query>&skip=<n>&limit=<n>` - Durchsuche Effects mit Regex-Filter und Pagination
+  - `q` - Suchtext (durchsucht effectType, manufacturer, model, tags, comment)
+  - `skip` - Überspringe n Ergebnisse (Pagination)
+  - `limit` - Begrenzen Sie auf n Ergebnisse (10, 20, 50, ...)
+  - Response: `{ results: [...], total: n }`
+- `GET /api/v1/effects/<id>/image` - Hole das erste Bild eines Effects (als Blob)
+- `GET /api/v1/effecttypes` - Liste alle Effekt-Typen mit i18n Namen
+- `GET /api/v1/connectors/<name>` - Hole Connector-Bild (PNG/JPG aus embedded filesystem)
+- `POST /api/v1/effects` (auth required) - Erstelle neuen Effect mit multipart/form-data
+  - Form-Felder: `effectType`, `manufacturer`, `model`, `voltage`, `current`, `connector`, `image`
+  - Response: `{ id, ... }`
+
 ### Authentifizierung
 
 - **Admin-Login**: Username `admin` mit Passwort (aus Env-Var `ADMIN_PASS`)
@@ -171,6 +191,18 @@ npm run dev
 ```
 
 Frontend läuft standardmäßig auf `http://localhost:5173`.
+
+#### Frontend-Architektur
+
+- **Composition API mit `<script setup>`**: Moderne Vue 3 Syntax für bessere Performance
+- **PrimeVue 3.53**: Umfangreiche UI-Komponenten (DataTable, Dialog, Dropdown, AutoComplete, etc.)
+- **Axios Interceptors**: Zentrale Authentifizierung und 401-Error-Handling
+- **Komponenten**:
+  - `EffectsView.vue` - Hauptseite für Effects-Datenbank mit Suche, Pagination, Detail-Modal
+  - `EffectUploadDialog.vue` - Wiederverwendbare Komponente zum Hochladen neuer Effects
+    - Props: `visible` (v-model), `effectTypes` (Array)
+    - Events: `@update:visible`, `@effect-created`
+    - Features: Form-Validierung, Manufacturer-Autocomplete, Connector-Dropdown, Bild-Upload
 
 ## Git-Workflow
 

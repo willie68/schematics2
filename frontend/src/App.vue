@@ -21,10 +21,26 @@
 </template>
 
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { onMounted } from 'vue'
 import UserMenu from './components/UserMenu.vue'
 import Toast from './components/Toast.vue'
 import { useAuth } from './composables/useAuth'
+import { useToast } from './composables/useToast'
+import { setApiErrorHandler } from './services/api'
 
-const { isLoggedIn } = useAuth()
+const router = useRouter()
+const { isLoggedIn, logout } = useAuth()
+const { error: showError } = useToast()
+
+onMounted(() => {
+  // Register global error handler for unauthorized responses
+  setApiErrorHandler({
+    onUnauthorized: () => {
+      showError('Sitzung abgelaufen. Bitte melden Sie sich erneut an.')
+      logout()
+      router.push('/login')
+    },
+  })
+})
 </script>

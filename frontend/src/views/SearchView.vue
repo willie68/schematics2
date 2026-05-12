@@ -27,7 +27,7 @@
           v-tooltip.bottom="privateOnly ? 'Nur private' : 'Private Filter'"
           @click="togglePrivateAndSearch" />
         <Button icon="pi pi-search" v-tooltip.bottom="'Suchen'" @click="search" :loading="isSearching" />
-        <Button v-if="isLoggedIn" icon="pi pi-upload" v-tooltip.bottom="'Upload'" severity="secondary" @click="showUploadDialog = true" />
+        <Button v-if="isLoggedIn" icon="pi pi-upload" v-tooltip.bottom="'Upload'" severity="success" @click="showUploadDialog = true" />
       </div>
       <div style="display:flex; justify-content:flex-end; align-items:center; gap:0.4rem;">
         <label style="font-size:0.9em;">Ergebnisse pro Seite:</label>

@@ -1,5 +1,72 @@
 # History
 
+## 0.2.7 - 2026-05-12
+
+- **Frontend UI**: Button-Styling vereinheitlicht
+  - Suche-Button: Blau (primary), eckig mit gerundeten Kanten, Tooltip "Suchen"
+  - Upload-Button (EffectsView): Grün (success), eckig mit gerundeten Kanten, Tooltip "Effekt hinzufügen"
+  - Upload-Button (SearchView): Grün (success), eckig mit gerundeten Kanten, Tooltip "Upload"
+  - Upload-Button (EffectUploadDialog): Grün (success), eckig mit gerundeten Kanten, Tooltip "Hochladen"
+  - Abbrechen-Button: Grau (secondary), eckig mit gerundeten Kanten, Tooltip "Abbrechen"
+  - Tooltips: Einheitlich `v-tooltip.bottom` statt `:title` Attribut
+  - Entfernt `rounded` Attribut für konsistentes Aussehen mit ecking-gerundeten Kanten
+- **Backend**: Sortierung für Effects Tabelle auf Model-Spalte korrigiert
+  - MongoDB $sort duplicate key error behoben
+  - Sekundäre Sortierung nach Model nur wenn nicht Hauptsortfeld
+
+## 0.2.6 - 2026-05-12
+
+- **Frontend & Backend**: Sortierung für Effects Tabelle implementiert
+  - Sortierbar nach: Typ, Hersteller, Modell, Spannung, Strom
+  - Frontend: DataTable mit `@sort` Event und `sortable` Attribute auf Columns
+  - API: `/api/v1/effects/search` akzeptiert `sort` (Feldname) und `order` (asc/desc) Parameter
+  - Backend: SearchEffects Repository Methode um Sorting unterstützt
+  - Helper-Funktion `mapEffectSortField()` für Feldname-Mapping
+  - Sekundäre Sortierung nach Modell für Konsistenz
+- **Frontend**: Typ-Spalte zeigt jetzt i18n Übersetzungen (z.B. "Verzerrung" statt "Distortion")
+  - Lokaler Lookup über `effectTypeMap`
+  - auch im Detail-Modal
+- **Bug Fixes**:
+  - Manufacturer AutoComplete zeigt jetzt korrekt Vorschläge aus API
+
+## 0.2.5 - 2026-05-12
+
+- **Backend**: EffectTypes jetzt vollständig aus MongoDB geladen
+  - `GetAllEffectTypes()` Datenbankfunktion aktiv (statt hardcodierte Liste)
+  - Collection: `effecttypes`
+  - Sortierung nach TypeName aufsteigend
+  - Unterstützt i18n (de/en Übersetzungen)
+- **Frontend**: EffectTypes-Dropdown funktioniert vollständig
+  - Lädt Types von `GET /api/v1/effecttypes`
+  - Zeigt deutschsprachige Namen an
+  - Speichert TypeName als Wert
+  - Integriert in EffectUploadDialog
+
+## 0.2.4 - 2026-05-12
+
+- **Frontend**: Effects Effects Upload Dialog Refactoring und Bug Fixes
+  - Neue Komponente `EffectUploadDialog.vue` - Upload-Logik in separate, wiederverwendbare Komponente ausgelagert
+  - Komponente nutzt v-model für visibility binding
+  - Props: `visible` (Boolean), `effectTypes` (Array)
+  - Events: `@update:visible`, `@effect-created`
+  - Form-Validierung: Typ, Hersteller, Modell, Anschluss sind erforderlich
+  - Manufacturer AutoComplete mit API-Vorschläge
+  - Connector Dropdown mit 9 Optionen
+  - File Upload mit Bildvalidation
+  - Error Handling und User Feedback
+- **Frontend**: EffectsView Cleanup
+  - Entfernt alte Upload-Funktionen nach Refactoring
+  - Vereinfachte State Management (nur noch `showUploadDialog` ref)
+  - Integration mit neuer EffectUploadDialog Komponente
+  - Fehlerbehandlung für null effectTypes robuster gemacht
+- **Bug Fixes**:
+  - Dialog close buttons (X-Button) funktionieren jetzt korrekt
+  - Form wird bei Dialog-Hide korrekt zurückgesetzt
+  - Manufacturer Autocomplete zeigt jetzt Vorschläge an
+  - Connector Dropdown Wert-Binding korrigiert
+  - Null-Safety Checks für alle Form-Felder
+  - Props Validation vereinfacht und robuster
+
 ## 0.2.3 - 2026-05-11
 
 - **Backend & Domain**: Effects Import mit Blob-Storage und Validierung.

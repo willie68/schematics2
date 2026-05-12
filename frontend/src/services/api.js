@@ -4,6 +4,11 @@ const api = axios.create({
   baseURL: '/',
 })
 
+// Store for router and auth callbacks (set by main.js or App.vue)
+let errorHandlers = {
+  onUnauthorized: null,
+}
+
 api.interceptors.request.use((cfg) => {
   const token = localStorage.getItem('schematic2_token')
   if (token) {
@@ -11,5 +16,22 @@ api.interceptors.request.use((cfg) => {
   }
   return cfg
 })
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Handle 401 Unauthorized (token expired or invalid)
+    if (error.response?.status === 401) {
+      if (errorHandlers.onUnauthorized) {
+        errorHandlers.onUnauthorized()
+      }
+    }
+    return Promise.reject(error)
+  }
+)
+
+export function setApiErrorHandler(handlers) {
+  Object.assign(errorHandlers, handlers)
+}
 
 export default api

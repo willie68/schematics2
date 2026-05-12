@@ -6,7 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"log/slog"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -16,12 +19,14 @@ import (
 	"github.com/willie68/schematic2/backend/internal/auth"
 	"github.com/willie68/schematic2/backend/internal/config"
 	"github.com/willie68/schematic2/backend/internal/domain"
+	"github.com/willie68/schematic2/backend/internal/logging"
+	"github.com/willie68/schematic2/backend/internal/repository/connector"
 	"github.com/willie68/schematic2/backend/internal/services/users"
 )
 
 const (
 	// BackendVersion should be synced with HISTORY.md
-	BackendVersion = "0.2.0"
+	BackendVersion = "0.2.7"
 )
 
 type documentStore interface {
@@ -30,6 +35,16 @@ type documentStore interface {
 	SuggestTags(ctx context.Context, prefix string, limit int) ([]domain.Tag, error)
 	SuggestManufacturers(ctx context.Context, prefix string, limit int) ([]string, error)
 	GetByID(ctx context.Context, id string) (domain.Document, error)
+}
+
+type effectStore interface {
+	SearchEffects(ctx context.Context, query string, skip, limit int64, sortField, sortOrder string) (domain.PagedEffects, error)
+	GetEffectByID(ctx context.Context, id string) (*domain.Effect, error)
+	CreateEffect(ctx context.Context, effect *domain.Effect) error
+}
+
+type effectTypeStore interface {
+	GetAllEffectTypes(ctx context.Context) ([]domain.EffectType, error)
 }
 
 type userStore interface {
@@ -53,13 +68,16 @@ type usersService interface {
 }
 
 type Handler struct {
-	cfg       config.Config
-	docStore  documentStore
-	index     documentIndex
-	blob      blobStore
-	userSvc   usersService
-	userStore userStore
-	adminPW   string
+	cfg             config.Config
+	log             *slog.Logger
+	docStore        documentStore
+	effectStore     effectStore
+	effectTypeStore effectTypeStore
+	index           documentIndex
+	blob            blobStore
+	userSvc         usersService
+	userStore       userStore
+	adminPW         string
 }
 
 type loginRequest struct {
@@ -85,13 +103,16 @@ func NewHandler(i do.Injector) *Handler {
 	cfg := do.MustInvoke[config.Config](i)
 	hash, _ := auth.HashPassword(cfg.AdminPass)
 	return &Handler{
-		cfg:       cfg,
-		docStore:  do.MustInvokeAs[documentStore](i),
-		index:     do.MustInvokeAs[documentIndex](i),
-		blob:      do.MustInvokeAs[blobStore](i),
-		userSvc:   do.MustInvokeAs[usersService](i),
-		userStore: do.MustInvokeAs[userStore](i),
-		adminPW:   hash,
+		cfg:             cfg,
+		log:             logging.New("api-handler"),
+		docStore:        do.MustInvokeAs[documentStore](i),
+		effectStore:     do.MustInvokeAs[effectStore](i),
+		effectTypeStore: do.MustInvokeAs[effectTypeStore](i),
+		index:           do.MustInvokeAs[documentIndex](i),
+		blob:            do.MustInvokeAs[blobStore](i),
+		userSvc:         do.MustInvokeAs[usersService](i),
+		userStore:       do.MustInvokeAs[userStore](i),
+		adminPW:         hash,
 	}
 }
 
@@ -105,14 +126,19 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 		api.Get("/tags", h.listTags)
 		api.Get("/tags/suggest", h.suggestTags)
 		api.Get("/manufacturers/suggest", h.suggestManufacturers)
+		api.Get("/effecttypes", h.listEffectTypes)
 		api.Get("/documents/search", h.searchDocuments)
 		api.Get("/documents/{id}/files/{filename}", h.downloadFile)
+		api.Get("/effects/search", h.searchEffects)
+		api.Get("/effects/{id}/image", h.getEffectImage)
+		api.Get("/connectors/{name}", h.getConnectorImage)
 
 		api.Group(func(protected chi.Router) {
 			protected.Use(h.authMiddleware)
 			protected.Get("/users/me", h.me)
 			protected.Post("/users/change-password", h.changePassword)
 			protected.Post("/documents/index", h.indexDocument)
+			protected.Post("/effects", h.createEffect)
 		})
 	})
 }
@@ -199,33 +225,48 @@ func (h *Handler) me(w http.ResponseWriter, r *http.Request) {
 	sub, _ := r.Context().Value(ctxSubjectKey{}).(string)
 	roles, _ := r.Context().Value(ctxRolesKey{}).([]string)
 
-	// If admin, return minimal response
+	// Check if admin
+	isAdmin := false
 	for _, role := range roles {
 		if role == "admin" {
-			respondJSON(w, http.StatusOK, map[string]any{
-				"email": "admin",
-			})
-			return
+			isAdmin = true
+			break
 		}
 	}
 
-	// For regular users, fetch complete user data from database
+	// Try to fetch user from database
+	var userData map[string]any
 	user, exists := h.userStore.GetUserByEmail(r.Context(), sub)
-	if !exists {
+
+	if exists {
+		// User found in database
+		userData = map[string]any{
+			"id":        user.ID,
+			"email":     user.Email,
+			"firstName": user.FirstName,
+			"lastName":  user.LastName,
+			"address":   user.Address,
+			"created":   user.Created,
+			"updated":   user.Updated,
+		}
+	} else if isAdmin {
+		// Admin not in database, return minimal but complete data
+		userData = map[string]any{
+			"id":        "admin",
+			"email":     "admin",
+			"firstName": "Administrator",
+			"lastName":  "",
+			"address":   nil,
+			"created":   0,
+			"updated":   0,
+		}
+	} else {
+		// Regular user not found
 		respondError(w, http.StatusNotFound, "user not found")
 		return
 	}
 
-	// Return user data without password
-	respondJSON(w, http.StatusOK, map[string]any{
-		"id":        user.ID,
-		"email":     user.Email,
-		"firstName": user.FirstName,
-		"lastName":  user.LastName,
-		"address":   user.Address,
-		"created":   user.Created,
-		"updated":   user.Updated,
-	})
+	respondJSON(w, http.StatusOK, userData)
 }
 
 func (h *Handler) changePassword(w http.ResponseWriter, r *http.Request) {
@@ -575,4 +616,191 @@ func (h *Handler) suggestManufacturers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusOK, map[string]any{"manufacturers": manufacturers, "count": len(manufacturers)})
+}
+
+func (h *Handler) searchEffects(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("q")
+	skip := parseInt64Param(r, "skip", 0)
+	limit := parseInt64Param(r, "limit", 20)
+	sort := r.URL.Query().Get("sort")
+	order := r.URL.Query().Get("order") // "asc" or "desc"
+
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	result, err := h.effectStore.SearchEffects(ctx, query, skip, limit, sort, order)
+	if err != nil {
+		h.log.Error("search effects failed", "error", err, "query", query, "skip", skip, "limit", limit)
+		respondError(w, http.StatusInternalServerError, "search effects failed")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]any{
+		"results": result.Items,
+		"count":   len(result.Items),
+		"total":   result.Total,
+		"skip":    result.Skip,
+		"limit":   result.Limit,
+	})
+}
+
+func (h *Handler) getEffectImage(w http.ResponseWriter, r *http.Request) {
+	effectID := chi.URLParam(r, "id")
+	if strings.TrimSpace(effectID) == "" {
+		respondError(w, http.StatusBadRequest, "effect id is required")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	// Get effect from store
+	effect, err := h.effectStore.GetEffectByID(ctx, effectID)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "effect not found")
+		return
+	}
+
+	// Get first image if available
+	if len(effect.Images) == 0 {
+		respondError(w, http.StatusNotFound, "no images available")
+		return
+	}
+
+	data, err := h.blob.Load(effect.Images[0])
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to load image")
+		return
+	}
+
+	w.Header().Set("Content-Type", effect.Images[0].MIMEType)
+	w.Header().Set("Cache-Control", "public, max-age=3600")
+	w.Write(data)
+}
+
+func (h *Handler) getConnectorImage(w http.ResponseWriter, r *http.Request) {
+	name := chi.URLParam(r, "name")
+	// Decode URL-encoded characters (e.g., %2B → +)
+	decodedName, err := url.QueryUnescape(name)
+	if err != nil {
+		decodedName = name
+	}
+
+	if strings.TrimSpace(decodedName) == "" {
+		respondError(w, http.StatusBadRequest, "connector name is required")
+		return
+	}
+
+	// Try to find the image with different extensions
+	var data []byte
+	var fileErr error
+	var mimeType string
+
+	// Try .png first
+	data, fileErr = connector.GetImage(decodedName + ".png")
+	if fileErr == nil {
+		mimeType = "image/png"
+	} else {
+		// Try .jpg
+		data, fileErr = connector.GetImage(decodedName + ".jpg")
+		if fileErr == nil {
+			mimeType = "image/jpeg"
+		} else {
+			// Try .jpeg
+			data, fileErr = connector.GetImage(decodedName + ".jpeg")
+			if fileErr == nil {
+				mimeType = "image/jpeg"
+			}
+		}
+	}
+
+	if fileErr != nil {
+		respondError(w, http.StatusNotFound, "connector image not found")
+		return
+	}
+
+	w.Header().Set("Content-Type", mimeType)
+	w.Header().Set("Cache-Control", "public, max-age=86400")
+	w.Write(data)
+}
+
+func (h *Handler) listEffectTypes(w http.ResponseWriter, r *http.Request) {
+	effectTypes, err := h.effectTypeStore.GetAllEffectTypes(r.Context())
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "list effect types failed")
+		return
+	}
+	respondJSON(w, http.StatusOK, effectTypes)
+}
+
+func (h *Handler) createEffect(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// Parse multipart form (max 32MB)
+	if err := r.ParseMultipartForm(32 << 20); err != nil {
+		respondError(w, http.StatusBadRequest, "failed to parse form")
+		return
+	}
+
+	// Extract form values
+	effectType := r.FormValue("effectType")
+	manufacturer := r.FormValue("manufacturer")
+	model := r.FormValue("model")
+	voltage := r.FormValue("voltage")
+	current := r.FormValue("current")
+	connector := r.FormValue("connector")
+
+	// Validate required fields
+	if effectType == "" || manufacturer == "" || model == "" || connector == "" {
+		respondError(w, http.StatusBadRequest, "missing required fields")
+		return
+	}
+
+	// Create new effect
+	now := time.Now()
+	effect := &domain.Effect{
+		ID:             fmt.Sprintf("effect_%d", now.UnixNano()),
+		CreatedAt:      now,
+		LastModifiedAt: now,
+		EffectType:     effectType,
+		Manufacturer:   manufacturer,
+		Model:          model,
+		Voltage:        voltage,
+		Current:        current,
+		Connector:      connector,
+		Images:         []*domain.ContainerInfo{},
+	}
+
+	// Handle image upload if provided
+	file, handler, err := r.FormFile("image")
+	if err == nil {
+		defer file.Close()
+
+		// Read file data
+		buf, err := io.ReadAll(file)
+		if err != nil {
+			respondError(w, http.StatusInternalServerError, "failed to read image")
+			return
+		}
+
+		// Save to blob store
+		mimeType := handler.Header.Get("Content-Type")
+		if mimeType == "" {
+			mimeType = "image/jpeg"
+		}
+		containerInfo, err := h.blob.Save(buf, mimeType)
+		if err != nil {
+			respondError(w, http.StatusInternalServerError, "failed to save image")
+			return
+		}
+		effect.Images = append(effect.Images, containerInfo)
+	}
+
+	// Save effect to database
+	if err := h.effectStore.CreateEffect(ctx, effect); err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to create effect")
+		return
+	}
+
+	respondJSON(w, http.StatusCreated, effect)
 }
