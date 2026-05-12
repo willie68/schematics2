@@ -831,18 +831,18 @@ func importEffectsData(ctx context.Context, db *mongo.Database, dir string, blob
 		// Insert into MongoDB
 		if !dryRun {
 			doc := bson.M{
-				"_id":             eff.ID,
-				"createdAt":       eff.CreatedAt,
-				"lastModifiedAt":  eff.LastModifiedAt,
-				"effectType":      eff.EffectType,
-				"manufacturer":    eff.Manufacturer,
-				"model":           eff.Model,
-				"tags":            eff.Tags,
-				"comment":         eff.Comment,
-				"images":          eff.Images,
-				"connector":       eff.Connector,
-				"voltage":         eff.Voltage,
-				"current":         eff.Current,
+				"_id":            eff.ID,
+				"createdAt":      eff.CreatedAt,
+				"lastModifiedAt": eff.LastModifiedAt,
+				"effectType":     eff.EffectType,
+				"manufacturer":   eff.Manufacturer,
+				"model":          eff.Model,
+				"tags":           eff.Tags,
+				"comment":        eff.Comment,
+				"images":         eff.Images,
+				"connector":      eff.Connector,
+				"voltage":        eff.Voltage,
+				"current":        eff.Current,
 			}
 
 			if _, err := effectsCol.InsertOne(ctx, doc); err != nil {
