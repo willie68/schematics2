@@ -11,7 +11,7 @@
           style="flex:1;"
         />
         <Button icon="pi pi-search" @click="search()" severity="primary" v-tooltip.bottom="'Suchen'" />
-        <Button icon="pi pi-plus" severity="success" @click="showUploadDialog = true" v-tooltip.bottom="'Effekt hinzufügen'" />
+        <Button v-if="isLoggedIn" icon="pi pi-plus" severity="success" @click="showUploadDialog = true" v-tooltip.bottom="'Effekt hinzufügen'" />
       </div>
       
       <div style="display:flex; gap:1rem; align-items:center;">
@@ -190,6 +190,9 @@ import Dropdown from 'primevue/dropdown'
 import Dialog from 'primevue/dialog'
 import EffectUploadDialog from '../components/EffectUploadDialog.vue'
 import api from '../services/api'
+import { useAuth } from '../composables/useAuth'
+
+const { isLoggedIn } = useAuth()
 
 const query = ref('')
 const effects = ref([])

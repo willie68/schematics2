@@ -1,5 +1,15 @@
 # History
 
+## 0.2.8 - 2026-05-13
+
+- **Frontend**: Effekt-Upload nur für angemeldete Benutzer
+  - "Effekt hinzufügen" Button wird nur angezeigt wenn `isLoggedIn` true
+  - useAuth() composable Integration in EffectsView
+- **Backend**: POST `/api/v1/effects` geschützt durch authMiddleware
+  - 401 Unauthorized wenn kein Bearer Token
+  - 401 Unauthorized wenn Token ungültig
+  - Nur authentifizierte Benutzer können Effects erstellen
+
 ## 0.2.7 - 2026-05-12
 
 - **Frontend UI**: Button-Styling vereinheitlicht
