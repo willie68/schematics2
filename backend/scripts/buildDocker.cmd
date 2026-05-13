@@ -7,11 +7,11 @@ set BASE_PATH=/schematics2
 call npm run build
 if errorlevel 1 (
     echo Error building frontend!
-    cd ..\backend\scripts
+    cd ..\backend
     pause
     exit /b 1
 )
-cd ..\backend\scripts
+cd ..\backend
 echo Frontend build complete!
 echo.
 echo Step 2: Generating TLS certificate...
