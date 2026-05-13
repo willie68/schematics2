@@ -9,10 +9,10 @@ import (
 
 	"github.com/samber/do/v2"
 	"github.com/willie68/schematic2/backend/internal"
-	"github.com/willie68/schematic2/backend/internal/api"
 	"github.com/willie68/schematic2/backend/internal/config"
 	"github.com/willie68/schematic2/backend/internal/logging"
 	"github.com/willie68/schematic2/backend/internal/services/health"
+	"github.com/willie68/schematic2/backend/internal/version"
 )
 
 var (
@@ -28,7 +28,20 @@ type shttpsrv interface {
 func main() {
 	cfg := config.LoadFromEnv()
 
-	logger.Info("starting schematic2 backend", "version", api.BackendVersion, "http_port", cfg.HTTP.Port, "https_port", cfg.HTTP.SSLPort)
+	// Build version info
+	versionInfo := map[string]any{
+		"version":    version.Version,
+		"http_port":  cfg.HTTP.Port,
+		"https_port": cfg.HTTP.SSLPort,
+	}
+	if version.BuildTime != "" {
+		versionInfo["build_time"] = version.BuildTime
+	}
+	if version.Commit != "" {
+		versionInfo["commit"] = version.Commit
+	}
+
+	logger.Info("starting schematic2 backend", versionInfo)
 
 	err := internal.InitServices(inj, cfg)
 	if err != nil {
@@ -45,12 +58,12 @@ func main() {
 	httpService := do.MustInvokeAs[shttpsrv](inj)
 
 	httpService.StartServers(router, healthHandler.Router())
-	log.Printf("schematic2 backend started: http=%d https=%d", cfg.HTTP.Port, cfg.HTTP.SSLPort)
+	logger.Info("schematic2 backend listening", "http_port", cfg.HTTP.Port, "https_port", cfg.HTTP.SSLPort)
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 	<-sigCh
 
-	log.Printf("shutdown signal received, stopping servers")
+	logger.Info("shutdown signal received, stopping servers")
 	httpService.ShutdownServers()
 }
