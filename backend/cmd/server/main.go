@@ -56,6 +56,20 @@ func main() {
 		"healthcheck_start_delay", cfg.Healthcheck.StartDelay,
 	)
 
+	// Log admin credentials status
+	maskedPass := ""
+	if cfg.AdminPass != "" {
+		maskedPass = ""
+		for i := 0; i < len(cfg.AdminPass); i++ {
+			maskedPass += "*"
+		}
+	}
+	logger.Info("admin credentials",
+		"admin_user", cfg.AdminUser,
+		"admin_pass_length", len(cfg.AdminPass),
+		"admin_pass_masked", maskedPass,
+	)
+
 	err := internal.InitServices(inj, cfg)
 	if err != nil {
 		log.Fatalf("init services: %v", err)
