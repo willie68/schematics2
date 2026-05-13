@@ -1,5 +1,21 @@
 # History
 
+## 0.2.11 - 2026-05-13
+
+- **Backend**: Deleted-Flag in INF-Dateien (Blob Metadata)
+  - containerInfoEntry Struct um `Deleted bool` Feld erweitert (mit omitempty)
+  - LoadContainerInfos lädt jetzt auch das Deleted Flag
+  - Neue BlobService.DeleteByInfo() Methode:
+    - Erhält ContainerInfo Parameter
+    - Lädt INF-Datei des Containers
+    - Findet Eintrag nach Offset und Length
+    - Markiert Eintrag als deleted
+    - Speichert aktualisierte INF-Datei
+  - DELETE /api/v1/documents/{id}:
+    - Ruft blob.DeleteByInfo() für alle Files auf
+    - Markiert Files persistent in .inf Dateien
+    - Ermöglicht späteren Restore (noch nicht implementiert)
+
 ## 0.2.10 - 2026-05-13
 
 - **Backend**: Soft-Delete für Dokument-Files

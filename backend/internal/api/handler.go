@@ -61,6 +61,7 @@ type documentIndex interface {
 type blobStore interface {
 	Save(data []byte, mimeType string) (*domain.ContainerInfo, error)
 	Load(ci *domain.ContainerInfo) ([]byte, error)
+	DeleteByInfo(ci *domain.ContainerInfo) error
 }
 
 type usersService interface {
@@ -449,9 +450,13 @@ func (h *Handler) deleteDocument(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Mark all files as deleted in the blob container metadata
+	// Mark all files as deleted in the blob container metadata (update .inf files)
 	for i := range doc.Files {
 		if doc.Files[i].Container != nil {
+			if err := h.blob.DeleteByInfo(doc.Files[i].Container); err != nil {
+				// Log the error but continue deleting other files
+				h.log.Warn("failed to mark file as deleted in blob store", "error", err, "container", doc.Files[i].Container.ContainerNumber)
+			}
 			doc.Files[i].Container.Deleted = true
 		}
 	}

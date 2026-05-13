@@ -464,6 +464,7 @@ type containerInfoEntry struct {
 	OriginalLength int64  `json:"originalLength"`
 	MIMEType       string `json:"mimeType,omitempty"`
 	Compressed     string `json:"compressed,omitempty"`
+	Deleted        bool   `json:"deleted,omitempty"`
 }
 
 // appendContainerInfoEntry writes a ContainerInfo entry to the .inf file
@@ -487,6 +488,7 @@ func (s *Service) appendContainerInfoEntry(containerNum int, ci *domain.Containe
 		OriginalLength: ci.OriginalLength,
 		MIMEType:       ci.MIMEType,
 		Compressed:     ci.Compressed,
+		Deleted:        ci.Deleted,
 	})
 
 	// Write back to file
@@ -528,6 +530,7 @@ func (s *Service) LoadContainerInfos(containerNum int) ([]*domain.ContainerInfo,
 			OriginalLength:  entry.OriginalLength,
 			MIMEType:        entry.MIMEType,
 			Compressed:      entry.Compressed,
+			Deleted:         entry.Deleted,
 		}
 	}
 
@@ -560,4 +563,55 @@ func (s *Service) ListAllContainerInfos() (map[int][]*domain.ContainerInfo, erro
 	}
 
 	return result, nil
+}
+
+// DeleteByInfo marks a file as deleted in the .inf file
+// It gets the container lock internally
+func (s *Service) DeleteByInfo(ci *domain.ContainerInfo) error {
+	if ci == nil {
+		return errors.New("container info is nil")
+	}
+
+	containerNum := ci.ContainerNumber
+	containerLock := s.getContainerLock(containerNum)
+	containerLock.Lock()
+	defer containerLock.Unlock()
+
+	infPath := filepath.Join(s.dir, fmt.Sprintf("%d.inf", containerNum))
+
+	// Load existing entries
+	var entries []containerInfoEntry
+	if data, err := os.ReadFile(infPath); err == nil {
+		if err = json.Unmarshal(data, &entries); err != nil {
+			return fmt.Errorf("parse existing .inf file: %w", err)
+		}
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("read .inf file: %w", err)
+	}
+
+	// Find and mark entry as deleted
+	found := false
+	for i := range entries {
+		if entries[i].Offset == ci.Offset && entries[i].Length == ci.Length {
+			entries[i].Deleted = true
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("container entry not found: offset=%d, length=%d", ci.Offset, ci.Length)
+	}
+
+	// Write back to file
+	data, err := json.MarshalIndent(entries, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal .inf data: %w", err)
+	}
+
+	if err = os.WriteFile(infPath, data, 0o644); err != nil {
+		return fmt.Errorf("write .inf file: %w", err)
+	}
+
+	return nil
 }
