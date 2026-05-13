@@ -107,7 +107,7 @@
               option-label="label" 
               option-value="value" 
               placeholder="Typ wählen..."
-              :disabled="file.isNew && !file.type"
+              :disabled="file.deleted"
             />
             <Button 
               icon="pi pi-trash" 
