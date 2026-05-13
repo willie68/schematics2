@@ -1,5 +1,18 @@
 # History
 
+## 0.2.10 - 2026-05-13
+
+- **Backend**: Soft-Delete für Dokument-Files
+  - ContainerInfo Model um `Deleted bool` Feld erweitert (mit `omitempty`)
+  - Rückwärtskompatibilität: alte INF-Dateien ohne Deleted Feld funktionieren
+  - DELETE `/api/v1/documents/{id}`:
+    - Markiert alle Files als deleted (Deleted: true)
+    - Speichert Metadaten mit gelöschtem Status
+    - Löscht dann das Dokument aus der DB
+  - GET `/api/v1/documents/{id}/files/{filename}`:
+    - Überprüft ob File gelöscht ist
+    - Antwortet mit 404 wenn File gelöscht
+
 ## 0.2.9 - 2026-05-13
 
 - **Frontend**: Dokument-Löschung in SearchView

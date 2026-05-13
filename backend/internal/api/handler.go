@@ -423,7 +423,7 @@ func (h *Handler) deleteDocument(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	user := h.getAuthenticatedUser(r)
-	
+
 	// Get the document to check permissions
 	doc, err := h.docStore.GetByID(ctx, docID)
 	if err != nil {
@@ -446,6 +446,19 @@ func (h *Handler) deleteDocument(w http.ResponseWriter, r *http.Request) {
 	// Admin can delete everything, users can only delete their own
 	if !isAdmin && doc.Owner != user {
 		respondError(w, http.StatusForbidden, "not authorized to delete this document")
+		return
+	}
+
+	// Mark all files as deleted in the blob container metadata
+	for i := range doc.Files {
+		if doc.Files[i].Container != nil {
+			doc.Files[i].Container.Deleted = true
+		}
+	}
+
+	// Update the document with deleted files, then delete it
+	if err := h.docStore.Upsert(doc); err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to mark files as deleted")
 		return
 	}
 
@@ -587,6 +600,12 @@ func (h *Handler) downloadFile(w http.ResponseWriter, r *http.Request) {
 
 	if file == nil {
 		respondError(w, http.StatusNotFound, "file not found")
+		return
+	}
+
+	// Check if file is deleted
+	if file.Container != nil && file.Container.Deleted {
+		respondError(w, http.StatusNotFound, "file not found (deleted)")
 		return
 	}
 
