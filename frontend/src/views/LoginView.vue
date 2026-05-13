@@ -4,12 +4,12 @@
     <div style="display:grid; gap:1.5rem;">
       <div style="box-sizing:border-box; width:100%;">
         <label for="user" style="display:block; font-weight:500; font-size:0.95rem; margin-bottom:0.5rem;">Benutzername</label>
-        <InputText id="user" v-model="username" style="width:100%; min-height:42px; box-sizing:border-box;" />
+        <InputText id="user" v-model="username" @keyup.enter="login" style="width:100%; min-height:42px; box-sizing:border-box;" />
       </div>
 
       <div style="box-sizing:border-box; width:100%;">
         <label for="pass" style="display:block; font-weight:500; font-size:0.95rem; margin-bottom:0.5rem;">Passwort</label>
-        <Password id="pass" v-model="password" :feedback="false" toggleMask style="width:100%; min-height:42px; box-sizing:border-box;" />
+        <Password id="pass" v-model="password" :feedback="false" toggleMask @keyup.enter="login" style="width:100%; min-height:42px; box-sizing:border-box;" />
       </div>
 
       <Button label="Einloggen" icon="pi pi-sign-in" @click="login" />
