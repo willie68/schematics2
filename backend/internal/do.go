@@ -98,10 +98,18 @@ func NewRouter(inj do.Injector) (http.Handler, error) {
 	r := chi.NewRouter()
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins: []string{"*"},
-		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowedHeaders: []string{"Accept", "Authorization", "Content-Type"},
 		MaxAge:         int((10 * time.Minute).Seconds()),
 	}))
+
+	// Debug middleware: log every incoming request path
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			logger.Debug("incoming request", "method", req.Method, "path", req.URL.Path, "remote", req.RemoteAddr)
+			next.ServeHTTP(w, req)
+		})
+	})
 
 	clientRedirect := version.ClientBasePath + "/client"
 
