@@ -3,15 +3,15 @@ setlocal enabledelayedexpansion
 
 REM Accept optional BASE_PATH argument for reverse-proxy deployment
 REM Usage: buildDocker.cmd [BASE_PATH]
-REM   buildDocker.cmd            builds for direct container access (BASE_PATH=/client)
-REM   buildDocker.cmd /schematics2  builds for reverse-proxy at /schematics2
+REM   buildDocker.cmd            builds for reverse-proxy at /schematics2 (default)
+REM   buildDocker.cmd /client    builds for direct container access
 
 if "%~1"=="" (
-    set BASE_PATH=/client
-    echo Building Schematic2 Docker image for direct container access...
+    set BASE_PATH=/schematics2
+    echo Building Schematic2 Docker image for reverse-proxy at /schematics2 ^(default^)...
 ) else (
     set BASE_PATH=%~1
-    echo Building Schematic2 Docker image for reverse-proxy at !BASE_PATH!...
+    echo Building Schematic2 Docker image with BASE_PATH=!BASE_PATH!...
 )
 
 echo.

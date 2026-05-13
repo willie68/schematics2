@@ -17,15 +17,15 @@ const defaultConfigFile = "configs/service.yaml"
 // Config contains runtime configuration for the backend service.
 // It follows the go-micro style service.yaml structure.
 type Config struct {
-	SecretFile     string         `yaml:"secretfile"`
-	HTTP           shttp.Config   `yaml:"http"`
-	Healthcheck    health.Config  `yaml:"healthcheck"`
-	Metrics        Metrics        `yaml:"metrics"`
-	Logging        logging.Config `yaml:"logging"`
-	Auth           Auth           `yaml:"auth"`
-	Profiling      Profiling      `yaml:"profiling"`
-	MongoDB        MongoDB        `yaml:"mongodb"`
-	Repository     Repository     `yaml:"repository"`
+	SecretFile  string         `yaml:"secretfile"`
+	HTTP        shttp.Config   `yaml:"http"`
+	Healthcheck health.Config  `yaml:"healthcheck"`
+	Metrics     Metrics        `yaml:"metrics"`
+	Logging     logging.Config `yaml:"logging"`
+	Auth        Auth           `yaml:"auth"`
+	Profiling   Profiling      `yaml:"profiling"`
+	MongoDB     MongoDB        `yaml:"mongodb"`
+	Repository  Repository     `yaml:"repository"`
 
 	// ClientBasePath is the external base path prefix (e.g. /schematics2 for reverse-proxy).
 	// Leave empty for direct container access. Set via CLIENT_BASE_PATH env var.
@@ -50,9 +50,9 @@ type Profiling struct {
 }
 
 type Repository struct {
-	RepositoryPath      string `yaml:"repositoryPath"`
-	ContainerMaxSizeMB  int64  `yaml:"containerMaxSizeMB"`
-	CompressionType     string `yaml:"compressionType"` // "none", "gzip", "zstd"
+	RepositoryPath     string `yaml:"repositoryPath"`
+	ContainerMaxSizeMB int64  `yaml:"containerMaxSizeMB"`
+	CompressionType    string `yaml:"compressionType"` // "none", "gzip", "zstd"
 }
 
 type MongoDB struct {
