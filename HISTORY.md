@@ -1,5 +1,15 @@
 # History
 
+## 0.2.13 - 2026-05-13
+
+- **Frontend**: Manufacturer und Model auch editierbar
+  - AutoComplete für Hersteller-Vorschläge
+  - Validierung erforderlich für beide Felder
+  
+- **Backend**: PATCH Endpoint erweitert
+  - Manufacturer und Model können aktualisiert werden
+  - Validierung: TrimSpace um Leerzeichen zu entfernen
+
 ## 0.2.12 - 2026-05-13
 
 - **Frontend**: Dokument-Edit Dialog

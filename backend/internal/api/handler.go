@@ -411,6 +411,14 @@ func (h *Handler) updateDocument(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update editable fields
+	if manufacturer, ok := payload["manufacturer"].(string); ok && strings.TrimSpace(manufacturer) != "" {
+		doc.Manufacturer = manufacturer
+	}
+
+	if model, ok := payload["model"].(string); ok && strings.TrimSpace(model) != "" {
+		doc.Model = model
+	}
+
 	if subtitle, ok := payload["subtitle"].(string); ok {
 		doc.Subtitle = subtitle
 	}

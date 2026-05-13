@@ -1,15 +1,22 @@
 <template>
   <Dialog v-model:visible="visible" header="Dokument bearbeiten" :modal="true" style="width: 1000px">
     <div style="display:grid; gap:1rem;">
-      <!-- Manufacturer & Model (read-only) -->
+      <!-- Manufacturer & Model -->
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.8rem;">
         <div>
-          <label style="display:block; margin-bottom:0.3rem; font-size:0.85rem">Hersteller</label>
-          <InputText v-model="form.manufacturer" disabled style="width:100%" />
+          <label style="display:block; margin-bottom:0.3rem; font-size:0.85rem">Hersteller *</label>
+          <AutoComplete
+            v-model="form.manufacturer"
+            :suggestions="suggestedManufacturers"
+            @complete="onManufacturerSuggest"
+            placeholder="Hersteller eingeben..."
+            :typeahead="false"
+            style="width:100%"
+          />
         </div>
         <div>
-          <label style="display:block; margin-bottom:0.3rem; font-size:0.85rem">Modell</label>
-          <InputText v-model="form.model" disabled style="width:100%" />
+          <label style="display:block; margin-bottom:0.3rem; font-size:0.85rem">Modell *</label>
+          <InputText v-model="form.model" placeholder="Modell eingeben..." style="width:100%" />
         </div>
       </div>
 
@@ -154,6 +161,7 @@ const errorMessage = ref('')
 const suggestedTags = ref([])
 const selectedTags = ref([])
 const currentTagQuery = ref('')
+const suggestedManufacturers = ref([])
 
 const docTypes = [
   { label: 'Schaltplan', value: 'schematic' },
@@ -221,6 +229,26 @@ function resetForm() {
   }
   selectedTags.value = []
   errorMessage.value = ''
+}
+
+async function onManufacturerSuggest(event) {
+  const query = event.query || ''
+
+  if (!query) {
+    suggestedManufacturers.value = []
+    return
+  }
+
+  try {
+    const { data } = await api.get('/api/v1/manufacturers/suggest', {
+      params: { q: query, limit: 10 },
+    })
+    suggestedManufacturers.value = (data.manufacturers || [])
+      .map((m) => String(m || '').trim())
+      .filter(Boolean)
+  } catch (err) {
+    suggestedManufacturers.value = []
+  }
 }
 
 async function onTagSuggest(event) {
@@ -332,6 +360,16 @@ function fileToBase64(file) {
 async function submit() {
   errorMessage.value = ''
 
+  if (!form.value.manufacturer.trim()) {
+    errorMessage.value = 'Hersteller ist erforderlich'
+    return
+  }
+
+  if (!form.value.model.trim()) {
+    errorMessage.value = 'Modell ist erforderlich'
+    return
+  }
+
   if (form.value.files.length === 0) {
     errorMessage.value = 'Bitte behalten Sie mindestens eine Datei'
     return
@@ -378,6 +416,8 @@ async function submit() {
       }))
 
     const payload = {
+      manufacturer: form.value.manufacturer,
+      model: form.value.model,
       subtitle: form.value.subtitle,
       tags: selectedTags.value.map((t) => normalizeTag(t)).filter(Boolean),
       description: form.value.description,
