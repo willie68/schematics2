@@ -29,32 +29,7 @@ func main() {
 	cfg := config.LoadFromEnv()
 
 	// Log version and build information
-	logFields := []any{
-		"version", version.Version,
-		"http_port", cfg.HTTP.Port,
-		"https_port", cfg.HTTP.SSLPort,
-	}
-	if version.BuildTime != "" {
-		logFields = append(logFields, "build_time", version.BuildTime)
-	}
-	if version.Commit != "" {
-		logFields = append(logFields, "commit", version.Commit)
-	}
-	if version.ClientBasePath != "" {
-		logFields = append(logFields, "client_base_path", version.ClientBasePath)
-	}
-
-	logger.Info("starting schematic2 backend", logFields...)
-
-	// Log sanitized configuration (no passwords)
-	logger.Info("configuration loaded",
-		"mongodb_hosts", cfg.MongoDB.Hosts,
-		"mongodb_database", cfg.MongoDB.Database,
-		"repository_path", cfg.Repository.RepositoryPath,
-		"repository_container_max_size_mb", cfg.Repository.ContainerMaxSizeMB,
-		"healthcheck_period", cfg.Healthcheck.Period,
-		"healthcheck_start_delay", cfg.Healthcheck.StartDelay,
-	)
+	startupLog(cfg)
 
 	// Log admin credentials status
 	maskedPass := ""
@@ -66,7 +41,6 @@ func main() {
 	}
 	logger.Info("admin credentials",
 		"admin_user", cfg.AdminUser,
-		"admin_pass_length", len(cfg.AdminPass),
 		"admin_pass_masked", maskedPass,
 	)
 
@@ -92,4 +66,23 @@ func main() {
 
 	logger.Info("shutdown signal received, stopping servers")
 	httpService.ShutdownServers()
+}
+
+func startupLog(cfg config.Config) {
+	logFields := []any{
+		"version", version.Version,
+		"http_port", cfg.HTTP.Port,
+		"https_port", cfg.HTTP.SSLPort,
+	}
+	if version.BuildTime != "" {
+		logFields = append(logFields, "build_time", version.BuildTime)
+	}
+	if version.Commit != "" {
+		logFields = append(logFields, "commit", version.Commit)
+	}
+	if version.ClientBasePath != "" {
+		logFields = append(logFields, "client_base_path", version.ClientBasePath)
+	}
+
+	logger.Info("starting schematic2 backend", logFields...)
 }
