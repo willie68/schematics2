@@ -23,11 +23,7 @@ import (
 	"github.com/willie68/schematic2/backend/internal/logging"
 	"github.com/willie68/schematic2/backend/internal/repository/connector"
 	"github.com/willie68/schematic2/backend/internal/services/users"
-)
-
-const (
-	// BackendVersion should be synced with HISTORY.md
-	BackendVersion = "0.2.7"
+	"github.com/willie68/schematic2/backend/internal/version"
 )
 
 type documentStore interface {
@@ -154,7 +150,7 @@ func (h *Handler) health(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) info(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, infoResponse{
-		Version: BackendVersion,
+		Version: version.Version,
 		Status:  "ok",
 	})
 }

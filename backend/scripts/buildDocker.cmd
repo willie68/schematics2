@@ -1,5 +1,17 @@
 @echo off
+setlocal enabledelayedexpansion
+
 echo Building Schematic2 Docker image with deployment config...
+echo.
+
+REM Get build information for ldflags
+for /f "tokens=*" %%i in ('powershell -Command "[System.DateTime]::UtcNow.ToString('o')"') do set BUILD_TIME=%%i
+for /f "tokens=*" %%i in ('git rev-parse --short HEAD 2^>nul') do set VCS_REF=%%i
+if "!VCS_REF!"=="" set VCS_REF=unknown
+
+echo Build Information:
+echo   BUILD_TIME: !BUILD_TIME!
+echo   VCS_REF (Commit): !VCS_REF!
 echo.
 echo Step 1: Generating TLS certificate...
 go run ./cmd/gencert
@@ -17,7 +29,11 @@ if not exist .\build\package\Dockerfile (
     pause
     exit /b 1
 )
-docker build -f ./build/package/Dockerfile --build-arg BASE_PATH=/schematics2 ../ -t mcs/schematics2:latest
+docker build -f ./build/package/Dockerfile ^
+    --build-arg BASE_PATH=/schematics2 ^
+    --build-arg BUILD_TIME=!BUILD_TIME! ^
+    --build-arg VCS_REF=!VCS_REF! ^
+    ../ -t mcs/schematics2:latest
 if errorlevel 1 (
     echo Error building Docker image!
     pause
