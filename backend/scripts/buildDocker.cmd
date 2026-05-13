@@ -1,7 +1,20 @@
 @echo off
-echo Building Schematic2 Docker image...
+echo Building Schematic2 Docker image with deployment config...
 echo.
-echo Step 1: Generating TLS certificate...
+echo Step 1: Building frontend with /schematics2 base path...
+cd ..\frontend
+set BASE_PATH=/schematics2
+call npm run build
+if errorlevel 1 (
+    echo Error building frontend!
+    cd ..\backend\scripts
+    pause
+    exit /b 1
+)
+cd ..\backend\scripts
+echo Frontend build complete!
+echo.
+echo Step 2: Generating TLS certificate...
 go run ./cmd/gencert
 if errorlevel 1 (
     echo Error generating TLS certificate!
@@ -10,7 +23,7 @@ if errorlevel 1 (
 )
 echo TLS certificate generation complete!
 echo.
-echo Step 2: Building Docker image...
+echo Step 3: Building Docker image...
 if not exist .\build\package\Dockerfile (
     echo Warning: Dockerfile not found at .\build\package\Dockerfile
     echo Please create a Dockerfile for schematic2
@@ -18,15 +31,26 @@ if not exist .\build\package\Dockerfile (
     exit /b 1
 )
 docker build -f ./build/package/Dockerfile ../ -t mcs/schematics2:latest
+if errorlevel 1 (
+    echo Error building Docker image!
+    pause
+    exit /b 1
+)
+echo Docker image build complete!
 echo.
-echo Step 3: Tagging image for Docker registry...
+echo Step 4: Tagging image for Docker registry...
 docker tag mcs/schematics2:latest 192.168.178.14:5000/mcs/schematics2:latest
 echo.
-echo Step 4: Pushing image to Docker registry (192.168.178.14:5000)...
+echo Step 5: Pushing image to Docker registry (192.168.178.14:5000)...
 docker push 192.168.178.14:5000/mcs/schematics2:latest
 echo.
 echo Docker image successfully pushed to 192.168.178.14:5000/mcs/schematics2:latest
 echo.
-echo To run the container, execute:
+echo On Ubuntu Server (192.168.178.14), pull the image with:
+echo docker pull 192.168.178.14:5000/mcs/schematics2:latest
+echo.
+echo Or use docker-compose or Kubernetes to deploy from the registry.
+echo.
+echo To run the container locally, execute:
 echo docker run -p 8080:8080 -p 8443:8443 -v %%cd%%\configs:/app/configs mcs/schematics2:latest
 pause
