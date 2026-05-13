@@ -69,4 +69,3 @@ echo Or use docker-compose or Kubernetes to deploy from the registry.
 echo.
 echo To run the container locally, execute:
 echo docker run -p 8080:8080 -p 8443:8443 -v %%cd%%\configs:/app/configs mcs/schematics2:latest
-pause
