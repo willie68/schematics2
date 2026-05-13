@@ -4,10 +4,15 @@ import vue from '@vitejs/plugin-vue'
 // Base path - can be overridden via environment variable
 // Usage: BASE_PATH=/schematics2 npm run build
 const basePath = process.env.BASE_PATH ? `${process.env.BASE_PATH}/client/` : '/client/'
+// API base is the root of the base path (e.g. /schematics2/ or /)
+const apiBase = process.env.BASE_PATH ? `${process.env.BASE_PATH}/` : '/'
 
 export default defineConfig({
   base: basePath,
   plugins: [vue()],
+  define: {
+    __API_BASE__: JSON.stringify(apiBase),
+  },
   server: {
     port: 5173,
     proxy: {
