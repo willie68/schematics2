@@ -31,8 +31,8 @@ import { useAuth } from '../composables/useAuth'
 
 const router = useRouter()
 const { setLoggedIn } = useAuth()
-const username = ref('admin')
-const password = ref('admin123')
+const username = ref('')
+const password = ref('')
 const message = ref('')
 const messageType = ref('info')
 
