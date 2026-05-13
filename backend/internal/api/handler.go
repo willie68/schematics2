@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -140,6 +141,7 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 			protected.Get("/users/me", h.me)
 			protected.Post("/users/change-password", h.changePassword)
 			protected.Post("/documents/index", h.indexDocument)
+			protected.Patch("/documents/{id}", h.updateDocument)
 			protected.Delete("/documents/{id}", h.deleteDocument)
 			protected.Post("/effects", h.createEffect)
 		})
@@ -377,6 +379,140 @@ func (h *Handler) indexDocument(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusCreated, map[string]any{"status": "indexed", "id": doc.ID})
 }
 
+func (h *Handler) updateDocument(w http.ResponseWriter, r *http.Request) {
+	docID := chi.URLParam(r, "id")
+	if strings.TrimSpace(docID) == "" {
+		respondError(w, http.StatusBadRequest, "document id is required")
+		return
+	}
+
+	// Get current document
+	doc, err := h.docStore.GetByID(r.Context(), docID)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "document not found")
+		return
+	}
+
+	// Check permissions (admin or owner)
+	user := r.Context().Value(ctxSubjectKey{}).(string)
+	roles := r.Context().Value(ctxRolesKey{}).([]string)
+	isAdmin := slices.Contains(roles, "admin")
+	
+	if !isAdmin && doc.Owner != user {
+		respondError(w, http.StatusForbidden, "not authorized to update this document")
+		return
+	}
+
+	// Parse update payload
+	var payload map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid payload")
+		return
+	}
+
+	// Update editable fields
+	if subtitle, ok := payload["subtitle"].(string); ok {
+		doc.Subtitle = subtitle
+	}
+
+	if description, ok := payload["description"].(string); ok {
+		doc.Description = description
+	}
+
+	// Update tags
+	doc.Tags = parseTags(payload["tags"])
+
+	// Handle new files (with base64 data)
+	newFiles, ok := payload["newFiles"].([]any)
+	if ok {
+		for _, nf := range newFiles {
+			fileMap, ok := nf.(map[string]any)
+			if !ok {
+				continue
+			}
+
+			// Create file entry
+			file := domain.DocumentFile{
+				Name:     toString(fileMap["name"]),
+				Type:     toString(fileMap["type"]),
+				MIMEType: toString(fileMap["mimetype"]),
+				Page:     int(toInt64(fileMap["page"])),
+			}
+
+			if dataStr, ok := fileMap["data"].(string); ok && dataStr != "" {
+				// Store in blob and get ContainerInfo
+				dataBytes, err := base64.StdEncoding.DecodeString(dataStr)
+				if err != nil {
+					respondError(w, http.StatusBadRequest, "invalid base64 data")
+					return
+				}
+
+				ci, err := h.blob.Save(dataBytes, file.MIMEType)
+				if err != nil {
+					respondError(w, http.StatusInternalServerError, "save file")
+					return
+				}
+				file.Container = ci
+			}
+
+			doc.Files = append(doc.Files, file)
+		}
+	}
+
+	// Handle deleted files
+	deletedFiles, ok := payload["deletedFiles"].([]any)
+	if ok {
+		for _, df := range deletedFiles {
+			fileMap, ok := df.(map[string]any)
+			if !ok {
+				continue
+			}
+
+			deletedName := toString(fileMap["name"])
+			
+			// Find and delete file from blob store
+			for i := range doc.Files {
+				if doc.Files[i].Name == deletedName && doc.Files[i].Container != nil {
+					if err := h.blob.DeleteByInfo(doc.Files[i].Container); err != nil {
+						h.log.Warn("failed to mark file as deleted in blob store", "error", err, "container", doc.Files[i].Container.ContainerNumber)
+					}
+					doc.Files[i].Container.Deleted = true
+				}
+			}
+
+			// Remove file from document
+			doc.Files = slices.DeleteFunc(doc.Files, func(f domain.DocumentFile) bool {
+				return f.Name == deletedName
+			})
+		}
+	}
+
+	// Update timestamps
+	doc.LastModifiedAt = time.Now()
+
+	// Save updated document
+	if err := h.docStore.Upsert(doc); err != nil {
+		respondError(w, http.StatusInternalServerError, "save document")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]any{"status": "updated", "id": doc.ID})
+}
+
+func toString(v any) string {
+	if s, ok := v.(string); ok {
+		return s
+	}
+	return ""
+}
+
+func toInt64(v any) int64 {
+	if f, ok := v.(float64); ok {
+		return int64(f)
+	}
+	return 0
+}
+
 func parseTags(raw any) []string {
 	items, ok := raw.([]any)
 	if !ok {
@@ -457,14 +593,7 @@ func (h *Handler) deleteDocument(w http.ResponseWriter, r *http.Request) {
 				// Log the error but continue deleting other files
 				h.log.Warn("failed to mark file as deleted in blob store", "error", err, "container", doc.Files[i].Container.ContainerNumber)
 			}
-			doc.Files[i].Container.Deleted = true
 		}
-	}
-
-	// Update the document with deleted files, then delete it
-	if err := h.docStore.Upsert(doc); err != nil {
-		respondError(w, http.StatusInternalServerError, "failed to mark files as deleted")
-		return
 	}
 
 	// Delete the document
@@ -605,12 +734,6 @@ func (h *Handler) downloadFile(w http.ResponseWriter, r *http.Request) {
 
 	if file == nil {
 		respondError(w, http.StatusNotFound, "file not found")
-		return
-	}
-
-	// Check if file is deleted
-	if file.Container != nil && file.Container.Deleted {
-		respondError(w, http.StatusNotFound, "file not found (deleted)")
 		return
 	}
 

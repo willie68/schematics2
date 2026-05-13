@@ -1,5 +1,28 @@
 # History
 
+## 0.2.12 - 2026-05-13
+
+- **Frontend**: Dokument-Edit Dialog
+  - Neue EditDialog.vue Komponente (ähnlich wie UploadDialog)
+  - Edit-Button in SearchView (nur für angemeldete Benutzer mit selektiertem Dokument)
+  - Hersteller und Modell sind schreibgeschützt
+  - Tags und Beschreibung können bearbeitet werden
+  - Neue Files können hinzugefügt werden (mit Base64 data)
+  - Bestehende Files können gelöscht werden (Soft-Delete)
+  - Toggle-Button um gelöschte Files wiederherzustellen
+  
+- **Backend**: PATCH /api/v1/documents/{id} Endpoint
+  - Permission Check: Admin oder Owner
+  - Nur neue Files werden als Base64 in Blob gespeichert
+  - Bestehende Files bleiben unverändert
+  - Gelöschte Files: blob.DeleteByInfo() aufgerufen, dann aus Document entfernt
+  - Timestamps aktualisiert (LastModifiedAt)
+  - Only editable fields: subtitle, tags, description
+  - Manufacturer und Model sind schreibgeschützt
+
+- **Domain**: ContainerInfo um Deleted Feld erweitert
+  - Konsistenz mit Blob-Metadaten
+
 ## 0.2.11 - 2026-05-13
 
 - **Backend**: Deleted-Flag in INF-Dateien (Blob Metadata)

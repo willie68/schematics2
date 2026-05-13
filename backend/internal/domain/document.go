@@ -14,7 +14,7 @@ type ContainerInfo struct {
 	OriginalLength  int64  `json:"originalLength" bson:"originalLength"` // Length before compression
 	MIMEType        string `json:"mimetype,omitempty" bson:"mimetype,omitempty"`
 	Compressed      string `json:"compressed,omitempty" bson:"compressed,omitempty"` // "none", "gzip", "zstd"
-	Deleted         bool   `json:"deleted,omitempty" bson:"deleted,omitempty"`       // Soft delete flag for files
+	Deleted         bool   `json:"deleted,omitempty" bson:"deleted,omitempty"`
 }
 
 type DocumentFile struct {

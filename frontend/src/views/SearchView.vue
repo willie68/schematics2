@@ -4,7 +4,7 @@
     <p class="muted">Durchsuche Schaltpläne, Dokumentationen und PDFs über Tags und Volltext.</p>
 
     <div style="display:grid; gap:0.8rem; margin-bottom:1rem;">
-      <div style="display:grid; grid-template-columns:1fr 1fr auto auto auto; gap:0.5rem; align-items:center;">
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem; align-items:center;">
         <InputText 
           v-model="query" 
           placeholder="Suche nach Begriffen"
@@ -20,15 +20,18 @@
           forceSelection
           style="width:100%"
         />
-        <Button v-if="isLoggedIn"
-          icon="pi pi-lock" 
-          :disabled="!isLoggedIn"
-          :severity="privateOnly ? 'warning' : 'secondary'"
-          v-tooltip.bottom="privateOnly ? 'Nur private' : 'Private Filter'"
-          @click="togglePrivateAndSearch" />
-        <Button icon="pi pi-search" v-tooltip.bottom="'Suchen'" @click="search" :loading="isSearching" />
-        <Button v-if="isLoggedIn" icon="pi pi-upload" v-tooltip.bottom="'Upload'" severity="success" @click="showUploadDialog = true" />
-        <Button v-if="isLoggedIn && selectedDocument" icon="pi pi-trash" v-tooltip.bottom="'Löschen'" severity="danger" @click="confirmDeleteDocument" />
+        <div style="display:flex; gap:0.5rem; justify-content:flex-end; align-items:center;">
+          <Button v-if="isLoggedIn"
+            icon="pi pi-lock" 
+            :disabled="!isLoggedIn"
+            :severity="privateOnly ? 'warning' : 'secondary'"
+            v-tooltip.bottom="privateOnly ? 'Nur private' : 'Private Filter'"
+            @click="togglePrivateAndSearch" />
+          <Button icon="pi pi-search" v-tooltip.bottom="'Suchen'" @click="search" :loading="isSearching" />
+          <Button v-if="isLoggedIn" icon="pi pi-upload" v-tooltip.bottom="'Upload'" severity="success" @click="showUploadDialog = true" />
+          <Button v-if="isLoggedIn && selectedDocument" icon="pi pi-pencil" v-tooltip.bottom="'Bearbeiten'" severity="info" @click="showEditDialog = true" />
+          <Button v-if="isLoggedIn && selectedDocument" icon="pi pi-trash" v-tooltip.bottom="'Löschen'" severity="danger" @click="confirmDeleteDocument" />
+        </div>
       </div>
       <div style="display:flex; justify-content:flex-end; align-items:center; gap:0.4rem;">
         <label style="font-size:0.9em;">Ergebnisse pro Seite:</label>
@@ -254,6 +257,7 @@
     </div>
 
     <UploadDialog v-model="showUploadDialog" @uploaded="search" />
+    <EditDialog v-model="showEditDialog" :document="selectedDocument" @updated="onDocumentUpdated" />
   </section>
 </template>
 
@@ -266,6 +270,7 @@ import Dropdown from 'primevue/dropdown'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import UploadDialog from '../components/UploadDialog.vue'
+import EditDialog from '../components/EditDialog.vue'
 import Image from 'primevue/image'
 import api from '../services/api'
 import { useAuth } from '../composables/useAuth'
@@ -279,6 +284,7 @@ const selectedTags = ref([])
 const suggestedTags = ref([])
 const results = ref([])
 const showUploadDialog = ref(false)
+const showEditDialog = ref(false)
 const selectedDocument = ref(null)
 const selectedFile = ref(null)
 const showDetailPanel = ref(false)
@@ -482,14 +488,22 @@ async function confirmDeleteDocument() {
   
   try {
     await api.delete(`/api/v1/documents/${selectedDocument.value.id}`)
-    success('Dokument gelöscht')
+    info('Dokument gelöscht')
     selectedDocument.value = null
     selectedFile.value = null
     showDetailPanel.value = false
-    search()
+    await search()
   } catch (err) {
     info(`Fehler beim Löschen: ${err?.response?.data?.message || err.message}`)
   }
+}
+
+async function onDocumentUpdated() {
+  info('Dokument gespeichert')
+  await search()
+  selectedDocument.value = null
+  selectedFile.value = null
+  showDetailPanel.value = false
 }
 </script>
 

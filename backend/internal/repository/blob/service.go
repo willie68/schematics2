@@ -488,7 +488,7 @@ func (s *Service) appendContainerInfoEntry(containerNum int, ci *domain.Containe
 		OriginalLength: ci.OriginalLength,
 		MIMEType:       ci.MIMEType,
 		Compressed:     ci.Compressed,
-		Deleted:        ci.Deleted,
+		Deleted:        false,
 	})
 
 	// Write back to file
@@ -530,7 +530,6 @@ func (s *Service) LoadContainerInfos(containerNum int) ([]*domain.ContainerInfo,
 			OriginalLength:  entry.OriginalLength,
 			MIMEType:        entry.MIMEType,
 			Compressed:      entry.Compressed,
-			Deleted:         entry.Deleted,
 		}
 	}
 
