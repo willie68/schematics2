@@ -305,6 +305,24 @@ func (s *MongoStore) Exists(ctx context.Context, id string) (bool, error) {
 	return count > 0, nil
 }
 
+// DeleteByID deletes a document from the store by its ID
+func (s *MongoStore) DeleteByID(ctx context.Context, id string) error {
+	if s.col == nil {
+		return errors.New("mongodb not initialised")
+	}
+
+	result, err := s.col.DeleteOne(ctx, bson.D{{Key: "_id", Value: id}})
+	if err != nil {
+		return fmt.Errorf("delete document: %w", err)
+	}
+
+	if result.DeletedCount == 0 {
+		return fmt.Errorf("document not found")
+	}
+
+	return nil
+}
+
 func (s *MongoStore) updateTagCounters(ctx context.Context, oldTags []string, newTags []string) error {
 	if s.tagsCol == nil {
 		return errors.New("mongodb tags collection not initialised")

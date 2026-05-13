@@ -35,6 +35,7 @@ type documentStore interface {
 	SuggestTags(ctx context.Context, prefix string, limit int) ([]domain.Tag, error)
 	SuggestManufacturers(ctx context.Context, prefix string, limit int) ([]string, error)
 	GetByID(ctx context.Context, id string) (domain.Document, error)
+	DeleteByID(ctx context.Context, id string) error
 }
 
 type effectStore interface {
@@ -138,6 +139,7 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 			protected.Get("/users/me", h.me)
 			protected.Post("/users/change-password", h.changePassword)
 			protected.Post("/documents/index", h.indexDocument)
+			protected.Delete("/documents/{id}", h.deleteDocument)
 			protected.Post("/effects", h.createEffect)
 		})
 	})
@@ -410,6 +412,50 @@ func parseTags(raw any) []string {
 	}
 
 	return tags
+}
+
+func (h *Handler) deleteDocument(w http.ResponseWriter, r *http.Request) {
+	docID := chi.URLParam(r, "id")
+	if strings.TrimSpace(docID) == "" {
+		respondError(w, http.StatusBadRequest, "document id is required")
+		return
+	}
+
+	ctx := r.Context()
+	user := h.getAuthenticatedUser(r)
+	
+	// Get the document to check permissions
+	doc, err := h.docStore.GetByID(ctx, docID)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "document not found")
+		return
+	}
+
+	// Check permissions: only admin or document owner can delete
+	roles, ok := r.Context().Value(ctxRolesKey{}).([]string)
+	isAdmin := false
+	if ok {
+		for _, role := range roles {
+			if role == "admin" {
+				isAdmin = true
+				break
+			}
+		}
+	}
+
+	// Admin can delete everything, users can only delete their own
+	if !isAdmin && doc.Owner != user {
+		respondError(w, http.StatusForbidden, "not authorized to delete this document")
+		return
+	}
+
+	// Delete the document
+	if err := h.docStore.DeleteByID(ctx, docID); err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to delete document")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]any{"status": "deleted", "id": docID})
 }
 
 func (h *Handler) storeBlobFiles(doc *domain.Document) error {

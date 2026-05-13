@@ -28,6 +28,7 @@
           @click="togglePrivateAndSearch" />
         <Button icon="pi pi-search" v-tooltip.bottom="'Suchen'" @click="search" :loading="isSearching" />
         <Button v-if="isLoggedIn" icon="pi pi-upload" v-tooltip.bottom="'Upload'" severity="success" @click="showUploadDialog = true" />
+        <Button v-if="isLoggedIn && selectedDocument" icon="pi pi-trash" v-tooltip.bottom="'Löschen'" severity="danger" @click="confirmDeleteDocument" />
       </div>
       <div style="display:flex; justify-content:flex-end; align-items:center; gap:0.4rem;">
         <label style="font-size:0.9em;">Ergebnisse pro Seite:</label>
@@ -470,6 +471,25 @@ function downloadImage() {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
+}
+
+async function confirmDeleteDocument() {
+  if (!selectedDocument.value) return
+  
+  if (!confirm(`Wirklich löschen: "${selectedDocument.value.manufacturer} ${selectedDocument.value.model}"?`)) {
+    return
+  }
+  
+  try {
+    await api.delete(`/api/v1/documents/${selectedDocument.value.id}`)
+    success('Dokument gelöscht')
+    selectedDocument.value = null
+    selectedFile.value = null
+    showDetailPanel.value = false
+    search()
+  } catch (err) {
+    info(`Fehler beim Löschen: ${err?.response?.data?.message || err.message}`)
+  }
 }
 </script>
 

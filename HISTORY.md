@@ -1,5 +1,21 @@
 # History
 
+## 0.2.9 - 2026-05-13
+
+- **Frontend**: Dokument-Löschung in SearchView
+  - Lösch-Button (rot) neben Upload-Button
+  - Nur sichtbar für angemeldete Benutzer
+  - Bestätigungsdialog vor dem Löschen
+  - Aktualisiert die Trefferliste nach erfolgreichem Löschen
+- **Backend**: DELETE `/api/v1/documents/{id}` Endpoint
+  - Authentifizierung erforderlich (Bearer Token)
+  - Berechtigungen:
+    - Admin: Kann alle Dokumente löschen
+    - Benutzer: Kann nur seine eigenen Dokumente löschen (Owner Feld)
+  - 403 Forbidden wenn User nicht Eigentümer oder Admin
+  - 404 wenn Dokument nicht existiert
+  - MongoDB DeleteByID Methode in Store implementiert
+
 ## 0.2.8 - 2026-05-13
 
 - **Frontend**: Effekt-Upload nur für angemeldete Benutzer
