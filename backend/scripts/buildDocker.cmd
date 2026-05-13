@@ -1,7 +1,19 @@
 @echo off
 setlocal enabledelayedexpansion
 
-echo Building Schematic2 Docker image with deployment config...
+REM Accept optional BASE_PATH argument for reverse-proxy deployment
+REM Usage: buildDocker.cmd [BASE_PATH]
+REM   buildDocker.cmd            builds for direct container access (BASE_PATH=/client)
+REM   buildDocker.cmd /schematics2  builds for reverse-proxy at /schematics2
+
+if "%~1"=="" (
+    set BASE_PATH=/client
+    echo Building Schematic2 Docker image for direct container access...
+) else (
+    set BASE_PATH=%~1
+    echo Building Schematic2 Docker image for reverse-proxy at !BASE_PATH!...
+)
+
 echo.
 
 REM Get build information for ldflags
@@ -12,6 +24,7 @@ if "!VCS_REF!"=="" set VCS_REF=unknown
 echo Build Information:
 echo   BUILD_TIME: !BUILD_TIME!
 echo   VCS_REF (Commit): !VCS_REF!
+echo   BASE_PATH: !BASE_PATH!
 echo.
 echo Step 1: Generating TLS certificate...
 go run ./cmd/gencert
@@ -22,7 +35,7 @@ if errorlevel 1 (
 )
 echo TLS certificate generation complete!
 echo.
-echo Step 2: Building Docker image (with BASE_PATH=/schematics2)...
+echo Step 2: Building Docker image...
 if not exist .\build\package\Dockerfile (
     echo Warning: Dockerfile not found at .\build\package\Dockerfile
     echo Please create a Dockerfile for schematic2
@@ -30,7 +43,7 @@ if not exist .\build\package\Dockerfile (
     exit /b 1
 )
 docker build -f ./build/package/Dockerfile ^
-    --build-arg BASE_PATH=/schematics2 ^
+    --build-arg BASE_PATH=!BASE_PATH! ^
     --build-arg BUILD_TIME=!BUILD_TIME! ^
     --build-arg VCS_REF=!VCS_REF! ^
     ../ -t mcs/schematics2:latest

@@ -103,7 +103,7 @@ func NewRouter(inj do.Injector) (http.Handler, error) {
 	}))
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/client", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "./client", http.StatusTemporaryRedirect)
 	})
 	r.Get("/client", clientHandler.ServeHTTP)
 	r.Handle("/client/*", clientHandler)
