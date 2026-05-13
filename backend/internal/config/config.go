@@ -100,8 +100,8 @@ func defaultConfig() Config {
 			ContainerMaxSizeMB: 100,
 		},
 		JWTSecret: "change-me-in-production",
-		AdminUser: "admin",
-		AdminPass: "admin123",
+		AdminUser: "",
+		AdminPass: "",
 	}
 }
 
