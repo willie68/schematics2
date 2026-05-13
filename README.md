@@ -4,7 +4,7 @@ Schematic2 ist der Nachfolger von WilliesSchematicsWorld als Monorepo.
 
 Das Repository ist mit GitHub unter https://github.com/willie68/schematic verknüpft.
 
-**Version: 0.2.7**
+**Version: Backend 0.2.22, Frontend 0.2.7**
 
 ## Features
 
@@ -29,6 +29,44 @@ Das Repository ist mit GitHub unter https://github.com/willie68/schematic verkn�
 - `backend/`: Go REST API (go-micro-orientierter Aufbau mit `internal/` und DI über `do`)
 - `frontend/`: Vue 3.5 + PrimeVue 3.53 Web-Frontend
 - `docs/`: Projekt- und Architekturdokumentation
+
+## Deployment
+
+### Docker-Build
+
+```bash
+# Standard: Reverse-Proxy unter /schematics2 (mit Apache/Nginx)
+.\scripts\buildDocker.cmd
+
+# Oder: Direkter Client-Zugriff ohne Base-Path
+.\scripts\buildDocker.cmd /client
+```
+
+**Automatische Injection:**
+- BUILD_TIME: ISO 8601 Zeitstempel
+- VCS_REF: Git Short Hash
+- BASE_PATH: Frontend Base-Path + Backend Redirect-Pfad
+
+Versionsnummern werden automatisch aus Quelltext injiziert (Backend: `internal/version/version.go`, Frontend: `package.json`).
+
+### Reverse-Proxy (Apache)
+
+Beispiel Apache VirtualHost Konfiguration für `/schematics2`:
+
+```apache
+ProxyPreserveHost On
+SSLProxyEngine On
+SSLProxyVerify none
+
+# Redirect nackter Pfad auf mit Slash
+RedirectMatch ^/schematics2$ /schematics2/
+
+# Trailing Slash ERFORDERLICH auf beiden Seiten!
+ProxyPass /schematics2/ https://192.168.178.14:9743/
+ProxyPassReverse /schematics2/ https://192.168.178.14:9743/
+```
+
+⚠️ **Wichtig**: Trailing Slash (`/`) auf beiden Seiten des ProxyPass – ohne ihn entstehen `//` Pfade und das Frontend erhält falsche API URLs.
 
 ## Build-Dokumentation
 

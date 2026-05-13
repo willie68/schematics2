@@ -1,5 +1,44 @@
 # History
 
+## 0.2.22 - 2026-05-13 (Backend)
+
+- **Version Management**: Refaktoriert nach Go Best Practices
+  - Zentrale `internal/version/version.go` statt hardcodierter Konstanten
+  - BuildTime, Commit, ClientBasePath via ldflags injiziert (Build-Zeit)
+  - Keine Runtime Environment Variablen mehr nötig
+  
+- **Startup Logging**: Ausführliche strukturierte Logs
+  - Version, BuildTime, Commit, ClientBasePath angezeigt
+  - Sanitized Config-Info (MongoDB Hosts, Database, Paths)
+  - Doppelt-Ausgabe von Ports entfernt
+
+- **Docker Health Check**: Gefixt
+  - Nutzt `/readyz` Endpoint (nicht `/health`)
+  - Start-Period: 10 Sekunden
+  - `/health` als Alias Route hinzugefügt
+
+- **Path Normalisierung**: Apache Reverse-Proxy Robustheit
+  - `path.Clean` Middleware normalisiert `//api/v1/...` → `/api/v1/...`
+  - Workaround für Apache ProxyPass ohne trailing slash
+
+- **Connector-Bilder**: URL-Decode-Bug gefixt
+  - `url.QueryUnescape` → `url.PathUnescape`
+  - `%2B` (Plus) wird jetzt korrekt als `+` dekodiert, nicht als Leerzeichen
+
+## 0.2.7 - 2026-05-13 (Frontend)
+
+- **API URLs**: `__API_BASE__` globale Konstante
+  - Alle direkten `/api/v1/` URLs nutzen jetzt `__API_BASE__` Präfix
+  - EffectsView, RegisterView: Bild-URLs korrekt mit Base-Path
+  - Reverse-Proxy Deployment transparent
+
+- **Version Management**: Zentralisiert
+  - Single Source of Truth: `package.json` (version: "0.2.7")
+  - Vite injiziert Version zur Build-Zeit als `__APP_VERSION__`
+  - `config.js` nutzt injizierte Konstante
+
+- **Lizenz**: MIT License hinzugefügt
+
 ## 0.2.13 - 2026-05-13
 
 - **Frontend**: Manufacturer und Model auch editierbar
