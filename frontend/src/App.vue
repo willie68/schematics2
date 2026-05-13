@@ -18,6 +18,7 @@
     <RouterView />
     <Toast />
     <CookieBanner />
+    <AppFooter />
   </div>
 </template>
 
@@ -27,6 +28,7 @@ import { onMounted } from 'vue'
 import UserMenu from './components/UserMenu.vue'
 import Toast from './components/Toast.vue'
 import CookieBanner from './components/CookieBanner.vue'
+import AppFooter from './components/AppFooter.vue'
 import { useAuth } from './composables/useAuth'
 import { useToast } from './composables/useToast'
 import { setApiErrorHandler } from './services/api'
