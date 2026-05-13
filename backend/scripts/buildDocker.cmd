@@ -17,8 +17,16 @@ if not exist .\build\package\Dockerfile (
     pause
     exit /b 1
 )
-docker build -f ./build/package/Dockerfile ../ -t schematic2:latest
+docker build -f ./build/package/Dockerfile ../ -t mcs/schematics2:latest
+echo.
+echo Step 3: Tagging image for Docker registry...
+docker tag mcs/schematics2:latest 192.168.178.14:5000/mcs/schematics2:latest
+echo.
+echo Step 4: Pushing image to Docker registry (192.168.178.14:5000)...
+docker push 192.168.178.14:5000/mcs/schematics2:latest
+echo.
+echo Docker image successfully pushed to 192.168.178.14:5000/mcs/schematics2:latest
 echo.
 echo To run the container, execute:
-echo docker run -p 8080:8080 -p 8443:8443 -v %%cd%%\configs:/app/configs schematic2:latest
+echo docker run -p 8080:8080 -p 8443:8443 -v %%cd%%\configs:/app/configs mcs/schematics2:latest
 pause

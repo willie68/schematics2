@@ -397,7 +397,7 @@ func (h *Handler) updateDocument(w http.ResponseWriter, r *http.Request) {
 	user := r.Context().Value(ctxSubjectKey{}).(string)
 	roles := r.Context().Value(ctxRolesKey{}).([]string)
 	isAdmin := slices.Contains(roles, "admin")
-	
+
 	if !isAdmin && doc.Owner != user {
 		respondError(w, http.StatusForbidden, "not authorized to update this document")
 		return
@@ -477,7 +477,7 @@ func (h *Handler) updateDocument(w http.ResponseWriter, r *http.Request) {
 			}
 
 			deletedName := toString(fileMap["name"])
-			
+
 			// Find and delete file from blob store
 			for i := range doc.Files {
 				if doc.Files[i].Name == deletedName && doc.Files[i].Container != nil {
