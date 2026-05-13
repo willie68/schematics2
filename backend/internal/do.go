@@ -2,6 +2,7 @@ package internal
 
 import (
 	"net/http"
+	"path"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -106,7 +107,11 @@ func NewRouter(inj do.Injector) (http.Handler, error) {
 	// Debug middleware: log every incoming request path
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			logger.Debug("incoming request", "method", req.Method, "path", req.URL.Path, "remote", req.RemoteAddr)
+			// Normalize double slashes caused by Apache ProxyPass without trailing slash
+			if cleaned := path.Clean(req.URL.Path); cleaned != req.URL.Path {
+				req.URL.Path = cleaned
+			}
+			logger.Info("incoming request", "method", req.Method, "path", req.URL.Path, "remote", req.RemoteAddr)
 			next.ServeHTTP(w, req)
 		})
 	})

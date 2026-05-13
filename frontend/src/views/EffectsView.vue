@@ -306,11 +306,13 @@ const previousPage = () => {
 }
 
 const getThumbnailUrl = (effectId) => {
-  return `/api/v1/effects/${effectId}/image`
+  const base = typeof __API_BASE__ !== 'undefined' ? __API_BASE__ : '/'
+  return `${base}api/v1/effects/${effectId}/image`
 }
 
 const getImageUrl = (effectId) => {
-  return `/api/v1/effects/${effectId}/image`
+  const base = typeof __API_BASE__ !== 'undefined' ? __API_BASE__ : '/'
+  return `${base}api/v1/effects/${effectId}/image`
 }
 
 const showImageModal = (effect) => {
@@ -330,7 +332,8 @@ const isConnectorWithIcon = (connector) => {
 }
 
 const getConnectorImageUrl = (connector) => {
-  return `/api/v1/connectors/${encodeURIComponent(connector)}`
+  const base = typeof __API_BASE__ !== 'undefined' ? __API_BASE__ : '/'
+  return `${base}api/v1/connectors/${encodeURIComponent(connector)}`
 }
 
 const getConnectorIcon = (connector) => {

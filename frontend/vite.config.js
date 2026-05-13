@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { version } from './package.json'
 
 // Base path - can be overridden via environment variable
 // Usage: BASE_PATH=/schematics2 npm run build
@@ -12,6 +13,7 @@ export default defineConfig({
   plugins: [vue()],
   define: {
     __API_BASE__: JSON.stringify(apiBase),
+    __APP_VERSION__: JSON.stringify(version),
   },
   server: {
     port: 5173,

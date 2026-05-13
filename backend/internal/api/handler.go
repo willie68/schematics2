@@ -878,7 +878,8 @@ func (h *Handler) getEffectImage(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) getConnectorImage(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
 	// Decode URL-encoded characters (e.g., %2B → +)
-	decodedName, err := url.QueryUnescape(name)
+	// Use PathUnescape (not QueryUnescape) so '+' stays '+' and is not converted to space
+	decodedName, err := url.PathUnescape(name)
 	if err != nil {
 		decodedName = name
 	}
