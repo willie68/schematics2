@@ -16,6 +16,7 @@ import (
 	"github.com/willie68/schematic2/backend/internal/services/index"
 	"github.com/willie68/schematic2/backend/internal/services/shttp"
 	"github.com/willie68/schematic2/backend/internal/services/users"
+	"github.com/willie68/schematic2/backend/internal/version"
 	"github.com/willie68/schematic2/backend/internal/webclient"
 )
 
@@ -102,8 +103,7 @@ func NewRouter(inj do.Injector) (http.Handler, error) {
 		MaxAge:         int((10 * time.Minute).Seconds()),
 	}))
 
-	cfg := do.MustInvoke[config.Config](inj)
-	clientRedirect := cfg.ClientBasePath + "/client"
+	clientRedirect := version.ClientBasePath + "/client"
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, clientRedirect, http.StatusTemporaryRedirect)

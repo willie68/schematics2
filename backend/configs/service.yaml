@@ -5,11 +5,6 @@ JWTSecret: ${JWTSecret}
 AdminUser: ${AdminUser}
 AdminPass: ${AdminPass}
 
-# External base path for reverse-proxy deployments (e.g. /schematics2)
-# Leave empty for direct container access.
-# Set via CLIENT_BASE_PATH environment variable.
-clientBasePath: "${CLIENT_BASE_PATH}"
-
 # http service definition
 http:
   # name of this service

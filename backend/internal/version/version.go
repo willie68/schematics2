@@ -10,4 +10,8 @@ var (
 
 	// Commit is set during build with -ldflags "-X internal/version.Commit=..."
 	Commit = ""
+
+	// ClientBasePath is the external base path baked in at build time (e.g. /schematics2).
+	// Set via -ldflags "-X internal/version.ClientBasePath=/schematics2"
+	ClientBasePath = ""
 )

@@ -27,10 +27,6 @@ type Config struct {
 	MongoDB     MongoDB        `yaml:"mongodb"`
 	Repository  Repository     `yaml:"repository"`
 
-	// ClientBasePath is the external base path prefix (e.g. /schematics2 for reverse-proxy).
-	// Leave empty for direct container access. Set via CLIENT_BASE_PATH env var.
-	ClientBasePath string `yaml:"clientBasePath,omitempty"`
-
 	JWTSecret string `yaml:"jwtsecret,omitempty"`
 	AdminUser string `yaml:"adminuser,omitempty"`
 	AdminPass string `yaml:"adminpass,omitempty"`
@@ -78,7 +74,6 @@ func LoadFromEnv() Config {
 
 func defaultConfig() Config {
 	return Config{
-		ClientBasePath: "",
 		HTTP: shttp.Config{
 			Servicename: "go-micro",
 			Port:        8080,
