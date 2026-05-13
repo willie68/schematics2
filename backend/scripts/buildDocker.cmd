@@ -1,20 +1,7 @@
 @echo off
 echo Building Schematic2 Docker image with deployment config...
 echo.
-echo Step 1: Building frontend with /schematics2 base path...
-cd ..\frontend
-set BASE_PATH=/schematics2
-call npm run build
-if errorlevel 1 (
-    echo Error building frontend!
-    cd ..\backend
-    pause
-    exit /b 1
-)
-cd ..\backend
-echo Frontend build complete!
-echo.
-echo Step 2: Generating TLS certificate...
+echo Step 1: Generating TLS certificate...
 go run ./cmd/gencert
 if errorlevel 1 (
     echo Error generating TLS certificate!
@@ -23,14 +10,14 @@ if errorlevel 1 (
 )
 echo TLS certificate generation complete!
 echo.
-echo Step 3: Building Docker image...
+echo Step 2: Building Docker image (with BASE_PATH=/schematics2)...
 if not exist .\build\package\Dockerfile (
     echo Warning: Dockerfile not found at .\build\package\Dockerfile
     echo Please create a Dockerfile for schematic2
     pause
     exit /b 1
 )
-docker build -f ./build/package/Dockerfile ../ -t mcs/schematics2:latest
+docker build -f ./build/package/Dockerfile --build-arg BASE_PATH=/schematics2 ../ -t mcs/schematics2:latest
 if errorlevel 1 (
     echo Error building Docker image!
     pause
@@ -38,10 +25,10 @@ if errorlevel 1 (
 )
 echo Docker image build complete!
 echo.
-echo Step 4: Tagging image for Docker registry...
+echo Step 3: Tagging image for Docker registry...
 docker tag mcs/schematics2:latest 192.168.178.14:5000/mcs/schematics2:latest
 echo.
-echo Step 5: Pushing image to Docker registry (192.168.178.14:5000)...
+echo Step 4: Pushing image to Docker registry (192.168.178.14:5000)...
 docker push 192.168.178.14:5000/mcs/schematics2:latest
 echo.
 echo Docker image successfully pushed to 192.168.178.14:5000/mcs/schematics2:latest
