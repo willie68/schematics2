@@ -210,17 +210,39 @@ Content-Type: application/json
 
 ## Schnellstart
 
-### 1) Backend
+### Voraussetzungen
+
+- Go 1.26+
+- Node.js 22+
+- MongoDB 5.0+ (lokal oder via Docker)
+- PowerShell (für buildDocker.cmd auf Windows)
+
+### 1) MongoDB starten (Docker)
+
+```bash
+docker run -d --name mongodb -p 27017:27017 mongo:7
+```
+
+Oder für Entwicklung direkt lokal installieren.
+
+### 2) Backend
 
 ```bash
 cd backend
 go mod tidy
-go run cmd/api/main.go
+go run cmd/server/main.go
 ```
 
-Umgebungsvariablen siehe `backend/configs/service.env.example`.
+Der Server läuft standardmäßig auf `https://localhost:8443`.
 
-### 2) Frontend
+**Umgebungsvariablen** (optional, defaults sind vorhanden):
+- `JWTSecret`: JWT Secret (default: aus configs/secrets.yaml)
+- `AdminUser`: Admin Username (default: admin)
+- `AdminPass`: Admin Password (default: admin123)
+
+Siehe `backend/configs/service.yaml` für alle Konfigurationsoptionen.
+
+### 3) Frontend
 
 ```bash
 cd frontend
