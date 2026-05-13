@@ -28,20 +28,20 @@ type shttpsrv interface {
 func main() {
 	cfg := config.LoadFromEnv()
 
-	// Build version info
-	versionInfo := map[string]any{
-		"version":    version.Version,
-		"http_port":  cfg.HTTP.Port,
-		"https_port": cfg.HTTP.SSLPort,
+	// Log version and build information
+	logFields := []any{
+		"version", version.Version,
+		"http_port", cfg.HTTP.Port,
+		"https_port", cfg.HTTP.SSLPort,
 	}
 	if version.BuildTime != "" {
-		versionInfo["build_time"] = version.BuildTime
+		logFields = append(logFields, "build_time", version.BuildTime)
 	}
 	if version.Commit != "" {
-		versionInfo["commit"] = version.Commit
+		logFields = append(logFields, "commit", version.Commit)
 	}
 
-	logger.Info("starting schematic2 backend", versionInfo)
+	logger.Info("starting schematic2 backend", logFields...)
 
 	err := internal.InitServices(inj, cfg)
 	if err != nil {
