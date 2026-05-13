@@ -169,6 +169,7 @@ func NewHandler(inj do.Injector, serviceName string) *Handler {
 func (h *Handler) Router() *chi.Mux {
 	router := chi.NewRouter()
 	router.Get("/", h.GetDefaultEndpoint)
+	router.Get("/health", h.GetDefaultEndpoint)
 	router.Get("/livez", h.GetLivenessEndpoint)
 	router.Get("/readyz", h.GetReadinessEndpoint)
 	router.Head("/livez", h.HeadLivenessEndpoint)

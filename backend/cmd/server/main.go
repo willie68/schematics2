@@ -43,6 +43,16 @@ func main() {
 
 	logger.Info("starting schematic2 backend", logFields...)
 
+	// Log sanitized configuration (no passwords)
+	logger.Info("configuration loaded",
+		"mongodb_hosts", cfg.MongoDB.Hosts,
+		"mongodb_database", cfg.MongoDB.Database,
+		"repository_path", cfg.Repository.RepositoryPath,
+		"repository_container_max_size_mb", cfg.Repository.ContainerMaxSizeMB,
+		"healthcheck_period", cfg.Healthcheck.Period,
+		"healthcheck_start_delay", cfg.Healthcheck.StartDelay,
+	)
+
 	err := internal.InitServices(inj, cfg)
 	if err != nil {
 		log.Fatalf("init services: %v", err)
@@ -58,7 +68,6 @@ func main() {
 	httpService := do.MustInvokeAs[shttpsrv](inj)
 
 	httpService.StartServers(router, healthHandler.Router())
-	logger.Info("schematic2 backend listening", "http_port", cfg.HTTP.Port, "https_port", cfg.HTTP.SSLPort)
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
