@@ -40,6 +40,9 @@ func main() {
 	if version.Commit != "" {
 		logFields = append(logFields, "commit", version.Commit)
 	}
+	if cfg.ClientBasePath != "" {
+		logFields = append(logFields, "client_base_path", cfg.ClientBasePath)
+	}
 
 	logger.Info("starting schematic2 backend", logFields...)
 

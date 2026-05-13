@@ -17,15 +17,19 @@ const defaultConfigFile = "configs/service.yaml"
 // Config contains runtime configuration for the backend service.
 // It follows the go-micro style service.yaml structure.
 type Config struct {
-	SecretFile  string         `yaml:"secretfile"`
-	HTTP        shttp.Config   `yaml:"http"`
-	Healthcheck health.Config  `yaml:"healthcheck"`
-	Metrics     Metrics        `yaml:"metrics"`
-	Logging     logging.Config `yaml:"logging"`
-	Auth        Auth           `yaml:"auth"`
-	Profiling   Profiling      `yaml:"profiling"`
-	MongoDB     MongoDB        `yaml:"mongodb"`
-	Repository  Repository     `yaml:"repository"`
+	SecretFile     string         `yaml:"secretfile"`
+	HTTP           shttp.Config   `yaml:"http"`
+	Healthcheck    health.Config  `yaml:"healthcheck"`
+	Metrics        Metrics        `yaml:"metrics"`
+	Logging        logging.Config `yaml:"logging"`
+	Auth           Auth           `yaml:"auth"`
+	Profiling      Profiling      `yaml:"profiling"`
+	MongoDB        MongoDB        `yaml:"mongodb"`
+	Repository     Repository     `yaml:"repository"`
+
+	// ClientBasePath is the external base path prefix (e.g. /schematics2 for reverse-proxy).
+	// Leave empty for direct container access. Set via CLIENT_BASE_PATH env var.
+	ClientBasePath string `yaml:"clientBasePath,omitempty"`
 
 	JWTSecret string `yaml:"jwtsecret,omitempty"`
 	AdminUser string `yaml:"adminuser,omitempty"`
@@ -74,6 +78,7 @@ func LoadFromEnv() Config {
 
 func defaultConfig() Config {
 	return Config{
+		ClientBasePath: "",
 		HTTP: shttp.Config{
 			Servicename: "go-micro",
 			Port:        8080,

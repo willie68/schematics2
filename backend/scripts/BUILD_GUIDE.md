@@ -160,6 +160,18 @@ docker run -d \
   --name schematic2 \
   -p 8080:8080 \
   -p 8443:8443 \
+  -e CLIENT_BASE_PATH=/schematics2 \
+  -v /path/to/configs:/app/configs \
+  -v /path/to/data:/app/data \
+  192.168.178.14:5000/mcs/schematics2:latest
+```
+
+**Für direkten Zugriff:**
+```bash
+docker run -d \
+  --name schematic2 \
+  -p 8080:8080 \
+  -p 8443:8443 \
   -v /path/to/configs:/app/configs \
   -v /path/to/data:/app/data \
   192.168.178.14:5000/mcs/schematics2:latest

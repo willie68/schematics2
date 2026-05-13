@@ -102,8 +102,11 @@ func NewRouter(inj do.Injector) (http.Handler, error) {
 		MaxAge:         int((10 * time.Minute).Seconds()),
 	}))
 
+	cfg := do.MustInvoke[config.Config](inj)
+	clientRedirect := cfg.ClientBasePath + "/client"
+
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "./client", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, clientRedirect, http.StatusTemporaryRedirect)
 	})
 	r.Get("/client", clientHandler.ServeHTTP)
 	r.Handle("/client/*", clientHandler)
