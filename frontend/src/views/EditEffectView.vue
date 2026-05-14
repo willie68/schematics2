@@ -182,8 +182,8 @@ import Dropdown from 'primevue/dropdown'
 import Checkbox from 'primevue/checkbox'
 import AutoComplete from 'primevue/autocomplete'
 import FileUpload from 'primevue/fileupload'
-import { useToast } from 'primevue/usetoast'
 import api from '../services/api'
+import { useToast } from '../composables/useToast'
 
 const router = useRouter()
 const route = useRoute()
@@ -251,7 +251,7 @@ const loadEffect = async () => {
     console.error('Failed to load effect:', error)
     loadError.value = error.message || 'Effekt konnte nicht geladen werden'
     loading.value = false
-    toast.add({ severity: 'error', summary: 'Fehler', detail: loadError.value })
+    toast.error(loadError.value)
   }
 }
 
@@ -312,7 +312,7 @@ const getImageUrl = (effectId, index) => {
 const saveEffect = async () => {
   // Validate required fields
   if (!form.value.effectType || !form.value.manufacturer || !form.value.model || !form.value.connector) {
-    toast.add({ severity: 'error', summary: 'Validierungsfehler', detail: 'Bitte füllen Sie alle erforderlichen Felder aus' })
+    toast.error('Bitte füllen Sie alle erforderlichen Felder aus')
     return
   }
 
@@ -337,11 +337,11 @@ const saveEffect = async () => {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
 
-    toast.add({ severity: 'success', summary: 'Erfolg', detail: 'Effekt wurde aktualisiert' })
+    toast.success('Effekt wurde aktualisiert')
     setTimeout(() => goBack(), 1500)
   } catch (error) {
     console.error('Failed to save effect:', error)
-    toast.add({ severity: 'error', summary: 'Fehler', detail: 'Effekt konnte nicht aktualisiert werden' })
+    toast.error('Effekt konnte nicht aktualisiert werden')
   } finally {
     saving.value = false
   }
