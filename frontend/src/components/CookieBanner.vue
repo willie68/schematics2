@@ -6,7 +6,7 @@
           <strong>Datenschutz</strong>: Wir verwenden auf unserer Webseite ausschließlich technisch notwendige Cookies, 
           um Ihre aktuelle Benutzersession zu verwalten (z. B. für den Login-Status). 
           Ohne diese Cookies kann die Webseite nicht korrekt funktionieren. 
-          Es werden keine Daten zu Tracking- oder Marketingzwecken erhoben. Weitere Informationen finden Sie in unserer <a href="/datenschutz" target="_blank" rel="noopener noreferrer">Datenschutzerklärung</a>.
+          Es werden keine Daten zu Tracking- oder Marketingzwecken erhoben. Weitere Informationen finden Sie in unserer <RouterLink to="/datenschutz">Datenschutzerklärung</RouterLink>.
         </p>
       </div>
       <div class="cookie-actions">
@@ -24,6 +24,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
 import Button from 'primevue/button'
 
 const COOKIE_CONSENT_KEY = 'schematic2_cookie_consent'
@@ -73,6 +74,16 @@ function acceptCookies() {
 
 .cookie-message p {
   margin: 0;
+}
+
+.cookie-message :deep(a) {
+  color: #64b5f6;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.cookie-message :deep(a):hover {
+  color: #ffffff;
 }
 
 .cookie-actions {

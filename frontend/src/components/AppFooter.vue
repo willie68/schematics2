@@ -3,15 +3,15 @@
     <div class="footer-content">
       <p>&copy; 2026 Schematic2. Alle Rechte vorbehalten.</p>
       <div class="footer-links">
-        <a href="/datenschutz" rel="noopener noreferrer">
+        <RouterLink to="/datenschutz" class="footer-link">
           Datenschutz
-        </a>
+        </RouterLink>
         <span class="separator">|</span>
-        <a href="https://wkla.no-ip.biz/willie/pages/impressum.php" target="_blank" rel="noopener noreferrer">
+        <a href="https://wkla.no-ip.biz/willie/pages/impressum.php" target="_blank" rel="noopener noreferrer" class="footer-link">
           Impressum
         </a>
         <span class="separator">|</span>
-        <a href="https://www.disclaimer.de/disclaimer.htm?farbe=FFFFFF/000000/000000/000000" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.disclaimer.de/disclaimer.htm?farbe=FFFFFF/000000/000000/000000" target="_blank" rel="noopener noreferrer" class="footer-link">
           Haftungsausschluss
         </a>
       </div>
@@ -20,6 +20,7 @@
 </template>
 
 <script setup>
+import { RouterLink } from 'vue-router'
 </script>
 
 <style scoped>
@@ -58,6 +59,17 @@
 }
 
 .footer-links a:hover {
+  color: #0052a3;
+  text-decoration: underline;
+}
+
+.footer-link {
+  color: #0066cc;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-link:hover {
   color: #0052a3;
   text-decoration: underline;
 }
