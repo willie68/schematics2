@@ -368,10 +368,11 @@ func (h *Handler) indexDocument(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "id, manufacturer and model are required")
 		return
 	}
-	if doc.PrivateFile && strings.TrimSpace(doc.Owner) == "" {
-		respondError(w, http.StatusBadRequest, "owner is required for private documents")
-		return
-	}
+
+	// Set owner to currently authenticated user
+	user := h.getAuthenticatedUser(r)
+	doc.Owner = user
+
 	if err := h.docStore.Upsert(doc); err != nil {
 		respondError(w, http.StatusInternalServerError, "save document")
 		return

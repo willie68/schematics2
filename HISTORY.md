@@ -1,5 +1,17 @@
 # History
 
+## 0.2.23 - 2026-05-14
+
+- **Backend**: Document Owner automatisch vom angemeldeten User
+  - `POST /api/v1/documents/index`: Owner wird vom JWT-Token gesetzt, nicht vom Frontend
+  - Entfernt Validierung: `doc.Owner` wird immer vom `getAuthenticatedUser()` überschrieben
+  - Sicherheit: Frontend kann Owner nicht mehr manipulieren
+
+- **Frontend**: Owner-Feld aus Upload-Dialog entfernt
+  - Benutzer können Owner nicht mehr manuell eingeben
+  - Automatische Zuweisung vom Backend beim Upload
+  - Vereinfachte UI: Nur noch "Privates Dokument" Toggle (ohne Owner-Eingabe)
+
 ## 0.2.22 - 2026-05-13 (Backend)
 
 - **Version Management**: Refaktoriert nach Go Best Practices

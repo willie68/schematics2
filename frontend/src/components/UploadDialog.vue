@@ -62,18 +62,13 @@
         <label for="description">Beschreibung</label>
       </span>
 
-      <!-- Private File & Owner -->
+      <!-- Private File Checkbox -->
       <div style="display:grid; grid-template-columns: auto 1fr; gap:0.8rem; align-items:center;">
         <div>
           <InputSwitch v-model="form.privateFile" />
         </div>
         <label>Privates Dokument</label>
       </div>
-
-      <span v-if="form.privateFile" class="p-float-label">
-        <InputText id="owner" v-model="form.owner" style="width:100%" />
-        <label for="owner">Besitzer *</label>
-      </span>
 
       <!-- File Input -->
       <div>
@@ -170,7 +165,6 @@ const form = ref({
   subtitle: '',
   description: '',
   privateFile: false,
-  owner: '',
   files: [],
 })
 
@@ -197,7 +191,6 @@ function resetForm() {
     subtitle: '',
     description: '',
     privateFile: false,
-    owner: '',
     files: [],
   }
   selectedTags.value = []
@@ -354,11 +347,6 @@ async function submit() {
     }
   }
 
-  if (form.value.privateFile && !form.value.owner.trim()) {
-    errorMessage.value = 'Besitzer ist erforderlich für private Dokumente'
-    return
-  }
-
   isSubmitting.value = true
 
   try {
@@ -372,7 +360,6 @@ async function submit() {
       tags: selectedTags.value.map((t) => normalizeTag(t)).filter(Boolean),
       description: form.value.description,
       privateFile: form.value.privateFile,
-      owner: form.value.owner || 'admin',
       files: form.value.files,
     }
 
