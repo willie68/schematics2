@@ -5,6 +5,8 @@ import RegisterView from '../views/RegisterView.vue'
 import SearchView from '../views/SearchView.vue'
 import EffectsView from '../views/EffectsView.vue'
 import PrivacyView from '../views/PrivacyView.vue'
+import ImpressumView from '../views/ImpressumView.vue'
+import DisclaimerView from '../views/DisclaimerView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -15,6 +17,8 @@ const router = createRouter({
     { path: '/search', component: SearchView },
     { path: '/effects', component: EffectsView },
     { path: '/datenschutz', component: PrivacyView },
+    { path: '/impressum', component: ImpressumView },
+    { path: '/haftungsausschluss', component: DisclaimerView },
   ],
 })
 

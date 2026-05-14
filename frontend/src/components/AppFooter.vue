@@ -7,13 +7,13 @@
           Datenschutz
         </RouterLink>
         <span class="separator">|</span>
-        <a href="https://wkla.no-ip.biz/willie/pages/impressum.php" target="_blank" rel="noopener noreferrer" class="footer-link">
+        <RouterLink to="/impressum" class="footer-link">
           Impressum
-        </a>
+        </RouterLink>
         <span class="separator">|</span>
-        <a href="https://www.disclaimer.de/disclaimer.htm?farbe=FFFFFF/000000/000000/000000" target="_blank" rel="noopener noreferrer" class="footer-link">
+        <RouterLink to="/haftungsausschluss" class="footer-link">
           Haftungsausschluss
-        </a>
+        </RouterLink>
       </div>
     </div>
   </footer>
