@@ -141,7 +141,7 @@ func main() {
 	var blobSvc *blob.Service
 	var docStore *store.MongoStore
 
-	if !*dryRun && *importSch {
+	if !*dryRun && (*importSch || *importEff) {
 		blobSvc = blob.New(inj)
 		if err := blobSvc.Prepare(); err != nil {
 			log.Fatalf("prepare blob store: %v", err)
