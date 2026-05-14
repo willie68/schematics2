@@ -368,8 +368,11 @@ const getConnectorIcon = (connector) => {
 }
 
 const editEffect = (effectId) => {
-  showDetail.value = false
   router.push(`/effects/${effectId}/edit`)
+  // Schließe das Modal nach kurzer Verzögerung für sanfte Transition
+  setTimeout(() => {
+    showDetail.value = false
+  }, 100)
 }
 </script>
 

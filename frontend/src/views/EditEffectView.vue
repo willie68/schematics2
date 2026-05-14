@@ -14,6 +14,12 @@
       <i class="pi pi-spin pi-spinner" style="font-size:3rem;"></i>
     </div>
 
+    <div v-else-if="loadError" style="text-align:center; padding:2rem;">
+      <p style="color:red; font-size:1.1rem; margin-bottom:1rem;">⚠️ {{ loadError }}</p>
+      <p style="color:#666; margin-bottom:1rem;">Effekt-ID: {{ effectID }}</p>
+      <Button label="Zurück" @click="goBack()" />
+    </div>
+
     <div v-else-if="effect">
       <form @submit.prevent="saveEffect" style="display:grid; gap:1.5rem;">
         <!-- Basic Info Grid -->
@@ -187,6 +193,7 @@ const effectID = route.params.id
 const effect = ref(null)
 const loading = ref(true)
 const saving = ref(false)
+const loadError = ref(null)
 const effectTypes = ref([])
 const manufacturerSuggestions = ref([])
 const connectorOptions = ref(['HI-A+', 'HI+A-', '3.5mm', 'USB', 'XLR', 'RJ45'])
@@ -224,7 +231,9 @@ onMounted(async () => {
 
 const loadEffect = async () => {
   try {
+    console.log('Loading effect with ID:', effectID)
     const response = await api.get(`/api/v1/effects/${effectID}`)
+    console.log('Effect loaded successfully:', response.data)
     effect.value = response.data
     form.value = {
       effectType: response.data.effectType,
@@ -237,12 +246,12 @@ const loadEffect = async () => {
       comment: response.data.comment,
       images: response.data.images || []
     }
+    loading.value = false
   } catch (error) {
     console.error('Failed to load effect:', error)
-    toast.add({ severity: 'error', summary: 'Fehler', detail: 'Effekt konnte nicht geladen werden' })
-    setTimeout(() => goBack(), 2000)
-  } finally {
+    loadError.value = error.message || 'Effekt konnte nicht geladen werden'
     loading.value = false
+    toast.add({ severity: 'error', summary: 'Fehler', detail: loadError.value })
   }
 }
 
