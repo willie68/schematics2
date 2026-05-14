@@ -10,19 +10,10 @@
       <section class="impressum-section">
         <h2>Verantwortlich für den Inhalt</h2>
         <div class="contact-info">
-          <p><strong>Name/Unternehmen:</strong> [Bitte eintragen]</p>
-          <p><strong>Adresse:</strong> [Straße und Hausnummer]<br>[Postleitzahl] [Stadt]<br>[Land]</p>
-          <p><strong>Telefon:</strong> [Telefonnummer]</p>
-          <p><strong>Email:</strong> <a href="mailto:[email@example.com]">[email@example.com]</a></p>
+          <p><strong>Name/Unternehmen:</strong>Wilfried Klaas</p>
+          <p><strong>Adresse:</strong> Welperstraße 65<br>45525 Hattingen<br>Deutschland</p>
+          <p><strong>Email:</strong> <a href="mailto:w.klaas@gmx.de">w.klaas@gmx.de</a></p>
         </div>
-      </section>
-
-      <!-- Umsatzsteuer -->
-      <section class="impressum-section">
-        <h2>Umsatzsteuer-ID</h2>
-        <p>
-          Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz: [USt-ID-Nummer]
-        </p>
       </section>
 
       <!-- Haftung für Inhalte -->
@@ -107,8 +98,8 @@
         <h2>Kontakt</h2>
         <p>
           Für Fragen, Kritik oder sonstige Anliegen können Sie uns kontaktieren unter:<br>
-          <strong>Email:</strong> <a href="mailto:[email@example.com]">[email@example.com]</a><br>
-          <strong>Adresse:</strong> [Straße und Hausnummer]<br>[Postleitzahl] [Stadt]<br>[Land]
+          <strong>Email:</strong> <a href="mailto:w.klaas@gmx.de">w.klaas@gmx.de</a><br>
+          <strong>Adresse:</strong> Welperstraße 65<br>45525 Hattingen<br>Deutschland
         </p>
       </section>
     </div>
