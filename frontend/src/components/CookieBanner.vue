@@ -3,8 +3,10 @@
     <div class="cookie-content">
       <div class="cookie-message">
         <p style="margin:0;">
-          <strong>Datenschutz</strong>: Diese Anwendung verwendet LocalStorage zur Speicherung Ihres 
-          Authentifizierungs-Tokens. Dies ist technisch erforderlich, um Sie angemeldet zu halten.
+          <strong>Datenschutz</strong>: Wir verwenden auf unserer Webseite ausschließlich technisch notwendige Cookies, 
+          um Ihre aktuelle Benutzersession zu verwalten (z. B. für den Login-Status). 
+          Ohne diese Cookies kann die Webseite nicht korrekt funktionieren. 
+          Es werden keine Daten zu Tracking- oder Marketingzwecken erhoben. Weitere Informationen finden Sie in unserer <a href="/datenschutz" target="_blank" rel="noopener noreferrer">Datenschutzerklärung</a>.
         </p>
       </div>
       <div class="cookie-actions">
