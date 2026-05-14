@@ -70,7 +70,7 @@ func (s *MongoStore) SuggestManufacturers(ctx context.Context, prefix string, li
 	return out, nil
 }
 
-func (s *MongoStore) updateManufacturer(ctx context.Context, manufacturer string) error {
+func (s *MongoStore) UpdateManufacturer(ctx context.Context, manufacturer string) error {
 	if s.manufCol == nil || manufacturer == "" {
 		return nil
 	}
@@ -87,4 +87,8 @@ func (s *MongoStore) updateManufacturer(ctx context.Context, manufacturer string
 	}
 
 	return nil
+}
+
+func (s *MongoStore) updateManufacturer(ctx context.Context, manufacturer string) error {
+	return s.UpdateManufacturer(ctx, manufacturer)
 }

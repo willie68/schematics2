@@ -40,6 +40,7 @@ type effectStore interface {
 	GetEffectByID(ctx context.Context, id string) (*domain.Effect, error)
 	CreateEffect(ctx context.Context, effect *domain.Effect) error
 	UpdateEffect(ctx context.Context, effect *domain.Effect) error
+	UpdateManufacturer(ctx context.Context, manufacturer string) error
 }
 
 type effectTypeStore interface {
@@ -1022,6 +1023,12 @@ func (h *Handler) createEffect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Add manufacturer to manufacturers collection if not already exists
+	if err := h.effectStore.UpdateManufacturer(ctx, effect.Manufacturer); err != nil {
+		// Log but don't fail - manufacturer update is secondary
+		h.log.Warn("failed to update manufacturer", "error", err, "manufacturer", effect.Manufacturer)
+	}
+
 	respondJSON(w, http.StatusCreated, effect)
 }
 
@@ -1107,6 +1114,12 @@ func (h *Handler) updateEffect(w http.ResponseWriter, r *http.Request) {
 	if err := h.effectStore.UpdateEffect(ctx, effect); err != nil {
 		respondError(w, http.StatusInternalServerError, "failed to update effect")
 		return
+	}
+
+	// Add manufacturer to manufacturers collection if not already exists
+	if err := h.effectStore.UpdateManufacturer(ctx, effect.Manufacturer); err != nil {
+		// Log but don't fail - manufacturer update is secondary
+		h.log.Warn("failed to update manufacturer", "error", err, "manufacturer", effect.Manufacturer)
 	}
 
 	respondJSON(w, http.StatusOK, effect)
