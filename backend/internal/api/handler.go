@@ -1067,15 +1067,6 @@ func (h *Handler) updateEffect(w http.ResponseWriter, r *http.Request) {
 		effect.Connector = connector
 	}
 
-	// Parse tags if provided
-	if tagsStr := r.FormValue("tags"); tagsStr != "" {
-		effect.Tags = strings.Split(tagsStr, ",")
-		// Trim whitespace from tags
-		for i, tag := range effect.Tags {
-			effect.Tags[i] = strings.TrimSpace(tag)
-		}
-	}
-
 	// Update comment if provided
 	if comment := r.FormValue("comment"); comment != "" {
 		effect.Comment = comment

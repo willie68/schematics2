@@ -83,16 +83,7 @@
           </div>
         </div>
 
-        <!-- Tags and Comment -->
-        <div>
-          <label style="font-weight:bold; display:block; margin-bottom:0.5rem;">Tags (kommagetrennt)</label>
-          <Textarea 
-            v-model="tagsInput" 
-            placeholder="Tags eingeben, durch Komma getrennt"
-            rows="2"
-          />
-        </div>
-
+        <!-- Comment -->
         <div>
           <label style="font-weight:bold; display:block; margin-bottom:0.5rem;">Kommentar</label>
           <Textarea 
@@ -209,19 +200,8 @@ const form = ref({
   voltage: '',
   current: '',
   connector: '',
-  tags: [],
   comment: '',
   images: []
-})
-
-const tagsInput = computed({
-  get: () => form.value.tags.join(', '),
-  set: (val) => {
-    form.value.tags = val
-      .split(',')
-      .map(tag => tag.trim())
-      .filter(tag => tag.length > 0)
-  }
 })
 
 onMounted(async () => {
@@ -242,7 +222,6 @@ const loadEffect = async () => {
       voltage: response.data.voltage,
       current: response.data.current,
       connector: response.data.connector,
-      tags: response.data.tags || [],
       comment: response.data.comment,
       images: response.data.images || []
     }
@@ -325,7 +304,6 @@ const saveEffect = async () => {
     formData.append('voltage', form.value.voltage)
     formData.append('current', form.value.current)
     formData.append('connector', form.value.connector)
-    formData.append('tags', form.value.tags.join(','))
     formData.append('comment', form.value.comment)
     formData.append('replaceImage', replaceImage.value)
 
