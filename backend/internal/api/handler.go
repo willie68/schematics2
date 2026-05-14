@@ -130,8 +130,8 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 		api.Get("/documents/search", h.searchDocuments)
 		api.Get("/documents/{id}/files/{filename}", h.downloadFile)
 		api.Get("/effects/search", h.searchEffects)
-		api.Get("/effects/{id}", h.getEffect)
 		api.Get("/effects/{id}/image", h.getEffectImage)
+		api.Get("/effects/{id}", h.getEffect)
 		api.Get("/connectors/{name}", h.getConnectorImage)
 
 		api.Group(func(protected chi.Router) {
