@@ -65,7 +65,7 @@ profiling:
 
 mongodb:
     hosts:
-      - 192.168.178.14:27017
+      - 127.0.0.1:27017
     username:
     password:
     authDatabase: schematics

@@ -116,16 +116,6 @@ go run cmd/import-all/main.go -base-dir ./testdata -schematics=false -effecttype
   - `manufacturer` wird gegen die `manufacturers` Collection validiert (oder neu erstellt)
 - Domain: `Effect.Image` → `Effect.Images` (Array von ContainerInfo für Blob-Storage)
 
-### Legacy: Einzelne Import-Commands
-
-Die folgenden separaten Commands sind deprecated, aber noch vorhanden:
-- `cmd/import-tags/main.go` - Nur Tags importieren
-- `cmd/import-manufacturers/main.go` - Nur Hersteller importieren
-- `cmd/import-schematics/main.go` - Nur Schematics importieren
-- `cmd/import-effecttypes/main.go` - Nur Effect Types importieren
-- `cmd/import-effects/main.go` - Nur Effects importieren
-
-Für neue Importe bitte `cmd/import-all/main.go` verwenden!
 
 ## Backend API (Start)
 

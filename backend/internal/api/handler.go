@@ -371,6 +371,10 @@ func (h *Handler) indexDocument(w http.ResponseWriter, r *http.Request) {
 
 	// Set owner to currently authenticated user
 	user := h.getAuthenticatedUser(r)
+	if strings.TrimSpace(user) == "" {
+		respondError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
 	doc.Owner = user
 
 	if err := h.docStore.Upsert(doc); err != nil {
