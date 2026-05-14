@@ -3,6 +3,10 @@
     <div class="footer-content">
       <p>&copy; 2026 Schematic2. Alle Rechte vorbehalten.</p>
       <div class="footer-links">
+        <a href="/datenschutz" rel="noopener noreferrer">
+          Datenschutz
+        </a>
+        <span class="separator">|</span>
         <a href="https://wkla.no-ip.biz/willie/pages/impressum.php" target="_blank" rel="noopener noreferrer">
           Impressum
         </a>
