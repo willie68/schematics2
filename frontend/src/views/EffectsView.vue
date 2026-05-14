@@ -168,6 +168,23 @@
           <span v-else class="muted">Kein Bild vorhanden</span>
         </div>
       </div>
+
+      <template #footer>
+        <div style="display:flex; gap:1rem; justify-content:flex-end;">
+          <Button 
+            label="Schließen" 
+            severity="secondary" 
+            @click="showDetail = false"
+          />
+          <Button 
+            v-if="isLoggedIn"
+            label="Bearbeiten" 
+            icon="pi pi-pencil"
+            severity="primary"
+            @click="editEffect(selectedEffectDetail.id)"
+          />
+        </div>
+      </template>
     </Dialog>
 
     <!-- Effect Upload Dialog Component -->
@@ -182,6 +199,7 @@
 
 <script setup>
 import { computed, ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import DataTable from 'primevue/datatable'
@@ -191,6 +209,8 @@ import Dialog from 'primevue/dialog'
 import EffectUploadDialog from '../components/EffectUploadDialog.vue'
 import api from '../services/api'
 import { useAuth } from '../composables/useAuth'
+
+const router = useRouter()
 
 const { isLoggedIn } = useAuth()
 
@@ -345,6 +365,11 @@ const getConnectorIcon = (connector) => {
   }
   
   return 'pi pi-link'
+}
+
+const editEffect = (effectId) => {
+  showDetail.value = false
+  router.push(`/effects/${effectId}/edit`)
 }
 </script>
 

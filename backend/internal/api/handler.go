@@ -39,6 +39,7 @@ type effectStore interface {
 	SearchEffects(ctx context.Context, query string, skip, limit int64, sortField, sortOrder string) (domain.PagedEffects, error)
 	GetEffectByID(ctx context.Context, id string) (*domain.Effect, error)
 	CreateEffect(ctx context.Context, effect *domain.Effect) error
+	UpdateEffect(ctx context.Context, effect *domain.Effect) error
 }
 
 type effectTypeStore interface {
@@ -129,6 +130,7 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 		api.Get("/documents/search", h.searchDocuments)
 		api.Get("/documents/{id}/files/{filename}", h.downloadFile)
 		api.Get("/effects/search", h.searchEffects)
+		api.Get("/effects/{id}", h.getEffect)
 		api.Get("/effects/{id}/image", h.getEffectImage)
 		api.Get("/connectors/{name}", h.getConnectorImage)
 
@@ -140,6 +142,7 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 			protected.Patch("/documents/{id}", h.updateDocument)
 			protected.Delete("/documents/{id}", h.deleteDocument)
 			protected.Post("/effects", h.createEffect)
+			protected.Patch("/effects/{id}", h.updateEffect)
 		})
 	})
 }
@@ -841,6 +844,25 @@ func (h *Handler) searchEffects(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (h *Handler) getEffect(w http.ResponseWriter, r *http.Request) {
+	effectID := chi.URLParam(r, "id")
+	if strings.TrimSpace(effectID) == "" {
+		respondError(w, http.StatusBadRequest, "effect id is required")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	effect, err := h.effectStore.GetEffectByID(ctx, effectID)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "effect not found")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, effect)
+}
+
 func (h *Handler) getEffectImage(w http.ResponseWriter, r *http.Request) {
 	effectID := chi.URLParam(r, "id")
 	if strings.TrimSpace(effectID) == "" {
@@ -1001,4 +1023,100 @@ func (h *Handler) createEffect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusCreated, effect)
+}
+
+func (h *Handler) updateEffect(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	effectID := chi.URLParam(r, "id")
+
+	if effectID == "" {
+		respondError(w, http.StatusBadRequest, "effect ID is required")
+		return
+	}
+
+	// Get existing effect
+	effect, err := h.effectStore.GetEffectByID(ctx, effectID)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "effect not found")
+		return
+	}
+
+	// Parse multipart form (max 32MB)
+	if err := r.ParseMultipartForm(32 << 20); err != nil {
+		respondError(w, http.StatusBadRequest, "failed to parse form")
+		return
+	}
+
+	// Update form values if provided
+	if effectType := r.FormValue("effectType"); effectType != "" {
+		effect.EffectType = effectType
+	}
+	if manufacturer := r.FormValue("manufacturer"); manufacturer != "" {
+		effect.Manufacturer = manufacturer
+	}
+	if model := r.FormValue("model"); model != "" {
+		effect.Model = model
+	}
+	if voltage := r.FormValue("voltage"); voltage != "" {
+		effect.Voltage = voltage
+	}
+	if current := r.FormValue("current"); current != "" {
+		effect.Current = current
+	}
+	if connector := r.FormValue("connector"); connector != "" {
+		effect.Connector = connector
+	}
+
+	// Parse tags if provided
+	if tagsStr := r.FormValue("tags"); tagsStr != "" {
+		effect.Tags = strings.Split(tagsStr, ",")
+		// Trim whitespace from tags
+		for i, tag := range effect.Tags {
+			effect.Tags[i] = strings.TrimSpace(tag)
+		}
+	}
+
+	// Update comment if provided
+	if comment := r.FormValue("comment"); comment != "" {
+		effect.Comment = comment
+	}
+
+	// Handle image upload if provided
+	file, handler, err := r.FormFile("image")
+	if err == nil {
+		defer file.Close()
+
+		// Read file data
+		buf, err := io.ReadAll(file)
+		if err != nil {
+			respondError(w, http.StatusInternalServerError, "failed to read image")
+			return
+		}
+
+		// Save to blob store
+		mimeType := handler.Header.Get("Content-Type")
+		if mimeType == "" {
+			mimeType = "image/jpeg"
+		}
+		containerInfo, err := h.blob.Save(buf, mimeType)
+		if err != nil {
+			respondError(w, http.StatusInternalServerError, "failed to save image")
+			return
+		}
+
+		// Replace images with new one or append
+		if r.FormValue("replaceImage") == "true" {
+			effect.Images = []*domain.ContainerInfo{containerInfo}
+		} else {
+			effect.Images = append(effect.Images, containerInfo)
+		}
+	}
+
+	// Update effect in database
+	if err := h.effectStore.UpdateEffect(ctx, effect); err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to update effect")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, effect)
 }

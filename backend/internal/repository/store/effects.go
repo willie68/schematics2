@@ -119,3 +119,23 @@ func (m *MongoStore) CreateEffect(ctx context.Context, effect *domain.Effect) er
 	}
 	return nil
 }
+
+// UpdateEffect updates an existing effect in the database
+func (m *MongoStore) UpdateEffect(ctx context.Context, effect *domain.Effect) error {
+	if effect.ID == "" {
+		return fmt.Errorf("effect ID is required for update")
+	}
+
+	effect.LastModifiedAt = time.Now()
+
+	result, err := m.effectsCol.ReplaceOne(ctx, bson.M{"_id": effect.ID}, effect)
+	if err != nil {
+		return fmt.Errorf("replace effect: %w", err)
+	}
+
+	if result.MatchedCount == 0 {
+		return fmt.Errorf("effect not found")
+	}
+
+	return nil
+}
