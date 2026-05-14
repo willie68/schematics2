@@ -237,7 +237,7 @@ func (s *MongoStore) Upsert(doc domain.Document) error {
 	if err = s.updateTagCounters(ctx, oldTags, payload.Tags); err != nil {
 		return err
 	}
-	if err = s.updateManufacturer(ctx, payload.Manufacturer); err != nil {
+	if err = s.UpdateManufacturer(ctx, payload.Manufacturer); err != nil {
 		return err
 	}
 

@@ -88,7 +88,3 @@ func (s *MongoStore) UpdateManufacturer(ctx context.Context, manufacturer string
 
 	return nil
 }
-
-func (s *MongoStore) updateManufacturer(ctx context.Context, manufacturer string) error {
-	return s.UpdateManufacturer(ctx, manufacturer)
-}
