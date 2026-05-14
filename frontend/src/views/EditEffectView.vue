@@ -80,7 +80,7 @@
         <!-- Tags and Comment -->
         <div>
           <label style="font-weight:bold; display:block; margin-bottom:0.5rem;">Tags (kommagetrennt)</label>
-          <InputTextarea 
+          <Textarea 
             v-model="tagsInput" 
             placeholder="Tags eingeben, durch Komma getrennt"
             rows="2"
@@ -89,7 +89,7 @@
 
         <div>
           <label style="font-weight:bold; display:block; margin-bottom:0.5rem;">Kommentar</label>
-          <InputTextarea 
+          <Textarea 
             v-model="form.comment" 
             placeholder="Kommentar eingeben"
             rows="3"
@@ -170,7 +170,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import InputText from 'primevue/inputtext'
-import InputTextarea from 'primevue/inputtextarea'
+import Textarea from 'primevue/textarea'
 import Button from 'primevue/button'
 import Dropdown from 'primevue/dropdown'
 import Checkbox from 'primevue/checkbox'
