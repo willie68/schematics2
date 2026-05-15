@@ -18,6 +18,7 @@ import (
 	"sync"
 
 	"github.com/klauspost/compress/zstd"
+	"github.com/rs/xid"
 	"github.com/samber/do/v2"
 	"github.com/willie68/schematics2/backend/internal/config"
 	"github.com/willie68/schematics2/backend/internal/domain/model"
@@ -126,6 +127,7 @@ func (s *Service) Save(data []byte, mimeType, filename string) (*model.Container
 		return nil, fmt.Errorf("compress data: %w", err)
 	}
 
+	id := xid.New().String()
 	// Step 1: Determine which container to use (under muCurrent lock)
 	recordSize := int64(4 + 1 + len(compressed))
 	s.muCurrent.Lock()
@@ -192,6 +194,7 @@ func (s *Service) Save(data []byte, mimeType, filename string) (*model.Container
 	}
 
 	ci := &model.ContainerInfo{
+		ID:              id,
 		ContainerNumber: containerNum,
 		Offset:          offset,
 		Name:            filename,
@@ -460,6 +463,7 @@ func compressionTypeToString(ct byte) string {
 
 // containerInfoEntry is the JSON-serializable format for .inf files
 type containerInfoEntry struct {
+	ID             string `json:"id,omitempty"` // Optional ID for easier identification
 	Offset         int64  `json:"offset"`
 	Length         int64  `json:"length"`
 	OriginalLength int64  `json:"originalLength"`
@@ -485,6 +489,7 @@ func (s *Service) appendContainerInfoEntry(containerNum int, ci *model.Container
 
 	// Append new entry
 	entries = append(entries, containerInfoEntry{
+		ID:             ci.ID,
 		Offset:         ci.Offset,
 		Length:         ci.Length,
 		OriginalLength: ci.OriginalLength,
@@ -527,6 +532,7 @@ func (s *Service) LoadContainerInfos(containerNum int) ([]*model.ContainerInfo, 
 	result := make([]*model.ContainerInfo, len(entries))
 	for i, entry := range entries {
 		result[i] = &model.ContainerInfo{
+			ID:              entry.ID,
 			ContainerNumber: containerNum,
 			Offset:          entry.Offset,
 			Length:          entry.Length,
@@ -595,6 +601,11 @@ func (s *Service) DeleteByInfo(ci *model.ContainerInfo) error {
 	// Find and mark entry as deleted
 	found := false
 	for i := range entries {
+		if ci.ID != "" && entries[i].ID != "" && entries[i].ID == ci.ID {
+			entries[i].Deleted = true
+			found = true
+			break
+		}
 		if entries[i].Offset == ci.Offset && entries[i].Length == ci.Length {
 			entries[i].Deleted = true
 			found = true

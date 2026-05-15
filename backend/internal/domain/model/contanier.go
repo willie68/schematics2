@@ -1,6 +1,7 @@
 package model
 
 type ContainerInfo struct {
+	ID              string `json:"id,omitempty" bson:"_id,omitempty"`
 	ContainerNumber int    `json:"containerNumber" bson:"containerNumber"`
 	Offset          int64  `json:"offset" bson:"offset"`
 	Name            string `json:"name,omitempty" bson:"name,omitempty"` // Optional name for easier identification
