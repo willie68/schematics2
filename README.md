@@ -4,7 +4,7 @@ Schematic2 ist der Nachfolger von WilliesSchematicsWorld als Monorepo.
 
 Das Repository ist mit GitHub unter https://github.com/willie68/schematic verknüpft.
 
-**Version: Backend 0.2.22, Frontend 0.2.7**
+**Version: Backend 0.2.28, Frontend 0.2.19**
 
 ## Features
 

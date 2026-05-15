@@ -1,6 +1,15 @@
 <template>
   <section class="card">
-    <h2>Effektdatenbank</h2>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+      <h2 style="margin:0;">Effektdatenbank</h2>
+      <Button 
+        icon="pi pi-envelope" 
+        label="Vorschlag" 
+        severity="secondary"
+        @click="sendSuggestion()"
+        v-tooltip.bottom="'Effekt vorschlagen'"
+      />
+    </div>
 
     <div style="display:grid; gap:0.8rem; margin: 1rem 0;">
       <div style="display:flex; gap:1rem; align-items:center;">
@@ -67,7 +76,7 @@
       <Column header="Bild" style="width:14%; text-align:center;">
         <template #body="slotProps">
           <img 
-            v-if="slotProps.data.images && slotProps.data.images.length > 0"
+            v-if="slotProps.data.image"
             :src="getThumbnailUrl(slotProps.data.id)"
             style="max-width:60px; max-height:60px; cursor:pointer;"
             @click="showImageModal(slotProps.data)"
@@ -95,7 +104,7 @@
     <!-- Image Modal -->
     <Dialog v-model:visible="showImage" :header="selectedEffect?.model" modal>
       <img 
-        v-if="selectedEffect?.images && selectedEffect.images.length > 0"
+        v-if="selectedEffect?.image"
         :src="getImageUrl(selectedEffect.id)"
         style="width:100%; max-height:600px; object-fit:contain;"
         :alt="selectedEffect.model"
@@ -160,7 +169,7 @@
         <!-- Right: Image -->
         <div style="display:flex; align-items:center; justify-content:center; background:#f5f5f5; border-radius:8px;">
           <img 
-            v-if="selectedEffectDetail?.images && selectedEffectDetail.images.length > 0"
+            v-if="selectedEffectDetail?.image"
             :src="getImageUrl(selectedEffectDetail.id)"
             style="max-width:100%; max-height:100%; object-fit:contain;"
             :alt="selectedEffectDetail.model"
@@ -182,6 +191,13 @@
             icon="pi pi-pencil"
             severity="primary"
             @click="editEffect(selectedEffectDetail.id)"
+          />
+          <Button 
+            v-if="isLoggedIn"
+            label="Löschen" 
+            icon="pi pi-trash" 
+            severity="danger" 
+            @click="confirmDeleteEffect()"
           />
         </div>
       </template>
@@ -209,8 +225,10 @@ import Dialog from 'primevue/dialog'
 import EffectUploadDialog from '../components/EffectUploadDialog.vue'
 import api from '../services/api'
 import { useAuth } from '../composables/useAuth'
+import { useToast } from '../composables/useToast'
 
 const router = useRouter()
+const toast = useToast()
 
 const { isLoggedIn } = useAuth()
 
@@ -327,12 +345,12 @@ const previousPage = () => {
 
 const getThumbnailUrl = (effectId) => {
   const base = typeof __API_BASE__ !== 'undefined' ? __API_BASE__ : '/'
-  return `${base}api/v1/effects/${effectId}/image`
+  return `${base}api/v1/effects/${effectId}/image`;
 }
 
 const getImageUrl = (effectId) => {
   const base = typeof __API_BASE__ !== 'undefined' ? __API_BASE__ : '/'
-  return `${base}api/v1/effects/${effectId}/image`
+  return `${base}api/v1/effects/${effectId}/image`;
 }
 
 const showImageModal = (effect) => {
@@ -343,6 +361,12 @@ const showImageModal = (effect) => {
 const showDetailModal = (event) => {
   selectedEffectDetail.value = event.data
   showDetail.value = true
+}
+
+const sendSuggestion = () => {
+  const subject = encodeURIComponent('Vorschlag: Effekt')
+  const body = encodeURIComponent('Hier können Sie einen Effektvorschlag eintragen:\n\nHersteller:\nModell:\nTyp:\nSpannung:\nStrom:\nAnschluss:\nKommentar:\n\n(Optional können Sie auch ein Bild anhängen)\n\nVielen Dank für Ihren Beitrag!')
+  window.location.href = `mailto:info@wk-music.de?subject=${subject}&body=${body}`
 }
 
 const isConnectorWithIcon = (connector) => {
@@ -374,6 +398,25 @@ const editEffect = (effectId) => {
     showDetail.value = false
   }, 100)
 }
+
+const confirmDeleteEffect = async () => {
+  if (!confirm(`Wirklich löschen: "${selectedEffectDetail.value.id} ${selectedEffectDetail.value.manufacturer} ${selectedEffectDetail.value.model}"?`)) {
+    return
+  }
+
+  try {
+    await api.delete(`/api/v1/effects/${selectedEffectDetail.value.id}`)
+    toast.success('Effekt gelöscht')
+    selectedEffectDetail.value = null
+    selectedEffect.value = null
+    showDetail.value = false
+    await search()
+  } catch (err) {
+    console.error('Delete error:', err)
+    toast.error(`Fehler beim Löschen: ${err?.response?.data?.message || err.message}`)
+  }
+}
+
 </script>
 
 <style scoped>

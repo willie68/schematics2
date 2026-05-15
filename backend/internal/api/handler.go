@@ -19,7 +19,7 @@ import (
 	"github.com/samber/do/v2"
 	"github.com/willie68/schematic2/backend/internal/auth"
 	"github.com/willie68/schematic2/backend/internal/config"
-	"github.com/willie68/schematic2/backend/internal/domain"
+	"github.com/willie68/schematic2/backend/internal/domain/model"
 	"github.com/willie68/schematic2/backend/internal/logging"
 	"github.com/willie68/schematic2/backend/internal/repository/connector"
 	"github.com/willie68/schematic2/backend/internal/services/users"
@@ -27,45 +27,46 @@ import (
 )
 
 type documentStore interface {
-	Upsert(doc domain.Document) error
-	ListTags(ctx context.Context) ([]domain.Tag, error)
-	SuggestTags(ctx context.Context, prefix string, limit int) ([]domain.Tag, error)
+	Upsert(doc model.Document) error
+	ListTags(ctx context.Context) ([]model.Tag, error)
+	SuggestTags(ctx context.Context, prefix string, limit int) ([]model.Tag, error)
 	SuggestManufacturers(ctx context.Context, prefix string, limit int) ([]string, error)
-	GetByID(ctx context.Context, id string) (domain.Document, error)
+	GetByID(ctx context.Context, id string) (model.Document, error)
 	DeleteByID(ctx context.Context, id string) error
 }
 
 type effectStore interface {
-	SearchEffects(ctx context.Context, query string, skip, limit int64, sortField, sortOrder string) (domain.PagedEffects, error)
-	GetEffectByID(ctx context.Context, id string) (*domain.Effect, error)
-	CreateEffect(ctx context.Context, effect *domain.Effect) error
-	UpdateEffect(ctx context.Context, effect *domain.Effect) error
+	SearchEffects(ctx context.Context, query string, skip, limit int64, sortField, sortOrder string) (model.PagedEffects, error)
+	GetEffectByID(ctx context.Context, id string) (*model.Effect, error)
+	CreateEffect(ctx context.Context, effect *model.Effect) error
+	UpdateEffect(ctx context.Context, effect *model.Effect) error
 	UpdateManufacturer(ctx context.Context, manufacturer string) error
+	DeleteEffect(ctx context.Context, id string) error
 }
 
 type effectTypeStore interface {
-	GetAllEffectTypes(ctx context.Context) ([]domain.EffectType, error)
+	GetAllEffectTypes(ctx context.Context) ([]model.EffectType, error)
 }
 
 type userStore interface {
-	CreateUser(ctx context.Context, user domain.User) error
-	GetUserByEmail(ctx context.Context, email string) (domain.User, bool)
-	UpdateUser(ctx context.Context, user domain.User) error
+	CreateUser(ctx context.Context, user model.User) error
+	GetUserByEmail(ctx context.Context, email string) (model.User, bool)
+	UpdateUser(ctx context.Context, user model.User) error
 }
 
 type documentIndex interface {
-	Search(query string, tags []string, skip, limit int64, sortField string, sortOrder int, privateOnly, isAuthenticated bool, username string) domain.PagedSearchResult
+	Search(query string, tags []string, skip, limit int64, sortField string, sortOrder int, privateOnly, isAuthenticated bool, username string) model.PagedSearchResult
 }
 
 type blobStore interface {
-	Save(data []byte, mimeType string) (*domain.ContainerInfo, error)
-	Load(ci *domain.ContainerInfo) ([]byte, error)
-	DeleteByInfo(ci *domain.ContainerInfo) error
+	Save(data []byte, mimeType, filename string) (*model.ContainerInfo, error)
+	Load(ci *model.ContainerInfo) ([]byte, error)
+	DeleteByInfo(ci *model.ContainerInfo) error
 }
 
 type usersService interface {
-	Register(ctx context.Context, req users.RegisterRequest) (domain.User, error)
-	Authenticate(ctx context.Context, email, password string) (domain.User, error)
+	Register(ctx context.Context, req users.RegisterRequest) (model.User, error)
+	Authenticate(ctx context.Context, email, password string) (model.User, error)
 }
 
 type Handler struct {
@@ -144,6 +145,7 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 			protected.Delete("/documents/{id}", h.deleteDocument)
 			protected.Post("/effects", h.createEffect)
 			protected.Patch("/effects/{id}", h.updateEffect)
+			protected.Delete("/effects/{id}", h.deleteEffect)
 		})
 	})
 }
@@ -352,7 +354,7 @@ func (h *Handler) indexDocument(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var doc domain.Document
+	var doc model.Document
 	if err := json.Unmarshal(raw, &doc); err != nil {
 		respondError(w, http.StatusBadRequest, "invalid payload")
 		return
@@ -445,7 +447,7 @@ func (h *Handler) updateDocument(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Create file entry
-			file := domain.DocumentFile{
+			file := model.DocumentFile{
 				Name:     toString(fileMap["name"]),
 				Type:     toString(fileMap["type"]),
 				MIMEType: toString(fileMap["mimetype"]),
@@ -460,7 +462,7 @@ func (h *Handler) updateDocument(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 
-				ci, err := h.blob.Save(dataBytes, file.MIMEType)
+				ci, err := h.blob.Save(dataBytes, file.MIMEType, file.Name)
 				if err != nil {
 					respondError(w, http.StatusInternalServerError, "save file")
 					return
@@ -494,7 +496,7 @@ func (h *Handler) updateDocument(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Remove file from document
-			doc.Files = slices.DeleteFunc(doc.Files, func(f domain.DocumentFile) bool {
+			doc.Files = slices.DeleteFunc(doc.Files, func(f model.DocumentFile) bool {
 				return f.Name == deletedName
 			})
 		}
@@ -618,7 +620,7 @@ func (h *Handler) deleteDocument(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string]any{"status": "deleted", "id": docID})
 }
 
-func (h *Handler) storeBlobFiles(doc *domain.Document) error {
+func (h *Handler) storeBlobFiles(doc *model.Document) error {
 	if doc == nil {
 		return errors.New("document is nil")
 	}
@@ -637,7 +639,7 @@ func (h *Handler) storeBlobFiles(doc *domain.Document) error {
 			return fmt.Errorf("invalid file data for %q: %w", doc.Files[i].Name, err)
 		}
 
-		info, err := h.blob.Save(data, doc.Files[i].MIMEType)
+		info, err := h.blob.Save(data, doc.Files[i].MIMEType, doc.Files[i].Name)
 		if err != nil {
 			return fmt.Errorf("store file %q: %w", doc.Files[i].Name, err)
 		}
@@ -737,7 +739,7 @@ func (h *Handler) downloadFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Find the file
-	var file *domain.DocumentFile
+	var file *model.DocumentFile
 	for i := range doc.Files {
 		if doc.Files[i].Name == filename {
 			file = &doc.Files[i]
@@ -887,19 +889,25 @@ func (h *Handler) getEffectImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get first image if available
-	if len(effect.Images) == 0 {
+	if effect.Image == nil {
 		respondError(w, http.StatusNotFound, "no images available")
 		return
 	}
 
-	data, err := h.blob.Load(effect.Images[0])
+	data, err := h.blob.Load(effect.Image)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "failed to load image")
 		return
 	}
 
-	w.Header().Set("Content-Type", effect.Images[0].MIMEType)
+	w.Header().Set("Content-Type", effect.Image.MIMEType)
 	w.Header().Set("Cache-Control", "public, max-age=3600")
+	if effect.Image.Name != "" {
+		filename := url.PathEscape(effect.Image.Name)
+		w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", filename))
+	} else {
+		w.Header().Set("Content-Disposition", "inline")
+	}
 	w.Write(data)
 }
 
@@ -962,8 +970,8 @@ func (h *Handler) listEffectTypes(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) createEffect(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	// Parse multipart form (max 32MB)
-	if err := r.ParseMultipartForm(32 << 20); err != nil {
+	// Parse multipart form (max 128MB)
+	if err := r.ParseMultipartForm(128 << 20); err != nil {
 		respondError(w, http.StatusBadRequest, "failed to parse form")
 		return
 	}
@@ -971,30 +979,29 @@ func (h *Handler) createEffect(w http.ResponseWriter, r *http.Request) {
 	// Extract form values
 	effectType := r.FormValue("effectType")
 	manufacturer := r.FormValue("manufacturer")
-	model := r.FormValue("model")
+	emodel := r.FormValue("model")
 	voltage := r.FormValue("voltage")
 	current := r.FormValue("current")
 	connector := r.FormValue("connector")
 
 	// Validate required fields
-	if effectType == "" || manufacturer == "" || model == "" || connector == "" {
+	if effectType == "" || manufacturer == "" || emodel == "" || connector == "" {
 		respondError(w, http.StatusBadRequest, "missing required fields")
 		return
 	}
 
 	// Create new effect
 	now := time.Now()
-	effect := &domain.Effect{
-		ID:             fmt.Sprintf("effect_%d", now.UnixNano()),
+	effect := &model.Effect{
 		CreatedAt:      now,
 		LastModifiedAt: now,
 		EffectType:     effectType,
 		Manufacturer:   manufacturer,
-		Model:          model,
+		Model:          emodel,
 		Voltage:        voltage,
 		Current:        current,
 		Connector:      connector,
-		Images:         []*domain.ContainerInfo{},
+		Image:          nil,
 	}
 
 	// Handle image upload if provided
@@ -1014,12 +1021,12 @@ func (h *Handler) createEffect(w http.ResponseWriter, r *http.Request) {
 		if mimeType == "" {
 			mimeType = "image/jpeg"
 		}
-		containerInfo, err := h.blob.Save(buf, mimeType)
+		containerInfo, err := h.blob.Save(buf, mimeType, handler.Filename)
 		if err != nil {
 			respondError(w, http.StatusInternalServerError, "failed to save image")
 			return
 		}
-		effect.Images = append(effect.Images, containerInfo)
+		effect.Image = containerInfo
 	}
 
 	// Save effect to database
@@ -1096,23 +1103,27 @@ func (h *Handler) updateEffect(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Delete old image if it exists
+		if effect.Image != nil {
+			if err := h.blob.DeleteByInfo(effect.Image); err != nil {
+				h.log.Warn("failed to delete old image", "error", err)
+				// Continue anyway - don't fail the update
+			}
+		}
+
 		// Save to blob store
 		mimeType := handler.Header.Get("Content-Type")
 		if mimeType == "" {
 			mimeType = "image/jpeg"
 		}
-		containerInfo, err := h.blob.Save(buf, mimeType)
+		containerInfo, err := h.blob.Save(buf, mimeType, handler.Filename)
 		if err != nil {
 			respondError(w, http.StatusInternalServerError, "failed to save image")
 			return
 		}
 
-		// Replace images with new one or append
-		if r.FormValue("replaceImage") == "true" {
-			effect.Images = []*domain.ContainerInfo{containerInfo}
-		} else {
-			effect.Images = append(effect.Images, containerInfo)
-		}
+		// Always replace the single image
+		effect.Image = containerInfo
 	}
 
 	// Update effect in database
@@ -1128,4 +1139,36 @@ func (h *Handler) updateEffect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusOK, effect)
+}
+
+func (h *Handler) deleteEffect(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	effectID := chi.URLParam(r, "id")
+
+	if effectID == "" {
+		respondError(w, http.StatusBadRequest, "effect ID is required")
+		return
+	}
+
+	// Get existing effect to find associated images
+	effect, err := h.effectStore.GetEffectByID(ctx, effectID)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "effect not found")
+		return
+	}
+
+	// Mark associated images as deleted in blob store
+	if effect.Image != nil {
+		if err := h.blob.DeleteByInfo(effect.Image); err != nil {
+			h.log.Warn("failed to mark effect image as deleted in blob store", "error", err, "container", effect.Image.ContainerNumber)
+		}
+	}
+
+	// Delete effect from database
+	if err := h.effectStore.DeleteEffect(ctx, effectID); err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to delete effect")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]any{"status": "deleted", "id": effectID})
 }

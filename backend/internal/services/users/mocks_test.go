@@ -8,7 +8,7 @@ import (
 	"context"
 
 	mock "github.com/stretchr/testify/mock"
-	"github.com/willie68/schematic2/backend/internal/domain"
+	"github.com/willie68/schematic2/backend/internal/domain/model"
 )
 
 // newMockuserStore creates a new instance of mockuserStore. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
@@ -39,7 +39,7 @@ func (_m *mockuserStore) EXPECT() *mockuserStore_Expecter {
 }
 
 // CreateUser provides a mock function for the type mockuserStore
-func (_mock *mockuserStore) CreateUser(ctx context.Context, user domain.User) error {
+func (_mock *mockuserStore) CreateUser(ctx context.Context, user model.User) error {
 	ret := _mock.Called(ctx, user)
 
 	if len(ret) == 0 {
@@ -47,7 +47,7 @@ func (_mock *mockuserStore) CreateUser(ctx context.Context, user domain.User) er
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.User) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, model.User) error); ok {
 		r0 = returnFunc(ctx, user)
 	} else {
 		r0 = ret.Error(0)
@@ -62,20 +62,20 @@ type mockuserStore_CreateUser_Call struct {
 
 // CreateUser is a helper method to define mock.On call
 //   - ctx context.Context
-//   - user domain.User
+//   - user model.User
 func (_e *mockuserStore_Expecter) CreateUser(ctx interface{}, user interface{}) *mockuserStore_CreateUser_Call {
 	return &mockuserStore_CreateUser_Call{Call: _e.mock.On("CreateUser", ctx, user)}
 }
 
-func (_c *mockuserStore_CreateUser_Call) Run(run func(ctx context.Context, user domain.User)) *mockuserStore_CreateUser_Call {
+func (_c *mockuserStore_CreateUser_Call) Run(run func(ctx context.Context, user model.User)) *mockuserStore_CreateUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 domain.User
+		var arg1 model.User
 		if args[1] != nil {
-			arg1 = args[1].(domain.User)
+			arg1 = args[1].(model.User)
 		}
 		run(
 			arg0,
@@ -90,28 +90,28 @@ func (_c *mockuserStore_CreateUser_Call) Return(err error) *mockuserStore_Create
 	return _c
 }
 
-func (_c *mockuserStore_CreateUser_Call) RunAndReturn(run func(ctx context.Context, user domain.User) error) *mockuserStore_CreateUser_Call {
+func (_c *mockuserStore_CreateUser_Call) RunAndReturn(run func(ctx context.Context, user model.User) error) *mockuserStore_CreateUser_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // GetUserByEmail provides a mock function for the type mockuserStore
-func (_mock *mockuserStore) GetUserByEmail(ctx context.Context, email string) (domain.User, bool) {
+func (_mock *mockuserStore) GetUserByEmail(ctx context.Context, email string) (model.User, bool) {
 	ret := _mock.Called(ctx, email)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetUserByEmail")
 	}
 
-	var r0 domain.User
+	var r0 model.User
 	var r1 bool
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (domain.User, bool)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (model.User, bool)); ok {
 		return returnFunc(ctx, email)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) domain.User); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) model.User); ok {
 		r0 = returnFunc(ctx, email)
 	} else {
-		r0 = ret.Get(0).(domain.User)
+		r0 = ret.Get(0).(model.User)
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string) bool); ok {
 		r1 = returnFunc(ctx, email)
@@ -151,12 +151,12 @@ func (_c *mockuserStore_GetUserByEmail_Call) Run(run func(ctx context.Context, e
 	return _c
 }
 
-func (_c *mockuserStore_GetUserByEmail_Call) Return(user domain.User, b bool) *mockuserStore_GetUserByEmail_Call {
+func (_c *mockuserStore_GetUserByEmail_Call) Return(user model.User, b bool) *mockuserStore_GetUserByEmail_Call {
 	_c.Call.Return(user, b)
 	return _c
 }
 
-func (_c *mockuserStore_GetUserByEmail_Call) RunAndReturn(run func(ctx context.Context, email string) (domain.User, bool)) *mockuserStore_GetUserByEmail_Call {
+func (_c *mockuserStore_GetUserByEmail_Call) RunAndReturn(run func(ctx context.Context, email string) (model.User, bool)) *mockuserStore_GetUserByEmail_Call {
 	_c.Call.Return(run)
 	return _c
 }

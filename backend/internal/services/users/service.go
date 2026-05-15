@@ -10,13 +10,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/samber/do/v2"
 	"github.com/willie68/schematic2/backend/internal/auth"
-	"github.com/willie68/schematic2/backend/internal/domain"
+	"github.com/willie68/schematic2/backend/internal/domain/model"
 )
 
 // userStore interface for user persistence
 type userStore interface {
-	CreateUser(ctx context.Context, user domain.User) error
-	GetUserByEmail(ctx context.Context, email string) (domain.User, bool)
+	CreateUser(ctx context.Context, user model.User) error
+	GetUserByEmail(ctx context.Context, email string) (model.User, bool)
 }
 
 // Service manages user operations with flood protection
@@ -51,7 +51,7 @@ type RegisterRequest struct {
 }
 
 // Register creates a new user with flood protection (serialized + min duration)
-func (s *Service) Register(ctx context.Context, req RegisterRequest) (domain.User, error) {
+func (s *Service) Register(ctx context.Context, req RegisterRequest) (model.User, error) {
 	start := time.Now()
 
 	// Lock: only one registration at a time
@@ -61,24 +61,24 @@ func (s *Service) Register(ctx context.Context, req RegisterRequest) (domain.Use
 	// Validate input
 	if err := validateRegisterRequest(req); err != nil {
 		time.Sleep(time.Until(start.Add(s.minDuration)))
-		return domain.User{}, err
+		return model.User{}, err
 	}
 
 	// Hash password
 	hashedPassword, err := auth.HashPassword(req.Password)
 	if err != nil {
 		time.Sleep(time.Until(start.Add(s.minDuration)))
-		return domain.User{}, fmt.Errorf("hash password: %w", err)
+		return model.User{}, fmt.Errorf("hash password: %w", err)
 	}
 
 	// Create user
-	user := domain.User{
+	user := model.User{
 		ID:        uuid.New().String(),
 		Email:     req.Email,
 		Password:  hashedPassword,
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
-		Address: domain.Address{
+		Address: model.Address{
 			Street:  req.Street,
 			ZipCode: req.ZipCode,
 			City:    req.City,
@@ -90,7 +90,7 @@ func (s *Service) Register(ctx context.Context, req RegisterRequest) (domain.Use
 	// Save to database
 	if err := s.store.CreateUser(ctx, user); err != nil {
 		time.Sleep(time.Until(start.Add(s.minDuration)))
-		return domain.User{}, err
+		return model.User{}, err
 	}
 
 	// Ensure minimum duration
@@ -102,14 +102,14 @@ func (s *Service) Register(ctx context.Context, req RegisterRequest) (domain.Use
 }
 
 // Authenticate validates user credentials and returns the user if valid
-func (s *Service) Authenticate(ctx context.Context, email, password string) (domain.User, error) {
+func (s *Service) Authenticate(ctx context.Context, email, password string) (model.User, error) {
 	user, exists := s.store.GetUserByEmail(ctx, email)
 	if !exists {
-		return domain.User{}, errors.New("user not found")
+		return model.User{}, errors.New("user not found")
 	}
 
 	if err := auth.CheckPassword(user.Password, password); err != nil {
-		return domain.User{}, errors.New("invalid password")
+		return model.User{}, errors.New("invalid password")
 	}
 
 	user.Password = ""

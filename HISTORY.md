@@ -1,5 +1,31 @@
 # History
 
+## 0.2.28 - 2026-05-15 (Backend)
+
+- **Effect Update**: Altes Bild wird beim Update gelöscht
+  - `updateEffect` Handler: Bevor neues Bild gespeichert wird, wird altes mit `blob.DeleteByInfo()` gelöscht
+  - Verhindert Speicherverschwendung durch verwaiste Blob-Dateien
+  - Fehler beim Löschen wird geloggt, aber nicht fatal
+
+## 0.2.19 - 2026-05-15 (Frontend)
+
+- **EditEffectView**: Bildbereich nach KISS-Prinzip vereinfacht
+  - Entfernt: PrimeVue FileUpload-Komponente mit komplexen Buttons
+  - Hinzugefügt: Einfacher HTML `<input type="file">` Input
+  - Verhaltensweise: Altes Bild bleibt, wenn keine neue Datei gewählt
+  - Nach Speichern: loadEffect() lädt Updated-Daten + neues Bild
+
+- **EffectsView**: Image-Feld-Referenzen korrigiert
+  - Behob: `images` (plural) → `image` (singular) - Backend gibt einzelnes Bild zurück
+  - 3 Stellen: Tabelle, Image Modal, Detail Modal
+  - Bilder werden jetzt korrekt in Tabelle und Detailansicht angezeigt
+
+- **EffectsView**: "Vorschlag"-Button hinzugefügt
+  - Neuer Button oben rechts neben "Effektdatenbank"-Titel
+  - Öffnet E-Mail-Client mit vorausgefülltem Subject "Vorschlag: Effekt"
+  - Adresse: info@wk-music.de
+  - Benutzer können Effektvorschläge einreichen
+
 ## 0.2.23 - 2026-05-14
 
 - **Backend**: Document Owner automatisch vom angemeldeten User

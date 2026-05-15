@@ -10,7 +10,7 @@ import (
 
 	"github.com/samber/do/v2"
 	"github.com/willie68/schematic2/backend/internal/config"
-	"github.com/willie68/schematic2/backend/internal/domain"
+	"github.com/willie68/schematic2/backend/internal/domain/model"
 	"github.com/willie68/schematic2/backend/internal/logging"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -22,7 +22,7 @@ const tagsCollection = "tags"
 const manufacturersCollection = "manufacturers"
 const usersCollection = "users"
 
-// MongoStore stores domain.Document in MongoDB.
+// MongoStore stores model.Document in MongoDB.
 type MongoStore struct {
 	cfg            config.MongoDB
 	client         *mongo.Client
@@ -37,17 +37,17 @@ type MongoStore struct {
 }
 
 type mongoDocument struct {
-	ID             string                `bson:"_id"`
-	CreatedAt      time.Time             `bson:"createdAt"`
-	LastModifiedAt time.Time             `bson:"lastModifiedAt"`
-	Manufacturer   string                `bson:"manufacturer"`
-	Model          string                `bson:"model"`
-	Subtitle       string                `bson:"subtitle"`
-	Tags           []string              `bson:"tags"`
-	Description    string                `bson:"description"`
-	PrivateFile    bool                  `bson:"privateFile"`
-	Owner          string                `bson:"owner"`
-	Files          []domain.DocumentFile `bson:"files"`
+	ID             string               `bson:"_id"`
+	CreatedAt      time.Time            `bson:"createdAt"`
+	LastModifiedAt time.Time            `bson:"lastModifiedAt"`
+	Manufacturer   string               `bson:"manufacturer"`
+	Model          string               `bson:"model"`
+	Subtitle       string               `bson:"subtitle"`
+	Tags           []string             `bson:"tags"`
+	Description    string               `bson:"description"`
+	PrivateFile    bool                 `bson:"privateFile"`
+	Owner          string               `bson:"owner"`
+	Files          []model.DocumentFile `bson:"files"`
 }
 
 type mongoTag struct {
@@ -179,7 +179,7 @@ func (s *MongoStore) ensureIndexes() error {
 	return err
 }
 
-func (s *MongoStore) Upsert(doc domain.Document) error {
+func (s *MongoStore) Upsert(doc model.Document) error {
 	if s.col == nil {
 		return errors.New("mongodb not initialised")
 	}
@@ -263,21 +263,21 @@ func (s *MongoStore) fetchDocumentTags(ctx context.Context, id string) ([]string
 	return normalizeTags(prev.Tags), nil
 }
 
-func (s *MongoStore) GetByID(ctx context.Context, id string) (domain.Document, error) {
+func (s *MongoStore) GetByID(ctx context.Context, id string) (model.Document, error) {
 	if s.col == nil {
-		return domain.Document{}, errors.New("mongodb not initialised")
+		return model.Document{}, errors.New("mongodb not initialised")
 	}
 
 	var mdoc mongoDocument
 	err := s.col.FindOne(ctx, bson.D{{Key: "_id", Value: id}}).Decode(&mdoc)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return domain.Document{}, fmt.Errorf("document not found")
+		return model.Document{}, fmt.Errorf("document not found")
 	}
 	if err != nil {
-		return domain.Document{}, fmt.Errorf("find document: %w", err)
+		return model.Document{}, fmt.Errorf("find document: %w", err)
 	}
 
-	return domain.Document{
+	return model.Document{
 		ID:             mdoc.ID,
 		CreatedAt:      mdoc.CreatedAt,
 		LastModifiedAt: mdoc.LastModifiedAt,
@@ -444,9 +444,9 @@ func toTagSet(tags []string) map[string]struct{} {
 	return set
 }
 
-func (s *MongoStore) Get(id string) (domain.Document, bool) {
+func (s *MongoStore) Get(id string) (model.Document, bool) {
 	if s.col == nil {
-		return domain.Document{}, false
+		return model.Document{}, false
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -455,14 +455,14 @@ func (s *MongoStore) Get(id string) (domain.Document, bool) {
 	var doc mongoDocument
 	err := s.col.FindOne(ctx, bson.D{{Key: "_id", Value: id}}).Decode(&doc)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return domain.Document{}, false
+		return model.Document{}, false
 	}
 	if err != nil {
 		s.logger.Error("get document failed", "error", err, "id", id)
-		return domain.Document{}, false
+		return model.Document{}, false
 	}
 
-	return domain.Document{
+	return model.Document{
 		ID:             doc.ID,
 		CreatedAt:      doc.CreatedAt,
 		LastModifiedAt: doc.LastModifiedAt,
@@ -477,7 +477,7 @@ func (s *MongoStore) Get(id string) (domain.Document, bool) {
 	}, true
 }
 
-func (s *MongoStore) List() []domain.Document {
+func (s *MongoStore) List() []model.Document {
 	if s.col == nil {
 		return nil
 	}
@@ -498,9 +498,9 @@ func (s *MongoStore) List() []domain.Document {
 		return nil
 	}
 
-	out := make([]domain.Document, 0, len(docs))
+	out := make([]model.Document, 0, len(docs))
 	for _, d := range docs {
-		out = append(out, domain.Document{
+		out = append(out, model.Document{
 			ID:             d.ID,
 			CreatedAt:      d.CreatedAt,
 			LastModifiedAt: d.LastModifiedAt,
@@ -519,9 +519,9 @@ func (s *MongoStore) List() []domain.Document {
 }
 
 // Search executes a full-text and tag-based search using MongoDB queries
-func (s *MongoStore) Search(filter domain.SearchFilter) domain.PagedSearchResult {
+func (s *MongoStore) Search(filter model.SearchFilter) model.PagedSearchResult {
 	if s.col == nil {
-		return domain.PagedSearchResult{Results: []domain.SearchResult{}}
+		return model.PagedSearchResult{Results: []model.SearchResult{}}
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -607,7 +607,7 @@ func (s *MongoStore) Search(filter domain.SearchFilter) domain.PagedSearchResult
 	total, err := s.col.CountDocuments(ctx, mongoFilter)
 	if err != nil {
 		s.logger.Error("count search results failed", "error", err)
-		return domain.PagedSearchResult{Results: []domain.SearchResult{}}
+		return model.PagedSearchResult{Results: []model.SearchResult{}}
 	}
 
 	sortField := "_id"
@@ -629,20 +629,20 @@ func (s *MongoStore) Search(filter domain.SearchFilter) domain.PagedSearchResult
 	cur, err := s.col.Find(ctx, mongoFilter, opts)
 	if err != nil {
 		s.logger.Error("search documents failed", "error", err)
-		return domain.PagedSearchResult{Results: []domain.SearchResult{}}
+		return model.PagedSearchResult{Results: []model.SearchResult{}}
 	}
 	defer cur.Close(ctx)
 
 	var docs []mongoDocument
 	if err = cur.All(ctx, &docs); err != nil {
 		s.logger.Error("decode search results failed", "error", err)
-		return domain.PagedSearchResult{Results: []domain.SearchResult{}}
+		return model.PagedSearchResult{Results: []model.SearchResult{}}
 	}
 
-	out := make([]domain.SearchResult, 0, len(docs))
+	out := make([]model.SearchResult, 0, len(docs))
 	for _, d := range docs {
-		out = append(out, domain.SearchResult{
-			Document: domain.Document{
+		out = append(out, model.SearchResult{
+			Document: model.Document{
 				ID:             d.ID,
 				CreatedAt:      d.CreatedAt,
 				LastModifiedAt: d.LastModifiedAt,
@@ -658,7 +658,7 @@ func (s *MongoStore) Search(filter domain.SearchFilter) domain.PagedSearchResult
 		})
 	}
 
-	return domain.PagedSearchResult{
+	return model.PagedSearchResult{
 		Results: out,
 		Total:   total,
 		Skip:    filter.Skip,

@@ -26,7 +26,7 @@ import (
 
 	"github.com/samber/do/v2"
 	"github.com/willie68/schematic2/backend/internal/config"
-	"github.com/willie68/schematic2/backend/internal/domain"
+	"github.com/willie68/schematic2/backend/internal/domain/model"
 	"github.com/willie68/schematic2/backend/internal/logging"
 	"github.com/willie68/schematic2/backend/internal/repository/blob"
 	"github.com/willie68/schematic2/backend/internal/repository/store"
@@ -490,7 +490,7 @@ func importDocument(
 	}
 
 	// Build domain document files by reading the physical files
-	var docFiles []domain.DocumentFile
+	var docFiles []model.DocumentFile
 	for filename := range bk.Files {
 		filePath := filepath.Join(docDir, filename)
 
@@ -499,7 +499,7 @@ func importDocument(
 			if _, err := os.Stat(filePath); err != nil {
 				log.Printf("warning: document %q: file %q not found on disk: %v", bk.ID, filename, err)
 			}
-			docFiles = append(docFiles, domain.DocumentFile{
+			docFiles = append(docFiles, model.DocumentFile{
 				Name:     filename,
 				MIMEType: mimeTypeForFile(filename),
 				Type:     "schematic",
@@ -515,14 +515,14 @@ func importDocument(
 
 		mimeType := mimeTypeForFile(filename)
 
-		docFile := domain.DocumentFile{
+		docFile := model.DocumentFile{
 			Name:     filename,
 			MIMEType: mimeType,
 			Type:     "schematic",
 		}
 
 		if !dryRun && blobSvc != nil {
-			info, err := blobSvc.Save(fileData, mimeType)
+			info, err := blobSvc.Save(fileData, mimeType, filename)
 			if err != nil {
 				return fmt.Errorf("save blob %q: %w", filename, err)
 			}
@@ -532,7 +532,7 @@ func importDocument(
 		docFiles = append(docFiles, docFile)
 	}
 
-	doc := domain.Document{
+	doc := model.Document{
 		ID:             bk.ID,
 		CreatedAt:      bk.CreatedAt,
 		LastModifiedAt: bk.LastModifiedAt,
@@ -678,7 +678,7 @@ func importEffectTypes(ctx context.Context, col *mongo.Collection, dir, imagesOu
 
 // parseEffectType reads and parses an effect type from a directory
 // Returns the parsed EffectType, the image filename, and any error
-func parseEffectType(dir string) (*domain.EffectType, string, error) {
+func parseEffectType(dir string) (*model.EffectType, string, error) {
 	jsonFile := filepath.Join(dir, "effecttype.json")
 	data, err := os.ReadFile(jsonFile)
 	if err != nil {
@@ -709,7 +709,7 @@ func parseEffectType(dir string) (*domain.EffectType, string, error) {
 		lastModifiedAt = time.Now().UTC()
 	}
 
-	et := &domain.EffectType{
+	et := &model.EffectType{
 		ID:             backup.ID,
 		CreatedAt:      createdAt,
 		LastModifiedAt: lastModifiedAt,
@@ -819,13 +819,13 @@ func importEffectsData(ctx context.Context, db *mongo.Database, dir string, blob
 			}
 
 			mimeType := mimeTypeForFile(imageFile)
-			containerInfo, err := blobSvc.Save(fileData, mimeType)
+			containerInfo, err := blobSvc.Save(fileData, mimeType, imageFile)
 			if err != nil {
 				log.Printf("Warning: failed to save image to blob store: %v", err)
 				continue
 			}
 
-			eff.Images = []*domain.ContainerInfo{containerInfo}
+			eff.Image = containerInfo
 		}
 
 		// Insert into MongoDB
@@ -839,7 +839,7 @@ func importEffectsData(ctx context.Context, db *mongo.Database, dir string, blob
 				"model":          eff.Model,
 				"tags":           eff.Tags,
 				"comment":        eff.Comment,
-				"images":         eff.Images,
+				"image":          eff.Image,
 				"connector":      eff.Connector,
 				"voltage":        eff.Voltage,
 				"current":        eff.Current,
@@ -859,7 +859,7 @@ func importEffectsData(ctx context.Context, db *mongo.Database, dir string, blob
 
 // parseEffectData reads and parses an effect from a directory
 // Returns the parsed Effect, the image filename, and any error
-func parseEffectData(dir string) (*domain.Effect, string, error) {
+func parseEffectData(dir string) (*model.Effect, string, error) {
 	jsonFile := filepath.Join(dir, "effect.json")
 	data, err := os.ReadFile(jsonFile)
 	if err != nil {
@@ -886,7 +886,7 @@ func parseEffectData(dir string) (*domain.Effect, string, error) {
 		lastModifiedAt = time.Now().UTC()
 	}
 
-	eff := &domain.Effect{
+	eff := &model.Effect{
 		ID:             backup.ID,
 		CreatedAt:      createdAt,
 		LastModifiedAt: lastModifiedAt,

@@ -6,7 +6,7 @@ package index
 
 import (
 	mock "github.com/stretchr/testify/mock"
-	"github.com/willie68/schematic2/backend/internal/domain"
+	"github.com/willie68/schematic2/backend/internal/domain/model"
 )
 
 // newMockdocStoreInterface creates a new instance of mockdocStoreInterface. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
@@ -37,18 +37,18 @@ func (_m *mockdocStoreInterface) EXPECT() *mockdocStoreInterface_Expecter {
 }
 
 // Search provides a mock function for the type mockdocStoreInterface
-func (_mock *mockdocStoreInterface) Search(filter domain.SearchFilter) domain.PagedSearchResult {
+func (_mock *mockdocStoreInterface) Search(filter model.SearchFilter) model.PagedSearchResult {
 	ret := _mock.Called(filter)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Search")
 	}
 
-	var r0 domain.PagedSearchResult
-	if returnFunc, ok := ret.Get(0).(func(domain.SearchFilter) domain.PagedSearchResult); ok {
+	var r0 model.PagedSearchResult
+	if returnFunc, ok := ret.Get(0).(func(model.SearchFilter) model.PagedSearchResult); ok {
 		r0 = returnFunc(filter)
 	} else {
-		r0 = ret.Get(0).(domain.PagedSearchResult)
+		r0 = ret.Get(0).(model.PagedSearchResult)
 	}
 	return r0
 }
@@ -59,16 +59,16 @@ type mockdocStoreInterface_Search_Call struct {
 }
 
 // Search is a helper method to define mock.On call
-//   - filter domain.SearchFilter
+//   - filter model.SearchFilter
 func (_e *mockdocStoreInterface_Expecter) Search(filter interface{}) *mockdocStoreInterface_Search_Call {
 	return &mockdocStoreInterface_Search_Call{Call: _e.mock.On("Search", filter)}
 }
 
-func (_c *mockdocStoreInterface_Search_Call) Run(run func(filter domain.SearchFilter)) *mockdocStoreInterface_Search_Call {
+func (_c *mockdocStoreInterface_Search_Call) Run(run func(filter model.SearchFilter)) *mockdocStoreInterface_Search_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 domain.SearchFilter
+		var arg0 model.SearchFilter
 		if args[0] != nil {
-			arg0 = args[0].(domain.SearchFilter)
+			arg0 = args[0].(model.SearchFilter)
 		}
 		run(
 			arg0,
@@ -77,12 +77,12 @@ func (_c *mockdocStoreInterface_Search_Call) Run(run func(filter domain.SearchFi
 	return _c
 }
 
-func (_c *mockdocStoreInterface_Search_Call) Return(pagedSearchResult domain.PagedSearchResult) *mockdocStoreInterface_Search_Call {
+func (_c *mockdocStoreInterface_Search_Call) Return(pagedSearchResult model.PagedSearchResult) *mockdocStoreInterface_Search_Call {
 	_c.Call.Return(pagedSearchResult)
 	return _c
 }
 
-func (_c *mockdocStoreInterface_Search_Call) RunAndReturn(run func(filter domain.SearchFilter) domain.PagedSearchResult) *mockdocStoreInterface_Search_Call {
+func (_c *mockdocStoreInterface_Search_Call) RunAndReturn(run func(filter model.SearchFilter) model.PagedSearchResult) *mockdocStoreInterface_Search_Call {
 	_c.Call.Return(run)
 	return _c
 }

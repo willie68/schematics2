@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/willie68/schematic2/backend/internal/domain"
+	"github.com/willie68/schematic2/backend/internal/domain/model"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 // CreateUser adds a new user to the database
-func (s *MongoStore) CreateUser(ctx context.Context, user domain.User) error {
+func (s *MongoStore) CreateUser(ctx context.Context, user model.User) error {
 	if s.usersCol == nil {
 		return errors.New("mongodb users collection not initialised")
 	}
@@ -37,26 +37,26 @@ func (s *MongoStore) CreateUser(ctx context.Context, user domain.User) error {
 }
 
 // GetUserByEmail retrieves a user by email
-func (s *MongoStore) GetUserByEmail(ctx context.Context, email string) (domain.User, bool) {
+func (s *MongoStore) GetUserByEmail(ctx context.Context, email string) (model.User, bool) {
 	if s.usersCol == nil {
-		return domain.User{}, false
+		return model.User{}, false
 	}
 
-	var user domain.User
+	var user model.User
 	err := s.usersCol.FindOne(ctx, bson.D{{Key: "email", Value: email}}).Decode(&user)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return domain.User{}, false
+		return model.User{}, false
 	}
 	if err != nil {
 		s.logger.Error("get user failed", "error", err, "email", email)
-		return domain.User{}, false
+		return model.User{}, false
 	}
 
 	return user, true
 }
 
 // UpdateUser updates an existing user in the database
-func (s *MongoStore) UpdateUser(ctx context.Context, user domain.User) error {
+func (s *MongoStore) UpdateUser(ctx context.Context, user model.User) error {
 	if s.usersCol == nil {
 		return errors.New("mongodb users collection not initialised")
 	}

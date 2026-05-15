@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/willie68/schematic2/backend/internal/auth"
-	"github.com/willie68/schematic2/backend/internal/domain"
+	"github.com/willie68/schematic2/backend/internal/domain/model"
 )
 
 // ServiceTestSuite tests the user service
@@ -251,7 +251,7 @@ func (s *ServiceTestSuite) TestAuthenticate_Success() {
 	// GIVEN
 	pwd, err := auth.HashPassword("securePassword123")
 	s.NoError(err)
-	s.store.EXPECT().GetUserByEmail(mock.Anything, "user@example.com").Return(domain.User{
+	s.store.EXPECT().GetUserByEmail(mock.Anything, "user@example.com").Return(model.User{
 		Email:    "user@example.com",
 		Password: pwd,
 	}, true)
@@ -267,7 +267,7 @@ func (s *ServiceTestSuite) TestAuthenticate_Success() {
 
 func (s *ServiceTestSuite) TestAuthenticate_InvalidPassword() {
 	// GIVEN
-	s.store.EXPECT().GetUserByEmail(mock.Anything, "user@example.com").Return(domain.User{
+	s.store.EXPECT().GetUserByEmail(mock.Anything, "user@example.com").Return(model.User{
 		Email:    "user@example.com",
 		Password: "securePassword123",
 	}, true)
@@ -281,7 +281,7 @@ func (s *ServiceTestSuite) TestAuthenticate_InvalidPassword() {
 }
 
 func (s *ServiceTestSuite) TestAuthenticate_UserNotFound() {
-	s.store.EXPECT().GetUserByEmail(mock.Anything, "nonexistent@example.com").Return(domain.User{}, false)
+	s.store.EXPECT().GetUserByEmail(mock.Anything, "nonexistent@example.com").Return(model.User{}, false)
 
 	// WHEN
 	_, err := s.svc.Authenticate(context.Background(), "nonexistent@example.com", "password")

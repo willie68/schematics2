@@ -5,13 +5,13 @@ import (
 	"strings"
 
 	"github.com/samber/do/v2"
-	"github.com/willie68/schematic2/backend/internal/domain"
+	"github.com/willie68/schematic2/backend/internal/domain/model"
 	"github.com/willie68/schematic2/backend/internal/logging"
 )
 
 // docStoreInterface defines the interface for the document store
 type docStoreInterface interface {
-	Search(filter domain.SearchFilter) domain.PagedSearchResult
+	Search(filter model.SearchFilter) model.PagedSearchResult
 }
 
 type MongoIndex struct {
@@ -27,7 +27,7 @@ func NewMongoIndex(inj do.Injector) *MongoIndex {
 }
 
 // Search performs full-text and tag-based search using MongoDB queries
-func (idx *MongoIndex) Search(query string, tags []string, skip, limit int64, sortField string, sortOrder int, privateOnly, isAuthenticated bool, username string) domain.PagedSearchResult {
+func (idx *MongoIndex) Search(query string, tags []string, skip, limit int64, sortField string, sortOrder int, privateOnly, isAuthenticated bool, username string) model.PagedSearchResult {
 	normTags := make([]string, 0, len(tags))
 	for _, t := range tags {
 		trimmed := strings.ToLower(strings.TrimSpace(t))
@@ -36,7 +36,7 @@ func (idx *MongoIndex) Search(query string, tags []string, skip, limit int64, so
 		}
 	}
 
-	filter := domain.SearchFilter{
+	filter := model.SearchFilter{
 		Query:           query,
 		Tags:            normTags,
 		Skip:            skip,

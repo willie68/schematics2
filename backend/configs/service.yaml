@@ -1,9 +1,9 @@
 # secret file contains secrets like credentials, access key ... it has the same structure as this config and will be merged on start
 secretfile: "configs/secrets.yaml"
 
-jwtsecret: ${JWTSecret}
-adminuser: ${AdminUser}
-adminpass: ${AdminPass}
+jwtsecret: ${JWT_SECRET}
+adminuser: ${ADMIN_USER}
+adminpass: ${ADMIN_PASS}
 
 # http service definition
 http:

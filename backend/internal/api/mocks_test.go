@@ -8,7 +8,7 @@ import (
 	"context"
 
 	mock "github.com/stretchr/testify/mock"
-	"github.com/willie68/schematic2/backend/internal/domain"
+	"github.com/willie68/schematic2/backend/internal/domain/model"
 	"github.com/willie68/schematic2/backend/internal/services/users"
 )
 
@@ -97,22 +97,22 @@ func (_c *mockdocumentStore_DeleteByID_Call) RunAndReturn(run func(ctx context.C
 }
 
 // GetByID provides a mock function for the type mockdocumentStore
-func (_mock *mockdocumentStore) GetByID(ctx context.Context, id string) (domain.Document, error) {
+func (_mock *mockdocumentStore) GetByID(ctx context.Context, id string) (model.Document, error) {
 	ret := _mock.Called(ctx, id)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetByID")
 	}
 
-	var r0 domain.Document
+	var r0 model.Document
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (domain.Document, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (model.Document, error)); ok {
 		return returnFunc(ctx, id)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) domain.Document); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) model.Document); ok {
 		r0 = returnFunc(ctx, id)
 	} else {
-		r0 = ret.Get(0).(domain.Document)
+		r0 = ret.Get(0).(model.Document)
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
 		r1 = returnFunc(ctx, id)
@@ -152,34 +152,34 @@ func (_c *mockdocumentStore_GetByID_Call) Run(run func(ctx context.Context, id s
 	return _c
 }
 
-func (_c *mockdocumentStore_GetByID_Call) Return(document domain.Document, err error) *mockdocumentStore_GetByID_Call {
+func (_c *mockdocumentStore_GetByID_Call) Return(document model.Document, err error) *mockdocumentStore_GetByID_Call {
 	_c.Call.Return(document, err)
 	return _c
 }
 
-func (_c *mockdocumentStore_GetByID_Call) RunAndReturn(run func(ctx context.Context, id string) (domain.Document, error)) *mockdocumentStore_GetByID_Call {
+func (_c *mockdocumentStore_GetByID_Call) RunAndReturn(run func(ctx context.Context, id string) (model.Document, error)) *mockdocumentStore_GetByID_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // ListTags provides a mock function for the type mockdocumentStore
-func (_mock *mockdocumentStore) ListTags(ctx context.Context) ([]domain.Tag, error) {
+func (_mock *mockdocumentStore) ListTags(ctx context.Context) ([]model.Tag, error) {
 	ret := _mock.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListTags")
 	}
 
-	var r0 []domain.Tag
+	var r0 []model.Tag
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context) ([]domain.Tag, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context) ([]model.Tag, error)); ok {
 		return returnFunc(ctx)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context) []domain.Tag); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context) []model.Tag); ok {
 		r0 = returnFunc(ctx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]domain.Tag)
+			r0 = ret.Get(0).([]model.Tag)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
@@ -214,12 +214,12 @@ func (_c *mockdocumentStore_ListTags_Call) Run(run func(ctx context.Context)) *m
 	return _c
 }
 
-func (_c *mockdocumentStore_ListTags_Call) Return(tags []domain.Tag, err error) *mockdocumentStore_ListTags_Call {
+func (_c *mockdocumentStore_ListTags_Call) Return(tags []model.Tag, err error) *mockdocumentStore_ListTags_Call {
 	_c.Call.Return(tags, err)
 	return _c
 }
 
-func (_c *mockdocumentStore_ListTags_Call) RunAndReturn(run func(ctx context.Context) ([]domain.Tag, error)) *mockdocumentStore_ListTags_Call {
+func (_c *mockdocumentStore_ListTags_Call) RunAndReturn(run func(ctx context.Context) ([]model.Tag, error)) *mockdocumentStore_ListTags_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -299,23 +299,23 @@ func (_c *mockdocumentStore_SuggestManufacturers_Call) RunAndReturn(run func(ctx
 }
 
 // SuggestTags provides a mock function for the type mockdocumentStore
-func (_mock *mockdocumentStore) SuggestTags(ctx context.Context, prefix string, limit int) ([]domain.Tag, error) {
+func (_mock *mockdocumentStore) SuggestTags(ctx context.Context, prefix string, limit int) ([]model.Tag, error) {
 	ret := _mock.Called(ctx, prefix, limit)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SuggestTags")
 	}
 
-	var r0 []domain.Tag
+	var r0 []model.Tag
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int) ([]domain.Tag, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int) ([]model.Tag, error)); ok {
 		return returnFunc(ctx, prefix, limit)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int) []domain.Tag); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int) []model.Tag); ok {
 		r0 = returnFunc(ctx, prefix, limit)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]domain.Tag)
+			r0 = ret.Get(0).([]model.Tag)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string, int) error); ok {
@@ -362,18 +362,18 @@ func (_c *mockdocumentStore_SuggestTags_Call) Run(run func(ctx context.Context, 
 	return _c
 }
 
-func (_c *mockdocumentStore_SuggestTags_Call) Return(tags []domain.Tag, err error) *mockdocumentStore_SuggestTags_Call {
+func (_c *mockdocumentStore_SuggestTags_Call) Return(tags []model.Tag, err error) *mockdocumentStore_SuggestTags_Call {
 	_c.Call.Return(tags, err)
 	return _c
 }
 
-func (_c *mockdocumentStore_SuggestTags_Call) RunAndReturn(run func(ctx context.Context, prefix string, limit int) ([]domain.Tag, error)) *mockdocumentStore_SuggestTags_Call {
+func (_c *mockdocumentStore_SuggestTags_Call) RunAndReturn(run func(ctx context.Context, prefix string, limit int) ([]model.Tag, error)) *mockdocumentStore_SuggestTags_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // Upsert provides a mock function for the type mockdocumentStore
-func (_mock *mockdocumentStore) Upsert(doc domain.Document) error {
+func (_mock *mockdocumentStore) Upsert(doc model.Document) error {
 	ret := _mock.Called(doc)
 
 	if len(ret) == 0 {
@@ -381,7 +381,7 @@ func (_mock *mockdocumentStore) Upsert(doc domain.Document) error {
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(domain.Document) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(model.Document) error); ok {
 		r0 = returnFunc(doc)
 	} else {
 		r0 = ret.Error(0)
@@ -395,16 +395,16 @@ type mockdocumentStore_Upsert_Call struct {
 }
 
 // Upsert is a helper method to define mock.On call
-//   - doc domain.Document
+//   - doc model.Document
 func (_e *mockdocumentStore_Expecter) Upsert(doc interface{}) *mockdocumentStore_Upsert_Call {
 	return &mockdocumentStore_Upsert_Call{Call: _e.mock.On("Upsert", doc)}
 }
 
-func (_c *mockdocumentStore_Upsert_Call) Run(run func(doc domain.Document)) *mockdocumentStore_Upsert_Call {
+func (_c *mockdocumentStore_Upsert_Call) Run(run func(doc model.Document)) *mockdocumentStore_Upsert_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 domain.Document
+		var arg0 model.Document
 		if args[0] != nil {
-			arg0 = args[0].(domain.Document)
+			arg0 = args[0].(model.Document)
 		}
 		run(
 			arg0,
@@ -418,7 +418,7 @@ func (_c *mockdocumentStore_Upsert_Call) Return(err error) *mockdocumentStore_Up
 	return _c
 }
 
-func (_c *mockdocumentStore_Upsert_Call) RunAndReturn(run func(doc domain.Document) error) *mockdocumentStore_Upsert_Call {
+func (_c *mockdocumentStore_Upsert_Call) RunAndReturn(run func(doc model.Document) error) *mockdocumentStore_Upsert_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -451,7 +451,7 @@ func (_m *mockeffectStore) EXPECT() *mockeffectStore_Expecter {
 }
 
 // CreateEffect provides a mock function for the type mockeffectStore
-func (_mock *mockeffectStore) CreateEffect(ctx context.Context, effect *domain.Effect) error {
+func (_mock *mockeffectStore) CreateEffect(ctx context.Context, effect *model.Effect) error {
 	ret := _mock.Called(ctx, effect)
 
 	if len(ret) == 0 {
@@ -459,7 +459,7 @@ func (_mock *mockeffectStore) CreateEffect(ctx context.Context, effect *domain.E
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.Effect) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *model.Effect) error); ok {
 		r0 = returnFunc(ctx, effect)
 	} else {
 		r0 = ret.Error(0)
@@ -474,20 +474,20 @@ type mockeffectStore_CreateEffect_Call struct {
 
 // CreateEffect is a helper method to define mock.On call
 //   - ctx context.Context
-//   - effect *domain.Effect
+//   - effect *model.Effect
 func (_e *mockeffectStore_Expecter) CreateEffect(ctx interface{}, effect interface{}) *mockeffectStore_CreateEffect_Call {
 	return &mockeffectStore_CreateEffect_Call{Call: _e.mock.On("CreateEffect", ctx, effect)}
 }
 
-func (_c *mockeffectStore_CreateEffect_Call) Run(run func(ctx context.Context, effect *domain.Effect)) *mockeffectStore_CreateEffect_Call {
+func (_c *mockeffectStore_CreateEffect_Call) Run(run func(ctx context.Context, effect *model.Effect)) *mockeffectStore_CreateEffect_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 *domain.Effect
+		var arg1 *model.Effect
 		if args[1] != nil {
-			arg1 = args[1].(*domain.Effect)
+			arg1 = args[1].(*model.Effect)
 		}
 		run(
 			arg0,
@@ -502,29 +502,86 @@ func (_c *mockeffectStore_CreateEffect_Call) Return(err error) *mockeffectStore_
 	return _c
 }
 
-func (_c *mockeffectStore_CreateEffect_Call) RunAndReturn(run func(ctx context.Context, effect *domain.Effect) error) *mockeffectStore_CreateEffect_Call {
+func (_c *mockeffectStore_CreateEffect_Call) RunAndReturn(run func(ctx context.Context, effect *model.Effect) error) *mockeffectStore_CreateEffect_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DeleteEffect provides a mock function for the type mockeffectStore
+func (_mock *mockeffectStore) DeleteEffect(ctx context.Context, id string) error {
+	ret := _mock.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteEffect")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = returnFunc(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// mockeffectStore_DeleteEffect_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteEffect'
+type mockeffectStore_DeleteEffect_Call struct {
+	*mock.Call
+}
+
+// DeleteEffect is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id string
+func (_e *mockeffectStore_Expecter) DeleteEffect(ctx interface{}, id interface{}) *mockeffectStore_DeleteEffect_Call {
+	return &mockeffectStore_DeleteEffect_Call{Call: _e.mock.On("DeleteEffect", ctx, id)}
+}
+
+func (_c *mockeffectStore_DeleteEffect_Call) Run(run func(ctx context.Context, id string)) *mockeffectStore_DeleteEffect_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *mockeffectStore_DeleteEffect_Call) Return(err error) *mockeffectStore_DeleteEffect_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *mockeffectStore_DeleteEffect_Call) RunAndReturn(run func(ctx context.Context, id string) error) *mockeffectStore_DeleteEffect_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // GetEffectByID provides a mock function for the type mockeffectStore
-func (_mock *mockeffectStore) GetEffectByID(ctx context.Context, id string) (*domain.Effect, error) {
+func (_mock *mockeffectStore) GetEffectByID(ctx context.Context, id string) (*model.Effect, error) {
 	ret := _mock.Called(ctx, id)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetEffectByID")
 	}
 
-	var r0 *domain.Effect
+	var r0 *model.Effect
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (*domain.Effect, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (*model.Effect, error)); ok {
 		return returnFunc(ctx, id)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) *domain.Effect); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) *model.Effect); ok {
 		r0 = returnFunc(ctx, id)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*domain.Effect)
+			r0 = ret.Get(0).(*model.Effect)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
@@ -565,33 +622,33 @@ func (_c *mockeffectStore_GetEffectByID_Call) Run(run func(ctx context.Context, 
 	return _c
 }
 
-func (_c *mockeffectStore_GetEffectByID_Call) Return(effect *domain.Effect, err error) *mockeffectStore_GetEffectByID_Call {
+func (_c *mockeffectStore_GetEffectByID_Call) Return(effect *model.Effect, err error) *mockeffectStore_GetEffectByID_Call {
 	_c.Call.Return(effect, err)
 	return _c
 }
 
-func (_c *mockeffectStore_GetEffectByID_Call) RunAndReturn(run func(ctx context.Context, id string) (*domain.Effect, error)) *mockeffectStore_GetEffectByID_Call {
+func (_c *mockeffectStore_GetEffectByID_Call) RunAndReturn(run func(ctx context.Context, id string) (*model.Effect, error)) *mockeffectStore_GetEffectByID_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // SearchEffects provides a mock function for the type mockeffectStore
-func (_mock *mockeffectStore) SearchEffects(ctx context.Context, query string, skip int64, limit int64, sortField string, sortOrder string) (domain.PagedEffects, error) {
+func (_mock *mockeffectStore) SearchEffects(ctx context.Context, query string, skip int64, limit int64, sortField string, sortOrder string) (model.PagedEffects, error) {
 	ret := _mock.Called(ctx, query, skip, limit, sortField, sortOrder)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SearchEffects")
 	}
 
-	var r0 domain.PagedEffects
+	var r0 model.PagedEffects
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int64, int64, string, string) (domain.PagedEffects, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int64, int64, string, string) (model.PagedEffects, error)); ok {
 		return returnFunc(ctx, query, skip, limit, sortField, sortOrder)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int64, int64, string, string) domain.PagedEffects); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int64, int64, string, string) model.PagedEffects); ok {
 		r0 = returnFunc(ctx, query, skip, limit, sortField, sortOrder)
 	} else {
-		r0 = ret.Get(0).(domain.PagedEffects)
+		r0 = ret.Get(0).(model.PagedEffects)
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string, int64, int64, string, string) error); ok {
 		r1 = returnFunc(ctx, query, skip, limit, sortField, sortOrder)
@@ -655,18 +712,18 @@ func (_c *mockeffectStore_SearchEffects_Call) Run(run func(ctx context.Context, 
 	return _c
 }
 
-func (_c *mockeffectStore_SearchEffects_Call) Return(pagedEffects domain.PagedEffects, err error) *mockeffectStore_SearchEffects_Call {
+func (_c *mockeffectStore_SearchEffects_Call) Return(pagedEffects model.PagedEffects, err error) *mockeffectStore_SearchEffects_Call {
 	_c.Call.Return(pagedEffects, err)
 	return _c
 }
 
-func (_c *mockeffectStore_SearchEffects_Call) RunAndReturn(run func(ctx context.Context, query string, skip int64, limit int64, sortField string, sortOrder string) (domain.PagedEffects, error)) *mockeffectStore_SearchEffects_Call {
+func (_c *mockeffectStore_SearchEffects_Call) RunAndReturn(run func(ctx context.Context, query string, skip int64, limit int64, sortField string, sortOrder string) (model.PagedEffects, error)) *mockeffectStore_SearchEffects_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // UpdateEffect provides a mock function for the type mockeffectStore
-func (_mock *mockeffectStore) UpdateEffect(ctx context.Context, effect *domain.Effect) error {
+func (_mock *mockeffectStore) UpdateEffect(ctx context.Context, effect *model.Effect) error {
 	ret := _mock.Called(ctx, effect)
 
 	if len(ret) == 0 {
@@ -674,7 +731,7 @@ func (_mock *mockeffectStore) UpdateEffect(ctx context.Context, effect *domain.E
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *domain.Effect) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *model.Effect) error); ok {
 		r0 = returnFunc(ctx, effect)
 	} else {
 		r0 = ret.Error(0)
@@ -689,20 +746,20 @@ type mockeffectStore_UpdateEffect_Call struct {
 
 // UpdateEffect is a helper method to define mock.On call
 //   - ctx context.Context
-//   - effect *domain.Effect
+//   - effect *model.Effect
 func (_e *mockeffectStore_Expecter) UpdateEffect(ctx interface{}, effect interface{}) *mockeffectStore_UpdateEffect_Call {
 	return &mockeffectStore_UpdateEffect_Call{Call: _e.mock.On("UpdateEffect", ctx, effect)}
 }
 
-func (_c *mockeffectStore_UpdateEffect_Call) Run(run func(ctx context.Context, effect *domain.Effect)) *mockeffectStore_UpdateEffect_Call {
+func (_c *mockeffectStore_UpdateEffect_Call) Run(run func(ctx context.Context, effect *model.Effect)) *mockeffectStore_UpdateEffect_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 *domain.Effect
+		var arg1 *model.Effect
 		if args[1] != nil {
-			arg1 = args[1].(*domain.Effect)
+			arg1 = args[1].(*model.Effect)
 		}
 		run(
 			arg0,
@@ -717,7 +774,7 @@ func (_c *mockeffectStore_UpdateEffect_Call) Return(err error) *mockeffectStore_
 	return _c
 }
 
-func (_c *mockeffectStore_UpdateEffect_Call) RunAndReturn(run func(ctx context.Context, effect *domain.Effect) error) *mockeffectStore_UpdateEffect_Call {
+func (_c *mockeffectStore_UpdateEffect_Call) RunAndReturn(run func(ctx context.Context, effect *model.Effect) error) *mockeffectStore_UpdateEffect_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -807,23 +864,23 @@ func (_m *mockeffectTypeStore) EXPECT() *mockeffectTypeStore_Expecter {
 }
 
 // GetAllEffectTypes provides a mock function for the type mockeffectTypeStore
-func (_mock *mockeffectTypeStore) GetAllEffectTypes(ctx context.Context) ([]domain.EffectType, error) {
+func (_mock *mockeffectTypeStore) GetAllEffectTypes(ctx context.Context) ([]model.EffectType, error) {
 	ret := _mock.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetAllEffectTypes")
 	}
 
-	var r0 []domain.EffectType
+	var r0 []model.EffectType
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context) ([]domain.EffectType, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context) ([]model.EffectType, error)); ok {
 		return returnFunc(ctx)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context) []domain.EffectType); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context) []model.EffectType); ok {
 		r0 = returnFunc(ctx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]domain.EffectType)
+			r0 = ret.Get(0).([]model.EffectType)
 		}
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context) error); ok {
@@ -858,12 +915,12 @@ func (_c *mockeffectTypeStore_GetAllEffectTypes_Call) Run(run func(ctx context.C
 	return _c
 }
 
-func (_c *mockeffectTypeStore_GetAllEffectTypes_Call) Return(effectTypes []domain.EffectType, err error) *mockeffectTypeStore_GetAllEffectTypes_Call {
+func (_c *mockeffectTypeStore_GetAllEffectTypes_Call) Return(effectTypes []model.EffectType, err error) *mockeffectTypeStore_GetAllEffectTypes_Call {
 	_c.Call.Return(effectTypes, err)
 	return _c
 }
 
-func (_c *mockeffectTypeStore_GetAllEffectTypes_Call) RunAndReturn(run func(ctx context.Context) ([]domain.EffectType, error)) *mockeffectTypeStore_GetAllEffectTypes_Call {
+func (_c *mockeffectTypeStore_GetAllEffectTypes_Call) RunAndReturn(run func(ctx context.Context) ([]model.EffectType, error)) *mockeffectTypeStore_GetAllEffectTypes_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -896,7 +953,7 @@ func (_m *mockuserStore) EXPECT() *mockuserStore_Expecter {
 }
 
 // CreateUser provides a mock function for the type mockuserStore
-func (_mock *mockuserStore) CreateUser(ctx context.Context, user domain.User) error {
+func (_mock *mockuserStore) CreateUser(ctx context.Context, user model.User) error {
 	ret := _mock.Called(ctx, user)
 
 	if len(ret) == 0 {
@@ -904,7 +961,7 @@ func (_mock *mockuserStore) CreateUser(ctx context.Context, user domain.User) er
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.User) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, model.User) error); ok {
 		r0 = returnFunc(ctx, user)
 	} else {
 		r0 = ret.Error(0)
@@ -919,20 +976,20 @@ type mockuserStore_CreateUser_Call struct {
 
 // CreateUser is a helper method to define mock.On call
 //   - ctx context.Context
-//   - user domain.User
+//   - user model.User
 func (_e *mockuserStore_Expecter) CreateUser(ctx interface{}, user interface{}) *mockuserStore_CreateUser_Call {
 	return &mockuserStore_CreateUser_Call{Call: _e.mock.On("CreateUser", ctx, user)}
 }
 
-func (_c *mockuserStore_CreateUser_Call) Run(run func(ctx context.Context, user domain.User)) *mockuserStore_CreateUser_Call {
+func (_c *mockuserStore_CreateUser_Call) Run(run func(ctx context.Context, user model.User)) *mockuserStore_CreateUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 domain.User
+		var arg1 model.User
 		if args[1] != nil {
-			arg1 = args[1].(domain.User)
+			arg1 = args[1].(model.User)
 		}
 		run(
 			arg0,
@@ -947,28 +1004,28 @@ func (_c *mockuserStore_CreateUser_Call) Return(err error) *mockuserStore_Create
 	return _c
 }
 
-func (_c *mockuserStore_CreateUser_Call) RunAndReturn(run func(ctx context.Context, user domain.User) error) *mockuserStore_CreateUser_Call {
+func (_c *mockuserStore_CreateUser_Call) RunAndReturn(run func(ctx context.Context, user model.User) error) *mockuserStore_CreateUser_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // GetUserByEmail provides a mock function for the type mockuserStore
-func (_mock *mockuserStore) GetUserByEmail(ctx context.Context, email string) (domain.User, bool) {
+func (_mock *mockuserStore) GetUserByEmail(ctx context.Context, email string) (model.User, bool) {
 	ret := _mock.Called(ctx, email)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetUserByEmail")
 	}
 
-	var r0 domain.User
+	var r0 model.User
 	var r1 bool
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (domain.User, bool)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (model.User, bool)); ok {
 		return returnFunc(ctx, email)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) domain.User); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) model.User); ok {
 		r0 = returnFunc(ctx, email)
 	} else {
-		r0 = ret.Get(0).(domain.User)
+		r0 = ret.Get(0).(model.User)
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string) bool); ok {
 		r1 = returnFunc(ctx, email)
@@ -1008,18 +1065,18 @@ func (_c *mockuserStore_GetUserByEmail_Call) Run(run func(ctx context.Context, e
 	return _c
 }
 
-func (_c *mockuserStore_GetUserByEmail_Call) Return(user domain.User, b bool) *mockuserStore_GetUserByEmail_Call {
+func (_c *mockuserStore_GetUserByEmail_Call) Return(user model.User, b bool) *mockuserStore_GetUserByEmail_Call {
 	_c.Call.Return(user, b)
 	return _c
 }
 
-func (_c *mockuserStore_GetUserByEmail_Call) RunAndReturn(run func(ctx context.Context, email string) (domain.User, bool)) *mockuserStore_GetUserByEmail_Call {
+func (_c *mockuserStore_GetUserByEmail_Call) RunAndReturn(run func(ctx context.Context, email string) (model.User, bool)) *mockuserStore_GetUserByEmail_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // UpdateUser provides a mock function for the type mockuserStore
-func (_mock *mockuserStore) UpdateUser(ctx context.Context, user domain.User) error {
+func (_mock *mockuserStore) UpdateUser(ctx context.Context, user model.User) error {
 	ret := _mock.Called(ctx, user)
 
 	if len(ret) == 0 {
@@ -1027,7 +1084,7 @@ func (_mock *mockuserStore) UpdateUser(ctx context.Context, user domain.User) er
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, domain.User) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, model.User) error); ok {
 		r0 = returnFunc(ctx, user)
 	} else {
 		r0 = ret.Error(0)
@@ -1042,20 +1099,20 @@ type mockuserStore_UpdateUser_Call struct {
 
 // UpdateUser is a helper method to define mock.On call
 //   - ctx context.Context
-//   - user domain.User
+//   - user model.User
 func (_e *mockuserStore_Expecter) UpdateUser(ctx interface{}, user interface{}) *mockuserStore_UpdateUser_Call {
 	return &mockuserStore_UpdateUser_Call{Call: _e.mock.On("UpdateUser", ctx, user)}
 }
 
-func (_c *mockuserStore_UpdateUser_Call) Run(run func(ctx context.Context, user domain.User)) *mockuserStore_UpdateUser_Call {
+func (_c *mockuserStore_UpdateUser_Call) Run(run func(ctx context.Context, user model.User)) *mockuserStore_UpdateUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 domain.User
+		var arg1 model.User
 		if args[1] != nil {
-			arg1 = args[1].(domain.User)
+			arg1 = args[1].(model.User)
 		}
 		run(
 			arg0,
@@ -1070,7 +1127,7 @@ func (_c *mockuserStore_UpdateUser_Call) Return(err error) *mockuserStore_Update
 	return _c
 }
 
-func (_c *mockuserStore_UpdateUser_Call) RunAndReturn(run func(ctx context.Context, user domain.User) error) *mockuserStore_UpdateUser_Call {
+func (_c *mockuserStore_UpdateUser_Call) RunAndReturn(run func(ctx context.Context, user model.User) error) *mockuserStore_UpdateUser_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1103,18 +1160,18 @@ func (_m *mockdocumentIndex) EXPECT() *mockdocumentIndex_Expecter {
 }
 
 // Search provides a mock function for the type mockdocumentIndex
-func (_mock *mockdocumentIndex) Search(query string, tags []string, skip int64, limit int64, sortField string, sortOrder int, privateOnly bool, isAuthenticated bool, username string) domain.PagedSearchResult {
+func (_mock *mockdocumentIndex) Search(query string, tags []string, skip int64, limit int64, sortField string, sortOrder int, privateOnly bool, isAuthenticated bool, username string) model.PagedSearchResult {
 	ret := _mock.Called(query, tags, skip, limit, sortField, sortOrder, privateOnly, isAuthenticated, username)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Search")
 	}
 
-	var r0 domain.PagedSearchResult
-	if returnFunc, ok := ret.Get(0).(func(string, []string, int64, int64, string, int, bool, bool, string) domain.PagedSearchResult); ok {
+	var r0 model.PagedSearchResult
+	if returnFunc, ok := ret.Get(0).(func(string, []string, int64, int64, string, int, bool, bool, string) model.PagedSearchResult); ok {
 		r0 = returnFunc(query, tags, skip, limit, sortField, sortOrder, privateOnly, isAuthenticated, username)
 	} else {
-		r0 = ret.Get(0).(domain.PagedSearchResult)
+		r0 = ret.Get(0).(model.PagedSearchResult)
 	}
 	return r0
 }
@@ -1191,12 +1248,12 @@ func (_c *mockdocumentIndex_Search_Call) Run(run func(query string, tags []strin
 	return _c
 }
 
-func (_c *mockdocumentIndex_Search_Call) Return(pagedSearchResult domain.PagedSearchResult) *mockdocumentIndex_Search_Call {
+func (_c *mockdocumentIndex_Search_Call) Return(pagedSearchResult model.PagedSearchResult) *mockdocumentIndex_Search_Call {
 	_c.Call.Return(pagedSearchResult)
 	return _c
 }
 
-func (_c *mockdocumentIndex_Search_Call) RunAndReturn(run func(query string, tags []string, skip int64, limit int64, sortField string, sortOrder int, privateOnly bool, isAuthenticated bool, username string) domain.PagedSearchResult) *mockdocumentIndex_Search_Call {
+func (_c *mockdocumentIndex_Search_Call) RunAndReturn(run func(query string, tags []string, skip int64, limit int64, sortField string, sortOrder int, privateOnly bool, isAuthenticated bool, username string) model.PagedSearchResult) *mockdocumentIndex_Search_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1229,7 +1286,7 @@ func (_m *mockblobStore) EXPECT() *mockblobStore_Expecter {
 }
 
 // DeleteByInfo provides a mock function for the type mockblobStore
-func (_mock *mockblobStore) DeleteByInfo(ci *domain.ContainerInfo) error {
+func (_mock *mockblobStore) DeleteByInfo(ci *model.ContainerInfo) error {
 	ret := _mock.Called(ci)
 
 	if len(ret) == 0 {
@@ -1237,7 +1294,7 @@ func (_mock *mockblobStore) DeleteByInfo(ci *domain.ContainerInfo) error {
 	}
 
 	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(*domain.ContainerInfo) error); ok {
+	if returnFunc, ok := ret.Get(0).(func(*model.ContainerInfo) error); ok {
 		r0 = returnFunc(ci)
 	} else {
 		r0 = ret.Error(0)
@@ -1251,16 +1308,16 @@ type mockblobStore_DeleteByInfo_Call struct {
 }
 
 // DeleteByInfo is a helper method to define mock.On call
-//   - ci *domain.ContainerInfo
+//   - ci *model.ContainerInfo
 func (_e *mockblobStore_Expecter) DeleteByInfo(ci interface{}) *mockblobStore_DeleteByInfo_Call {
 	return &mockblobStore_DeleteByInfo_Call{Call: _e.mock.On("DeleteByInfo", ci)}
 }
 
-func (_c *mockblobStore_DeleteByInfo_Call) Run(run func(ci *domain.ContainerInfo)) *mockblobStore_DeleteByInfo_Call {
+func (_c *mockblobStore_DeleteByInfo_Call) Run(run func(ci *model.ContainerInfo)) *mockblobStore_DeleteByInfo_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 *domain.ContainerInfo
+		var arg0 *model.ContainerInfo
 		if args[0] != nil {
-			arg0 = args[0].(*domain.ContainerInfo)
+			arg0 = args[0].(*model.ContainerInfo)
 		}
 		run(
 			arg0,
@@ -1274,13 +1331,13 @@ func (_c *mockblobStore_DeleteByInfo_Call) Return(err error) *mockblobStore_Dele
 	return _c
 }
 
-func (_c *mockblobStore_DeleteByInfo_Call) RunAndReturn(run func(ci *domain.ContainerInfo) error) *mockblobStore_DeleteByInfo_Call {
+func (_c *mockblobStore_DeleteByInfo_Call) RunAndReturn(run func(ci *model.ContainerInfo) error) *mockblobStore_DeleteByInfo_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // Load provides a mock function for the type mockblobStore
-func (_mock *mockblobStore) Load(ci *domain.ContainerInfo) ([]byte, error) {
+func (_mock *mockblobStore) Load(ci *model.ContainerInfo) ([]byte, error) {
 	ret := _mock.Called(ci)
 
 	if len(ret) == 0 {
@@ -1289,17 +1346,17 @@ func (_mock *mockblobStore) Load(ci *domain.ContainerInfo) ([]byte, error) {
 
 	var r0 []byte
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(*domain.ContainerInfo) ([]byte, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(*model.ContainerInfo) ([]byte, error)); ok {
 		return returnFunc(ci)
 	}
-	if returnFunc, ok := ret.Get(0).(func(*domain.ContainerInfo) []byte); ok {
+	if returnFunc, ok := ret.Get(0).(func(*model.ContainerInfo) []byte); ok {
 		r0 = returnFunc(ci)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]byte)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(*domain.ContainerInfo) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(*model.ContainerInfo) error); ok {
 		r1 = returnFunc(ci)
 	} else {
 		r1 = ret.Error(1)
@@ -1313,16 +1370,16 @@ type mockblobStore_Load_Call struct {
 }
 
 // Load is a helper method to define mock.On call
-//   - ci *domain.ContainerInfo
+//   - ci *model.ContainerInfo
 func (_e *mockblobStore_Expecter) Load(ci interface{}) *mockblobStore_Load_Call {
 	return &mockblobStore_Load_Call{Call: _e.mock.On("Load", ci)}
 }
 
-func (_c *mockblobStore_Load_Call) Run(run func(ci *domain.ContainerInfo)) *mockblobStore_Load_Call {
+func (_c *mockblobStore_Load_Call) Run(run func(ci *model.ContainerInfo)) *mockblobStore_Load_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 *domain.ContainerInfo
+		var arg0 *model.ContainerInfo
 		if args[0] != nil {
-			arg0 = args[0].(*domain.ContainerInfo)
+			arg0 = args[0].(*model.ContainerInfo)
 		}
 		run(
 			arg0,
@@ -1336,33 +1393,33 @@ func (_c *mockblobStore_Load_Call) Return(bytes []byte, err error) *mockblobStor
 	return _c
 }
 
-func (_c *mockblobStore_Load_Call) RunAndReturn(run func(ci *domain.ContainerInfo) ([]byte, error)) *mockblobStore_Load_Call {
+func (_c *mockblobStore_Load_Call) RunAndReturn(run func(ci *model.ContainerInfo) ([]byte, error)) *mockblobStore_Load_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // Save provides a mock function for the type mockblobStore
-func (_mock *mockblobStore) Save(data []byte, mimeType string) (*domain.ContainerInfo, error) {
-	ret := _mock.Called(data, mimeType)
+func (_mock *mockblobStore) Save(data []byte, mimeType string, filename string) (*model.ContainerInfo, error) {
+	ret := _mock.Called(data, mimeType, filename)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Save")
 	}
 
-	var r0 *domain.ContainerInfo
+	var r0 *model.ContainerInfo
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func([]byte, string) (*domain.ContainerInfo, error)); ok {
-		return returnFunc(data, mimeType)
+	if returnFunc, ok := ret.Get(0).(func([]byte, string, string) (*model.ContainerInfo, error)); ok {
+		return returnFunc(data, mimeType, filename)
 	}
-	if returnFunc, ok := ret.Get(0).(func([]byte, string) *domain.ContainerInfo); ok {
-		r0 = returnFunc(data, mimeType)
+	if returnFunc, ok := ret.Get(0).(func([]byte, string, string) *model.ContainerInfo); ok {
+		r0 = returnFunc(data, mimeType, filename)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*domain.ContainerInfo)
+			r0 = ret.Get(0).(*model.ContainerInfo)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func([]byte, string) error); ok {
-		r1 = returnFunc(data, mimeType)
+	if returnFunc, ok := ret.Get(1).(func([]byte, string, string) error); ok {
+		r1 = returnFunc(data, mimeType, filename)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1377,11 +1434,12 @@ type mockblobStore_Save_Call struct {
 // Save is a helper method to define mock.On call
 //   - data []byte
 //   - mimeType string
-func (_e *mockblobStore_Expecter) Save(data interface{}, mimeType interface{}) *mockblobStore_Save_Call {
-	return &mockblobStore_Save_Call{Call: _e.mock.On("Save", data, mimeType)}
+//   - filename string
+func (_e *mockblobStore_Expecter) Save(data interface{}, mimeType interface{}, filename interface{}) *mockblobStore_Save_Call {
+	return &mockblobStore_Save_Call{Call: _e.mock.On("Save", data, mimeType, filename)}
 }
 
-func (_c *mockblobStore_Save_Call) Run(run func(data []byte, mimeType string)) *mockblobStore_Save_Call {
+func (_c *mockblobStore_Save_Call) Run(run func(data []byte, mimeType string, filename string)) *mockblobStore_Save_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 []byte
 		if args[0] != nil {
@@ -1391,20 +1449,25 @@ func (_c *mockblobStore_Save_Call) Run(run func(data []byte, mimeType string)) *
 		if args[1] != nil {
 			arg1 = args[1].(string)
 		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
 		run(
 			arg0,
 			arg1,
+			arg2,
 		)
 	})
 	return _c
 }
 
-func (_c *mockblobStore_Save_Call) Return(containerInfo *domain.ContainerInfo, err error) *mockblobStore_Save_Call {
+func (_c *mockblobStore_Save_Call) Return(containerInfo *model.ContainerInfo, err error) *mockblobStore_Save_Call {
 	_c.Call.Return(containerInfo, err)
 	return _c
 }
 
-func (_c *mockblobStore_Save_Call) RunAndReturn(run func(data []byte, mimeType string) (*domain.ContainerInfo, error)) *mockblobStore_Save_Call {
+func (_c *mockblobStore_Save_Call) RunAndReturn(run func(data []byte, mimeType string, filename string) (*model.ContainerInfo, error)) *mockblobStore_Save_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -1437,22 +1500,22 @@ func (_m *mockusersService) EXPECT() *mockusersService_Expecter {
 }
 
 // Authenticate provides a mock function for the type mockusersService
-func (_mock *mockusersService) Authenticate(ctx context.Context, email string, password string) (domain.User, error) {
+func (_mock *mockusersService) Authenticate(ctx context.Context, email string, password string) (model.User, error) {
 	ret := _mock.Called(ctx, email, password)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Authenticate")
 	}
 
-	var r0 domain.User
+	var r0 model.User
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) (domain.User, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) (model.User, error)); ok {
 		return returnFunc(ctx, email, password)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) domain.User); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string) model.User); ok {
 		r0 = returnFunc(ctx, email, password)
 	} else {
-		r0 = ret.Get(0).(domain.User)
+		r0 = ret.Get(0).(model.User)
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
 		r1 = returnFunc(ctx, email, password)
@@ -1498,33 +1561,33 @@ func (_c *mockusersService_Authenticate_Call) Run(run func(ctx context.Context, 
 	return _c
 }
 
-func (_c *mockusersService_Authenticate_Call) Return(user domain.User, err error) *mockusersService_Authenticate_Call {
+func (_c *mockusersService_Authenticate_Call) Return(user model.User, err error) *mockusersService_Authenticate_Call {
 	_c.Call.Return(user, err)
 	return _c
 }
 
-func (_c *mockusersService_Authenticate_Call) RunAndReturn(run func(ctx context.Context, email string, password string) (domain.User, error)) *mockusersService_Authenticate_Call {
+func (_c *mockusersService_Authenticate_Call) RunAndReturn(run func(ctx context.Context, email string, password string) (model.User, error)) *mockusersService_Authenticate_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // Register provides a mock function for the type mockusersService
-func (_mock *mockusersService) Register(ctx context.Context, req users.RegisterRequest) (domain.User, error) {
+func (_mock *mockusersService) Register(ctx context.Context, req users.RegisterRequest) (model.User, error) {
 	ret := _mock.Called(ctx, req)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Register")
 	}
 
-	var r0 domain.User
+	var r0 model.User
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, users.RegisterRequest) (domain.User, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, users.RegisterRequest) (model.User, error)); ok {
 		return returnFunc(ctx, req)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, users.RegisterRequest) domain.User); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, users.RegisterRequest) model.User); ok {
 		r0 = returnFunc(ctx, req)
 	} else {
-		r0 = ret.Get(0).(domain.User)
+		r0 = ret.Get(0).(model.User)
 	}
 	if returnFunc, ok := ret.Get(1).(func(context.Context, users.RegisterRequest) error); ok {
 		r1 = returnFunc(ctx, req)
@@ -1564,12 +1627,12 @@ func (_c *mockusersService_Register_Call) Run(run func(ctx context.Context, req 
 	return _c
 }
 
-func (_c *mockusersService_Register_Call) Return(user domain.User, err error) *mockusersService_Register_Call {
+func (_c *mockusersService_Register_Call) Return(user model.User, err error) *mockusersService_Register_Call {
 	_c.Call.Return(user, err)
 	return _c
 }
 
-func (_c *mockusersService_Register_Call) RunAndReturn(run func(ctx context.Context, req users.RegisterRequest) (domain.User, error)) *mockusersService_Register_Call {
+func (_c *mockusersService_Register_Call) RunAndReturn(run func(ctx context.Context, req users.RegisterRequest) (model.User, error)) *mockusersService_Register_Call {
 	_c.Call.Return(run)
 	return _c
 }

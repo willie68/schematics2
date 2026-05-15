@@ -6,13 +6,13 @@
     <div class="hub-grid">
       <article class="hub-card">
         <h3>Suche</h3>
-        <p class="muted">Suche in Schaltplänen, Dokumentationen und PDFs über Volltext und Tags.</p>
+        <p class="muted">Suche in Schaltplänen, Dokumentationen, Handbücher über Attribute und Tags.</p>
         <RouterLink class="hub-link" to="/search">Zur Suche</RouterLink>
       </article>
 
       <article class="hub-card">
         <h3>Effektdatenbank</h3>
-        <p class="muted">Bereich für Effekte aus WilliesSchematicsWorld, vorbereitet für spätere Datenanbindung.</p>
+        <p class="muted">Effekte: Hier findest du eine Übersicht über Effekte und deren Anschluss, tatsächliche Spannung und Stromverbrauch. Hilf gerne mit, die Daten zu erweitern und zu aktualisieren.</p>
         <RouterLink class="hub-link" to="/effects">Zur Effektdatenbank</RouterLink>
       </article>
     </div>

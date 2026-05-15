@@ -20,7 +20,7 @@ import (
 	"github.com/klauspost/compress/zstd"
 	"github.com/samber/do/v2"
 	"github.com/willie68/schematic2/backend/internal/config"
-	"github.com/willie68/schematic2/backend/internal/domain"
+	"github.com/willie68/schematic2/backend/internal/domain/model"
 	"github.com/willie68/schematic2/backend/internal/logging"
 )
 
@@ -116,7 +116,7 @@ func (s *Service) Prepare() error {
 	return nil
 }
 
-func (s *Service) Save(data []byte, mimeType string) (*domain.ContainerInfo, error) {
+func (s *Service) Save(data []byte, mimeType, filename string) (*model.ContainerInfo, error) {
 	if data == nil {
 		return nil, errors.New("data is nil")
 	}
@@ -191,9 +191,10 @@ func (s *Service) Save(data []byte, mimeType string) (*domain.ContainerInfo, err
 		return nil, err
 	}
 
-	ci := &domain.ContainerInfo{
+	ci := &model.ContainerInfo{
 		ContainerNumber: containerNum,
 		Offset:          offset,
+		Name:            filename,
 		Length:          int64(n + 5), // 4 bytes length + 1 byte compression type + data
 		OriginalLength:  int64(len(data)),
 		MIMEType:        mimeType,
@@ -217,7 +218,7 @@ func (s *Service) Save(data []byte, mimeType string) (*domain.ContainerInfo, err
 	return ci, nil
 }
 
-func (s *Service) Load(ci *domain.ContainerInfo) ([]byte, error) {
+func (s *Service) Load(ci *model.ContainerInfo) ([]byte, error) {
 	if ci == nil {
 		return nil, errors.New("container info is nil")
 	}
@@ -462,6 +463,7 @@ type containerInfoEntry struct {
 	Offset         int64  `json:"offset"`
 	Length         int64  `json:"length"`
 	OriginalLength int64  `json:"originalLength"`
+	Name           string `json:"name,omitempty"`
 	MIMEType       string `json:"mimeType,omitempty"`
 	Compressed     string `json:"compressed,omitempty"`
 	Deleted        bool   `json:"deleted,omitempty"`
@@ -469,7 +471,7 @@ type containerInfoEntry struct {
 
 // appendContainerInfoEntry writes a ContainerInfo entry to the .inf file
 // MUST be called while holding containerLock[containerNum] to ensure atomic writes
-func (s *Service) appendContainerInfoEntry(containerNum int, ci *domain.ContainerInfo) error {
+func (s *Service) appendContainerInfoEntry(containerNum int, ci *model.ContainerInfo) error {
 	infPath := filepath.Join(s.dir, fmt.Sprintf("%d.inf", containerNum))
 
 	// Load existing entries
@@ -486,6 +488,7 @@ func (s *Service) appendContainerInfoEntry(containerNum int, ci *domain.Containe
 		Offset:         ci.Offset,
 		Length:         ci.Length,
 		OriginalLength: ci.OriginalLength,
+		Name:           ci.Name,
 		MIMEType:       ci.MIMEType,
 		Compressed:     ci.Compressed,
 		Deleted:        false,
@@ -505,7 +508,7 @@ func (s *Service) appendContainerInfoEntry(containerNum int, ci *domain.Containe
 }
 
 // LoadContainerInfos loads all ContainerInfo entries for a specific container from its .inf file
-func (s *Service) LoadContainerInfos(containerNum int) ([]*domain.ContainerInfo, error) {
+func (s *Service) LoadContainerInfos(containerNum int) ([]*model.ContainerInfo, error) {
 	infPath := filepath.Join(s.dir, fmt.Sprintf("%d.inf", containerNum))
 
 	data, err := os.ReadFile(infPath)
@@ -521,13 +524,14 @@ func (s *Service) LoadContainerInfos(containerNum int) ([]*domain.ContainerInfo,
 		return nil, fmt.Errorf("unmarshal .inf data: %w", err)
 	}
 
-	result := make([]*domain.ContainerInfo, len(entries))
+	result := make([]*model.ContainerInfo, len(entries))
 	for i, entry := range entries {
-		result[i] = &domain.ContainerInfo{
+		result[i] = &model.ContainerInfo{
 			ContainerNumber: containerNum,
 			Offset:          entry.Offset,
 			Length:          entry.Length,
 			OriginalLength:  entry.OriginalLength,
+			Name:            entry.Name,
 			MIMEType:        entry.MIMEType,
 			Compressed:      entry.Compressed,
 		}
@@ -537,13 +541,13 @@ func (s *Service) LoadContainerInfos(containerNum int) ([]*domain.ContainerInfo,
 }
 
 // ListAllContainerInfos iterates over all containers and returns all ContainerInfo entries
-func (s *Service) ListAllContainerInfos() (map[int][]*domain.ContainerInfo, error) {
+func (s *Service) ListAllContainerInfos() (map[int][]*model.ContainerInfo, error) {
 	nums, err := s.listContainerNumbers()
 	if err != nil {
 		return nil, fmt.Errorf("list containers: %w", err)
 	}
 
-	result := make(map[int][]*domain.ContainerInfo)
+	result := make(map[int][]*model.ContainerInfo)
 	for _, num := range nums {
 		// Hold container lock while reading to prevent race with concurrent writes
 		containerLock := s.getContainerLock(num)
@@ -566,7 +570,7 @@ func (s *Service) ListAllContainerInfos() (map[int][]*domain.ContainerInfo, erro
 
 // DeleteByInfo marks a file as deleted in the .inf file
 // It gets the container lock internally
-func (s *Service) DeleteByInfo(ci *domain.ContainerInfo) error {
+func (s *Service) DeleteByInfo(ci *model.ContainerInfo) error {
 	if ci == nil {
 		return errors.New("container info is nil")
 	}

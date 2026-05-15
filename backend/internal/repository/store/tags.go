@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/willie68/schematic2/backend/internal/domain"
+	"github.com/willie68/schematic2/backend/internal/domain/model"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-func (s *MongoStore) ListTags(ctx context.Context) ([]domain.Tag, error) {
+func (s *MongoStore) ListTags(ctx context.Context) ([]model.Tag, error) {
 	if s.tagsCol == nil {
 		return nil, errors.New("mongodb tags collection not initialised")
 	}
@@ -30,15 +30,15 @@ func (s *MongoStore) ListTags(ctx context.Context) ([]domain.Tag, error) {
 		return nil, fmt.Errorf("decode tags: %w", err)
 	}
 
-	out := make([]domain.Tag, 0, len(mongoTags))
+	out := make([]model.Tag, 0, len(mongoTags))
 	for _, t := range mongoTags {
-		out = append(out, domain.Tag{Name: t.Tag, Counter: t.Counter})
+		out = append(out, model.Tag{Name: t.Tag, Counter: t.Counter})
 	}
 
 	return out, nil
 }
 
-func (s *MongoStore) SuggestTags(ctx context.Context, prefix string, limit int) ([]domain.Tag, error) {
+func (s *MongoStore) SuggestTags(ctx context.Context, prefix string, limit int) ([]model.Tag, error) {
 	if s.tagsCol == nil {
 		return nil, errors.New("mongodb tags collection not initialised")
 	}
@@ -61,9 +61,9 @@ func (s *MongoStore) SuggestTags(ctx context.Context, prefix string, limit int) 
 			return nil, fmt.Errorf("decode tags: %w", err)
 		}
 
-		out := make([]domain.Tag, 0, len(mongoTags))
+		out := make([]model.Tag, 0, len(mongoTags))
 		for _, t := range mongoTags {
-			out = append(out, domain.Tag{Name: t.Tag, Counter: t.Counter})
+			out = append(out, model.Tag{Name: t.Tag, Counter: t.Counter})
 		}
 		return out, nil
 	}
@@ -81,9 +81,9 @@ func (s *MongoStore) SuggestTags(ctx context.Context, prefix string, limit int) 
 		return nil, fmt.Errorf("decode tags: %w", err)
 	}
 
-	out := make([]domain.Tag, 0, len(mongoTags))
+	out := make([]model.Tag, 0, len(mongoTags))
 	for _, t := range mongoTags {
-		out = append(out, domain.Tag{Name: t.Tag, Counter: t.Counter})
+		out = append(out, model.Tag{Name: t.Tag, Counter: t.Counter})
 	}
 
 	return out, nil

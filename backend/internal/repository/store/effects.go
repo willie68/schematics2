@@ -2,11 +2,13 @@ package store
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/willie68/schematic2/backend/internal/domain"
+	"github.com/rs/xid"
+	"github.com/willie68/schematic2/backend/internal/domain/model"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
@@ -14,7 +16,7 @@ import (
 const effectsCollection = "effects"
 
 // SearchEffects searches for effects with pagination and sorting
-func (m *MongoStore) SearchEffects(ctx context.Context, query string, skip, limit int64, sortField, sortOrder string) (domain.PagedEffects, error) {
+func (m *MongoStore) SearchEffects(ctx context.Context, query string, skip, limit int64, sortField, sortOrder string) (model.PagedEffects, error) {
 	filter := bson.M{}
 
 	// Build search filter if query is provided
@@ -34,7 +36,7 @@ func (m *MongoStore) SearchEffects(ctx context.Context, query string, skip, limi
 	// Get total count
 	total, err := m.effectsCol.CountDocuments(ctx, filter)
 	if err != nil {
-		return domain.PagedEffects{}, fmt.Errorf("count documents: %w", err)
+		return model.PagedEffects{}, fmt.Errorf("count documents: %w", err)
 	}
 
 	// Determine sort order: default 1 (ascending), use -1 for descending
@@ -62,16 +64,16 @@ func (m *MongoStore) SearchEffects(ctx context.Context, query string, skip, limi
 		SetSort(sortFields)
 	cursor, err := m.effectsCol.Find(ctx, filter, opts)
 	if err != nil {
-		return domain.PagedEffects{}, fmt.Errorf("find effects: %w", err)
+		return model.PagedEffects{}, fmt.Errorf("find effects: %w", err)
 	}
 	defer cursor.Close(ctx)
 
-	var effects []domain.Effect
+	var effects []model.Effect
 	if err = cursor.All(ctx, &effects); err != nil {
-		return domain.PagedEffects{}, fmt.Errorf("decode effects: %w", err)
+		return model.PagedEffects{}, fmt.Errorf("decode effects: %w", err)
 	}
 
-	return domain.PagedEffects{
+	return model.PagedEffects{
 		Items: effects,
 		Total: total,
 		Skip:  skip,
@@ -98,8 +100,8 @@ func mapEffectSortField(field string) string {
 }
 
 // GetEffectByID retrieves a single effect by ID
-func (m *MongoStore) GetEffectByID(ctx context.Context, id string) (*domain.Effect, error) {
-	var effect domain.Effect
+func (m *MongoStore) GetEffectByID(ctx context.Context, id string) (*model.Effect, error) {
+	var effect model.Effect
 	err := m.effectsCol.FindOne(ctx, bson.M{"_id": id}).Decode(&effect)
 	if err != nil {
 		return nil, fmt.Errorf("get effect: %w", err)
@@ -108,9 +110,9 @@ func (m *MongoStore) GetEffectByID(ctx context.Context, id string) (*domain.Effe
 }
 
 // CreateEffect creates a new effect in the database
-func (m *MongoStore) CreateEffect(ctx context.Context, effect *domain.Effect) error {
+func (m *MongoStore) CreateEffect(ctx context.Context, effect *model.Effect) error {
 	if effect.ID == "" {
-		effect.ID = fmt.Sprintf("effect_%d", time.Now().UnixNano())
+		effect.ID = xid.New().String()
 	}
 
 	_, err := m.effectsCol.InsertOne(ctx, effect)
@@ -121,7 +123,7 @@ func (m *MongoStore) CreateEffect(ctx context.Context, effect *domain.Effect) er
 }
 
 // UpdateEffect updates an existing effect in the database
-func (m *MongoStore) UpdateEffect(ctx context.Context, effect *domain.Effect) error {
+func (m *MongoStore) UpdateEffect(ctx context.Context, effect *model.Effect) error {
 	if effect.ID == "" {
 		return fmt.Errorf("effect ID is required for update")
 	}
@@ -134,6 +136,24 @@ func (m *MongoStore) UpdateEffect(ctx context.Context, effect *domain.Effect) er
 	}
 
 	if result.MatchedCount == 0 {
+		return fmt.Errorf("effect not found")
+	}
+
+	return nil
+}
+
+// DeleteEffect deletes an effect from the store by its ID
+func (s *MongoStore) DeleteEffect(ctx context.Context, id string) error {
+	if s.col == nil {
+		return errors.New("mongodb not initialised")
+	}
+
+	result, err := s.effectsCol.DeleteOne(ctx, bson.D{{Key: "_id", Value: id}})
+	if err != nil {
+		return fmt.Errorf("delete effect: %w", err)
+	}
+
+	if result.DeletedCount == 0 {
 		return fmt.Errorf("effect not found")
 	}
 

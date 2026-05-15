@@ -95,45 +95,31 @@
 
         <!-- Image Section -->
         <div style="border:1px solid #ddd; border-radius:8px; padding:1rem;">
-          <label style="font-weight:bold; display:block; margin-bottom:1rem;">Bilder</label>
+          <label style="font-weight:bold; display:block; margin-bottom:1rem;">Bild</label>
 
-          <!-- Current Images -->
-          <div v-if="form.images && form.images.length > 0" style="margin-bottom:1rem;">
-            <h3 style="margin-top:0; font-size:0.9rem; color:#666;">Aktuelle Bilder:</h3>
-            <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:1rem;">
-              <div v-for="(img, idx) in form.images" :key="idx" style="position:relative; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
-                <img :src="getImageUrl(effect.id, idx)" style="width:100%; height:150px; object-fit:cover;" />
-                <Button 
-                  icon="pi pi-trash" 
-                  severity="danger" 
-                  text 
-                  @click="removeImage(idx)"
-                  style="position:absolute; top:0; right:0;"
-                />
-              </div>
+          <!-- Current Image Display -->
+          <div style="margin-bottom:1.5rem;">
+            <div v-if="form.image" style="text-align:center;">
+              <img :src="getImageUrl(effect.id)" style="max-width:200px; max-height:200px; border-radius:4px; object-fit:cover;" />
+              <p style="font-size:0.85rem; color:#666; margin-top:0.5rem;">{{ form.image.name }}</p>
             </div>
-            <Checkbox 
-              v-model="replaceImage" 
-              label="Neues Bild ersetzt alte Bilder"
-              style="margin-top:1rem;"
-            />
+            <div v-else style="padding:1rem; background:#f9f9f9; border-radius:4px; text-align:center; color:#999;">
+              Kein Bild vorhanden
+            </div>
           </div>
 
           <!-- Upload New Image -->
           <div>
-            <FileUpload 
-              name="image"
-              @select="onImageSelected"
+            <input 
+              ref="fileInput"
+              type="file" 
               accept="image/*"
-              :maxFileSize="32000000"
-              :auto="false"
-              chooseLabel="Bild wählen"
-              cancelLabel="Abbrechen"
+              @change="onImageSelected"
+              style="width:100%;"
             />
-            <div v-if="newImage" style="margin-top:1rem;">
-              <img :src="newImagePreview" style="max-width:200px; max-height:200px; border-radius:4px;" />
-              <p style="font-size:0.85rem; color:#666; margin-top:0.5rem;">{{ newImage.name }}</p>
-            </div>
+            <small style="color:#999; display:block; margin-top:0.25rem;">
+              {{ newImageFileName || 'keine Datei gewählt' }}
+            </small>
           </div>
         </div>
 
@@ -172,7 +158,6 @@ import Button from 'primevue/button'
 import Dropdown from 'primevue/dropdown'
 import Checkbox from 'primevue/checkbox'
 import AutoComplete from 'primevue/autocomplete'
-import FileUpload from 'primevue/fileupload'
 import api from '../services/api'
 import { useToast } from '../composables/useToast'
 
@@ -189,9 +174,9 @@ const effectTypes = ref([])
 const manufacturerSuggestions = ref([])
 const connectorOptions = ref(['HI-A+', 'HI+A-', '3.5mm', 'USB', 'XLR', 'RJ45'])
 
-const replaceImage = ref(false)
 const newImage = ref(null)
-const newImagePreview = ref(null)
+const newImageFileName = ref('')
+const fileInput = ref(null)
 
 const form = ref({
   effectType: '',
@@ -201,7 +186,7 @@ const form = ref({
   current: '',
   connector: '',
   comment: '',
-  images: []
+  image: null
 })
 
 onMounted(async () => {
@@ -223,7 +208,7 @@ const loadEffect = async () => {
       current: response.data.current,
       connector: response.data.connector,
       comment: response.data.comment,
-      images: response.data.images || []
+      image: response.data.image || null
     }
     loading.value = false
   } catch (error) {
@@ -268,24 +253,20 @@ const searchManufacturers = async (event) => {
 }
 
 const onImageSelected = (event) => {
-  const file = event.files[0]
+  const file = event.target?.files?.[0]
   if (file) {
     newImage.value = file
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      newImagePreview.value = e.target.result
-    }
-    reader.readAsDataURL(file)
+    newImageFileName.value = file.name
   }
 }
 
-const removeImage = (index) => {
-  form.value.images.splice(index, 1)
+const removeImage = () => {
+  form.value.image = null
 }
 
-const getImageUrl = (effectId, index) => {
+const getImageUrl = (effectId) => {
   const base = typeof __API_BASE__ !== 'undefined' ? __API_BASE__ : '/'
-  return `${base}api/v1/effects/${effectId}/image`
+  return `${base}api/v1/effects/${effectId}/image`;
 }
 
 const saveEffect = async () => {
@@ -305,17 +286,24 @@ const saveEffect = async () => {
     formData.append('current', form.value.current)
     formData.append('connector', form.value.connector)
     formData.append('comment', form.value.comment)
-    formData.append('replaceImage', replaceImage.value)
 
+    // Only append image if a new one was selected
     if (newImage.value) {
       formData.append('image', newImage.value)
     }
 
-    await api.patch(`/api/v1/effects/${effectID}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
+    await api.patch(`/api/v1/effects/${effectID}`, formData)
 
     toast.success('Effekt wurde aktualisiert')
+    
+    // Reload effect to show updated image
+    await loadEffect()
+    
+    // Reset image selection
+    newImage.value = null
+    newImageFileName.value = ''
+    
+    // Go back to effects list
     setTimeout(() => goBack(), 1500)
   } catch (error) {
     console.error('Failed to save effect:', error)

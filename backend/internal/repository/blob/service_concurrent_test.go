@@ -2,13 +2,14 @@ package blob
 
 import (
 	"bytes"
+	"fmt"
 	"sync"
 	"testing"
 
 	"github.com/samber/do/v2"
 	"github.com/stretchr/testify/suite"
 	"github.com/willie68/schematic2/backend/internal/config"
-	"github.com/willie68/schematic2/backend/internal/domain"
+	"github.com/willie68/schematic2/backend/internal/domain/model"
 )
 
 type BlobServiceConcurrentTestSuite struct {
@@ -53,13 +54,13 @@ func (s *BlobServiceConcurrentTestSuite) TestConcurrentSavesToDifferentContainer
 	payload3 := bytes.Repeat([]byte("C"), 400*1024) // 400KB - Container 2
 
 	// Save sequentially to different containers
-	ci1, err := s.svc.Save(payload1, "application/pdf")
+	ci1, err := s.svc.Save(payload1, "application/pdf", "first.pdf")
 	s.Require().NoError(err, "save first payload")
 
-	ci2, err := s.svc.Save(payload2, "application/pdf")
+	ci2, err := s.svc.Save(payload2, "application/pdf", "second.pdf")
 	s.Require().NoError(err, "save second payload")
 
-	ci3, err := s.svc.Save(payload3, "application/pdf")
+	ci3, err := s.svc.Save(payload3, "application/pdf", "third.pdf")
 	s.Require().NoError(err, "save third payload")
 
 	// WHEN - load concurrently from multiple goroutines
@@ -147,7 +148,7 @@ func (s *BlobServiceConcurrentTestSuite) TestConcurrentSavesToSameContainer() {
 
 	// WHEN - save concurrently from multiple goroutines to same container
 	var wg sync.WaitGroup
-	results := make([]*domain.ContainerInfo, 3)
+	results := make([]*model.ContainerInfo, 3)
 	var mu sync.Mutex
 
 	for i := 0; i < 3; i++ {
@@ -155,7 +156,7 @@ func (s *BlobServiceConcurrentTestSuite) TestConcurrentSavesToSameContainer() {
 		idx := i
 		go func(payload []byte) {
 			defer wg.Done()
-			ci, e := s.svc.Save(payload, "text/plain")
+			ci, e := s.svc.Save(payload, "text/plain", fmt.Sprintf("file%d.txt", idx+1))
 			s.Require().NoError(e, "concurrent save should succeed")
 			mu.Lock()
 			results[idx] = ci

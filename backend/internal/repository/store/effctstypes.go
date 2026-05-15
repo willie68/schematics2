@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/willie68/schematic2/backend/internal/domain"
+	"github.com/willie68/schematic2/backend/internal/domain/model"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
@@ -12,7 +12,7 @@ import (
 const effectTypesCollection = "effecttypes"
 
 // GetAllEffectTypes retrieves all effect types from the database
-func (m *MongoStore) GetAllEffectTypes(ctx context.Context) ([]domain.EffectType, error) {
+func (m *MongoStore) GetAllEffectTypes(ctx context.Context) ([]model.EffectType, error) {
 	filter := bson.M{}
 
 	opts := options.Find().SetSort(bson.D{
@@ -24,7 +24,7 @@ func (m *MongoStore) GetAllEffectTypes(ctx context.Context) ([]domain.EffectType
 	}
 	defer cursor.Close(ctx)
 
-	var effectTypes []domain.EffectType
+	var effectTypes []model.EffectType
 	if err = cursor.All(ctx, &effectTypes); err != nil {
 		return nil, fmt.Errorf("decode effect types: %w", err)
 	}

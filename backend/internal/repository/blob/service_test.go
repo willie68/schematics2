@@ -50,7 +50,7 @@ func (s *BlobServiceTestSuite) TestSaveAndLoad_Success() {
 	payload := []byte("hello-blob")
 
 	// WHEN
-	ci, err := s.svc.Save(payload, "text/plain")
+	ci, err := s.svc.Save(payload, "text/plain", "hello.txt")
 
 	// THEN
 	s.Require().NoError(err, "save payload")
@@ -85,7 +85,7 @@ func (s *BlobServiceTestSuite) TestSaveAndLoad_WithCompression() {
 	payload := []byte("hello-blob-with-compression")
 
 	// WHEN
-	ci, err := s.svc.Save(payload, "text/plain")
+	ci, err := s.svc.Save(payload, "text/plain", "hello.txt")
 
 	// THEN
 	s.Require().NoError(err, "save payload with compression")
@@ -107,10 +107,10 @@ func (s *BlobServiceTestSuite) TestRotatesContainer_AfterMaxSize() {
 	second := bytes.Repeat([]byte{2}, 300*1024)
 
 	// WHEN
-	ci1, err := s.svc.Save(first, "application/octet-stream")
+	ci1, err := s.svc.Save(first, "application/octet-stream", "hello.txt")
 	s.Require().NoError(err, "save first payload")
 
-	ci2, err := s.svc.Save(second, "application/octet-stream")
+	ci2, err := s.svc.Save(second, "application/octet-stream", "world.txt")
 	s.Require().NoError(err, "save second payload")
 
 	// THEN
@@ -126,9 +126,9 @@ func (s *BlobServiceTestSuite) TestLoad_AfterRotation() {
 	first := bytes.Repeat([]byte{1}, 900*1024)
 	second := bytes.Repeat([]byte{2}, 300*1024)
 
-	ci1, err := s.svc.Save(first, "application/octet-stream")
+	ci1, err := s.svc.Save(first, "application/octet-stream", "first.txt")
 	s.Require().NoError(err, "save first payload")
-	ci2, err := s.svc.Save(second, "application/octet-stream")
+	ci2, err := s.svc.Save(second, "application/octet-stream", "second.txt")
 	s.Require().NoError(err, "save second payload")
 
 	// WHEN
@@ -162,7 +162,7 @@ func (s *BlobServiceTestSuite) TestCompressionGzip_SaveAndLoad() {
 	payload := []byte("hello-world-gzip-compression-test")
 
 	// WHEN
-	ci, err := s.svc.Save(payload, "application/pdf")
+	ci, err := s.svc.Save(payload, "application/pdf", "hello.pdf")
 
 	// THEN
 	s.Require().NoError(err, "save payload with gzip")
@@ -193,7 +193,7 @@ func (s *BlobServiceTestSuite) TestCompressionNone_SaveAndLoad() {
 	payload := []byte("hello-world-no-compression")
 
 	// WHEN
-	ci, err := s.svc.Save(payload, "image/jpeg")
+	ci, err := s.svc.Save(payload, "image/jpeg", "hello.jpg")
 
 	// THEN
 	s.Require().NoError(err, "save payload without compression")
@@ -227,11 +227,11 @@ func (s *BlobServiceTestSuite) TestMixedCompressionInContainer_ZstdAndGzipAndNon
 	payload2 := []byte("second-uncompressed-data")
 
 	// Both saved without compression (service uses "none")
-	ci1, err := s.svc.Save(payload1, "text/plain")
+	ci1, err := s.svc.Save(payload1, "text/plain", "first.txt")
 	s.Require().NoError(err, "save first uncompressed payload")
 	s.Assert().Equal(1, ci1.ContainerNumber)
 
-	ci2, err := s.svc.Save(payload2, "text/plain")
+	ci2, err := s.svc.Save(payload2, "text/plain", "second.txt")
 	s.Require().NoError(err, "save second uncompressed payload")
 	s.Assert().Equal(1, ci2.ContainerNumber, "both in same container")
 
@@ -271,7 +271,7 @@ func (s *BlobServiceTestSuite) TestMixedCompressionInContainer_ZstdThenGzip() {
 	payload1 := bytes.Repeat([]byte("zstd-compressed-data-"), 100)
 
 	// WHEN - save with zstd
-	ci1, err := s.svc.Save(payload1, "application/pdf")
+	ci1, err := s.svc.Save(payload1, "application/pdf", "hello.pdf")
 	s.Require().NoError(err, "save with zstd")
 	s.Assert().Equal("zstd", ci1.Compressed)
 	s.Assert().Equal(1, ci1.ContainerNumber)
@@ -292,7 +292,7 @@ func (s *BlobServiceTestSuite) TestMixedCompressionInContainer_ZstdThenGzip() {
 	payload2 := bytes.Repeat([]byte("gzip-compressed-data-"), 100)
 
 	// WHEN - save with gzip
-	ci2, err := s.svc.Save(payload2, "application/pdf")
+	ci2, err := s.svc.Save(payload2, "application/pdf", "hello.pdf")
 	s.Require().NoError(err, "save with gzip")
 	s.Assert().Equal("gzip", ci2.Compressed)
 	s.Assert().Equal(containerNum, ci2.ContainerNumber, "both entries in same container")
@@ -331,7 +331,7 @@ func (s *BlobServiceTestSuite) TestCompressionCompatibility_SaveWithZstdLoadWith
 
 	payload := []byte("test-payload-for-cross-compression-compatibility")
 
-	ci, err := s.svc.Save(payload, "application/pdf")
+	ci, err := s.svc.Save(payload, "application/pdf", "hello.pdf")
 	s.Require().NoError(err, "save with zstd")
 	s.Assert().Equal("zstd", ci.Compressed)
 
@@ -364,7 +364,7 @@ func (s *BlobServiceTestSuite) TestInfFile_CreateAndRead() {
 	payload := []byte("test-data-for-inf-file")
 
 	// WHEN - save data (should create .inf file)
-	ci, err := s.svc.Save(payload, "application/pdf")
+	ci, err := s.svc.Save(payload, "application/pdf", "hello.pdf")
 	s.Require().NoError(err, "save payload")
 
 	// THEN - verify .inf file contains the entry
@@ -399,13 +399,13 @@ func (s *BlobServiceTestSuite) TestInfFile_MultipleEntriesInContainer() {
 	payload2 := []byte("second-data")
 	payload3 := []byte("third-data")
 
-	ci1, err := s.svc.Save(payload1, "application/pdf")
+	ci1, err := s.svc.Save(payload1, "application/pdf", "first.pdf")
 	s.Require().NoError(err, "save first payload")
 
-	_, err = s.svc.Save(payload2, "text/plain")
+	_, err = s.svc.Save(payload2, "text/plain", "second.txt")
 	s.Require().NoError(err, "save second payload")
 
-	_, err = s.svc.Save(payload3, "image/jpeg")
+	_, err = s.svc.Save(payload3, "image/jpeg", "third.jpg")
 	s.Require().NoError(err, "save third payload")
 
 	// THEN - verify all three are in the .inf file
@@ -442,10 +442,10 @@ func (s *BlobServiceTestSuite) TestInfFile_MultipleContainers() {
 	payload1 := bytes.Repeat([]byte("container1-"), 900*1024/12)
 	payload2 := bytes.Repeat([]byte("container2-"), 300*1024/12)
 
-	ci1, err := s.svc.Save(payload1, "application/pdf")
+	ci1, err := s.svc.Save(payload1, "application/pdf", "first.pdf")
 	s.Require().NoError(err, "save first payload")
 
-	ci2, err := s.svc.Save(payload2, "image/tiff")
+	ci2, err := s.svc.Save(payload2, "image/tiff", "second.tiff")
 	s.Require().NoError(err, "save second payload")
 
 	// THEN - verify each container has its own .inf entry
@@ -483,13 +483,13 @@ func (s *BlobServiceTestSuite) TestListAllContainerInfos() {
 	payload1b := []byte("small")
 	payload2a := bytes.Repeat([]byte("b"), 300*1024/1)
 
-	_, err = s.svc.Save(payload1a, "application/pdf")
+	_, err = s.svc.Save(payload1a, "application/pdf", "first.pdf")
 	s.Require().NoError(err, "save first container first payload")
 
-	_, err = s.svc.Save(payload1b, "text/plain")
+	_, err = s.svc.Save(payload1b, "text/plain", "second.txt")
 	s.Require().NoError(err, "save first container second payload")
 
-	_, err = s.svc.Save(payload2a, "image/jpeg")
+	_, err = s.svc.Save(payload2a, "image/jpeg", "third.jpg")
 	s.Require().NoError(err, "save second container payload")
 
 	// WHEN - list all container infos
@@ -529,7 +529,7 @@ func (s *BlobServiceTestSuite) TestInfFile_WithCompression() {
 
 	// WHEN - save with compression
 	payload := []byte("compressed-test-data")
-	ci, err := s.svc.Save(payload, "application/pdf")
+	ci, err := s.svc.Save(payload, "application/pdf", "hello.pdf")
 	s.Require().NoError(err, "save compressed payload")
 
 	// THEN - verify .inf file contains compression info

@@ -33,7 +33,15 @@
             style="cursor: pointer;"
             aria-label="Effektdatenbank"
           />
-          <RouterLink v-if="!isLoggedIn" to="/login">Login</RouterLink>
+          <Avatar v-if="!isLoggedIn"
+            v-tooltip.bottom="'Login'"
+            icon="pi pi-user"
+            shape="circle"
+            class="nav-avatar"
+            @click="router.push('/login')"
+            style="cursor: pointer;"
+            aria-label="Login"
+          />
           <UserMenu v-if="isLoggedIn" />
         </nav>
       </div>
