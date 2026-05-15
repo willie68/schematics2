@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 
-const TOKEN_KEY = 'schematic2_token'
+const TOKEN_KEY = 'schematics2_token'
 
 // module-level shared state – same ref across all components
 const isLoggedIn = ref(!!localStorage.getItem(TOKEN_KEY))

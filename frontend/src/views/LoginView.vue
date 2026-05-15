@@ -43,7 +43,7 @@ async function login() {
       username: username.value,
       password: password.value,
     })
-    localStorage.setItem('schematic2_token', data.token)
+    localStorage.setItem('schematics2_token', data.token)
     setLoggedIn(true)
     messageType.value = 'success'
     message.value = 'Login erfolgreich.'

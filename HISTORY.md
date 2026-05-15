@@ -1,5 +1,17 @@
 # History
 
+## 0.2.30 - 2026-05-15 (Backend & Frontend)
+
+- **AppFooter**: Version-Information hinzugefügt
+  - Zeigt aktuelle App- und Backend-Version zwischen Copyright und Footer-Links an
+  - Format: "Versionen: App X.X.X, Backend X.X.X"
+  - Backend-Version wird von `/api/v1/info` Endpoint abgerufen
+  - Subtile Darstellung mit kleinerer Schrift (0.85rem) und hellerer Farbe
+
+- **Info Endpoint**: Struktur aktualisiert für Frontend-Kompatibilität
+  - Rückgabe von `version` und `status` im `/api/v1/info` Endpoint
+  - Version wird dynamisch aus Konfiguration gelesen
+
 ## 0.2.28 - 2026-05-15 (Backend)
 
 - **Effect Update**: Altes Bild wird beim Update gelöscht

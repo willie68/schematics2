@@ -1,4 +1,4 @@
-module github.com/willie68/schematic2/backend
+module github.com/willie68/schematics2/backend
 
 go 1.26.2
 

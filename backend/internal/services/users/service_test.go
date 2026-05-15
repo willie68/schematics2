@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/willie68/schematic2/backend/internal/auth"
-	"github.com/willie68/schematic2/backend/internal/domain/model"
+	"github.com/willie68/schematics2/backend/internal/auth"
+	"github.com/willie68/schematics2/backend/internal/domain/model"
 )
 
 // ServiceTestSuite tests the user service

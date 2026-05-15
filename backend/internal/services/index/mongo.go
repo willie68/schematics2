@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/samber/do/v2"
-	"github.com/willie68/schematic2/backend/internal/domain/model"
-	"github.com/willie68/schematic2/backend/internal/logging"
+	"github.com/willie68/schematics2/backend/internal/domain/model"
+	"github.com/willie68/schematics2/backend/internal/logging"
 )
 
 // docStoreInterface defines the interface for the document store

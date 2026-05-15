@@ -14,6 +14,6 @@ go run ./cmd/gencert
 echo "TLS certificate generation complete!"
 echo ""
 echo "Step 3: Building Go binaries..."
-go build -ldflags="-s -w" -o ./bin/schematic2 ./cmd/server
+go build -ldflags="-s -w" -o ./bin/schematics2 ./cmd/server
 echo ""
 echo "Build complete!"

@@ -17,13 +17,13 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/samber/do/v2"
-	"github.com/willie68/schematic2/backend/internal/auth"
-	"github.com/willie68/schematic2/backend/internal/config"
-	"github.com/willie68/schematic2/backend/internal/domain/model"
-	"github.com/willie68/schematic2/backend/internal/logging"
-	"github.com/willie68/schematic2/backend/internal/repository/connector"
-	"github.com/willie68/schematic2/backend/internal/services/users"
-	"github.com/willie68/schematic2/backend/internal/version"
+	"github.com/willie68/schematics2/backend/internal/auth"
+	"github.com/willie68/schematics2/backend/internal/config"
+	"github.com/willie68/schematics2/backend/internal/domain/model"
+	"github.com/willie68/schematics2/backend/internal/logging"
+	"github.com/willie68/schematics2/backend/internal/repository/connector"
+	"github.com/willie68/schematics2/backend/internal/services/users"
+	"github.com/willie68/schematics2/backend/internal/version"
 )
 
 type documentStore interface {

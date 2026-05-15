@@ -1,5 +1,5 @@
 // Package main provides a unified import tool for migrating all data
-// (manufacturers, tags, schematics, effect types, and effects) from the backup into the Schematic2 system.
+// (manufacturers, tags, schematics, effect types, and effects) from the backup into the Schematics2 system.
 //
 // Directory structure (under base-dir):
 //   - manufacturers/     – JSON files with manufacturer data
@@ -25,11 +25,11 @@ import (
 	"time"
 
 	"github.com/samber/do/v2"
-	"github.com/willie68/schematic2/backend/internal/config"
-	"github.com/willie68/schematic2/backend/internal/domain/model"
-	"github.com/willie68/schematic2/backend/internal/logging"
-	"github.com/willie68/schematic2/backend/internal/repository/blob"
-	"github.com/willie68/schematic2/backend/internal/repository/store"
+	"github.com/willie68/schematics2/backend/internal/config"
+	"github.com/willie68/schematics2/backend/internal/domain/model"
+	"github.com/willie68/schematics2/backend/internal/logging"
+	"github.com/willie68/schematics2/backend/internal/repository/blob"
+	"github.com/willie68/schematics2/backend/internal/repository/store"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"

@@ -1,6 +1,6 @@
 # Create User Tool
 
-Command-line tool to create a new user in the schematic2 system.
+Command-line tool to create a new user in the schematics2 system.
 
 ## Usage
 

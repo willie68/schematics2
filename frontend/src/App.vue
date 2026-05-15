@@ -3,7 +3,7 @@
     <header class="card" style="margin-bottom: 1rem">
       <div style="display:flex; align-items:center; justify-content:space-between; gap: 1rem; flex-wrap: wrap;">
         <div>
-          <h1 style="margin-bottom:0.2rem">Schematic2</h1>
+          <h1 style="margin-bottom:0.2rem">Schematics2</h1>
         </div>
         <nav style="display:flex; align-items:center; gap:0.6rem;">
           <Avatar

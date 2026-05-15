@@ -1,7 +1,8 @@
 <template>
   <footer class="app-footer">
     <div class="footer-content">
-      <p>&copy; 2026 Schematic2. Alle Rechte vorbehalten.</p>
+      <p>&copy; 2026 Schematics2. Alle Rechte vorbehalten.</p>
+      <p class="version-info">Versionen: App {{ APP_VERSION }}, Backend {{ BACKEND_VERSION }}</p>
       <div class="footer-links">
         <RouterLink to="/datenschutz" class="footer-link">
           Datenschutz
@@ -21,6 +22,21 @@
 
 <script setup>
 import { RouterLink } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import api from '../services/api'
+import { APP_VERSION } from '../config'
+
+const BACKEND_VERSION = ref('Loading...')
+
+onMounted(async () => {
+  try {
+    const { data } = await api.get('/api/v1/info')
+    BACKEND_VERSION.value = data.version || 'Unknown'
+  } catch (error) {
+    BACKEND_VERSION.value = 'Error'
+    console.error('Failed to fetch backend version:', error)
+  }
+})
 </script>
 
 <style scoped>
@@ -42,6 +58,12 @@ import { RouterLink } from 'vue-router'
 .footer-content p {
   margin: 0 0 0.75rem 0;
   color: #666;
+}
+
+.version-info {
+  font-size: 0.85rem;
+  color: #999;
+  margin: 0.5rem 0 0.75rem 0;
 }
 
 .footer-links {

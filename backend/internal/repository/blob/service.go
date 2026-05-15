@@ -19,9 +19,9 @@ import (
 
 	"github.com/klauspost/compress/zstd"
 	"github.com/samber/do/v2"
-	"github.com/willie68/schematic2/backend/internal/config"
-	"github.com/willie68/schematic2/backend/internal/domain/model"
-	"github.com/willie68/schematic2/backend/internal/logging"
+	"github.com/willie68/schematics2/backend/internal/config"
+	"github.com/willie68/schematics2/backend/internal/domain/model"
+	"github.com/willie68/schematics2/backend/internal/logging"
 )
 
 // Service writes binary payloads into rotating container files (*.cnt).

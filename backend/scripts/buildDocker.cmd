@@ -8,10 +8,10 @@ REM   buildDocker.cmd /client    builds for direct container access
 
 if "%~1"=="" (
     set BASE_PATH=/schematics2
-    echo Building Schematic2 Docker image for reverse-proxy at /schematics2 ^(default^)...
+    echo Building Schematics2 Docker image for reverse-proxy at /schematics2 ^(default^)...
 ) else (
     set BASE_PATH=%~1
-    echo Building Schematic2 Docker image with BASE_PATH=!BASE_PATH!...
+    echo Building Schematics2 Docker image with BASE_PATH=!BASE_PATH!...
 )
 
 echo.
@@ -38,7 +38,7 @@ echo.
 echo Step 2: Building Docker image...
 if not exist .\build\package\Dockerfile (
     echo Warning: Dockerfile not found at .\build\package\Dockerfile
-    echo Please create a Dockerfile for schematic2
+    echo Please create a Dockerfile for schematics2
     pause
     exit /b 1
 )

@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/willie68/schematic2/backend/internal/config"
-	"github.com/willie68/schematic2/backend/internal/services/shttp"
+	"github.com/willie68/schematics2/backend/internal/config"
+	"github.com/willie68/schematics2/backend/internal/services/shttp"
 	"gopkg.in/yaml.v3"
 )
 

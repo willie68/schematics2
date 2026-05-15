@@ -1,6 +1,6 @@
 # Docker Build & Deployment Guide
 
-Dokumentation für das Build-System der Schematic2 Backend-Komponente.
+Dokumentation für das Build-System der Schematics2 Backend-Komponente.
 
 ## Überblick
 
@@ -50,7 +50,7 @@ Step 1: Generating TLS certificate
 ```
 - Erstellt/erneuert `configs/cert/server.crt` und `configs/cert/server.key`
 - Gültig für 10 Jahre
-- Subject: `schematic2` (oder `CN=schematic2`)
+- Subject: `schematics2` (oder `CN=schematics2`)
 - Zusätzliche DNS-Namen: `host.docker.internal`, `localhost`
 
 ### 2. Build-Informationen sammeln
@@ -157,7 +157,7 @@ docker pull 192.168.178.14:5000/mcs/schematics2:latest
 **Für Reverse-Proxy (empfohlen):**
 ```bash
 docker run -d \
-  --name schematic2 \
+  --name schematics2 \
   -p 8080:8080 \
   -p 8443:8443 \
   -e CLIENT_BASE_PATH=/schematics2 \
@@ -169,7 +169,7 @@ docker run -d \
 **Für direkten Zugriff:**
 ```bash
 docker run -d \
-  --name schematic2 \
+  --name schematics2 \
   -p 8080:8080 \
   -p 8443:8443 \
   -v /path/to/configs:/app/configs \
@@ -194,7 +194,7 @@ curl -k https://localhost:8443/livez
     ServerName wkla.no-ip.biz
     SSLEngine on
     
-    # Zu schematic2 Container
+    # Zu schematics2 Container
     ProxyPreserveHost On
     ProxyPass /schematics2 http://192.168.178.14:8080/
     ProxyPassReverse /schematics2 http://192.168.178.14:8080/
@@ -215,10 +215,10 @@ curl -k https://localhost:8443/livez
 
 ```bash
 # Logs ansehen
-docker logs schematic2
+docker logs schematics2
 
 # Health Status prüfen
-docker inspect schematic2 | grep -A 20 "Health"
+docker inspect schematics2 | grep -A 20 "Health"
 ```
 
 **Häufige Probleme:**
@@ -237,7 +237,7 @@ docker inspect schematic2 | grep -A 20 "Health"
 
 - `docker inspect mcs/schematics2:latest | grep -A 5 "Labels"`
 - API: `curl https://localhost:8443/api/v1/info`
-- Logs: `docker logs schematic2 | grep "starting schematic2 backend"`
+- Logs: `docker logs schematics2 | grep "starting schematics2 backend"`
 
 ---
 
@@ -262,7 +262,7 @@ Das buildDocker.cmd kann in CI/CD Pipelines integriert werden:
 
 ```yaml
 # Beispiel für GitHub Actions
-- name: Build & Push schematic2
+- name: Build & Push schematics2
   run: |
     cd backend/scripts
     .\buildDocker.cmd /schematics2

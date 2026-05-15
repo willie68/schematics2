@@ -1,6 +1,6 @@
 # Build Guide
 
-Diese Dokumentation beschreibt alle Build-Moeglichkeiten fuer Schematic2 (lokal und Docker).
+Diese Dokumentation beschreibt alle Build-Moeglichkeiten fuer Schematics2 (lokal und Docker).
 
 ## Voraussetzungen
 
@@ -10,8 +10,8 @@ Diese Dokumentation beschreibt alle Build-Moeglichkeiten fuer Schematic2 (lokal 
 
 ## Build-Artefakte
 
-- Backend Binary (Windows): backend/bin/schematic2.exe
-- Backend Binary (Linux): backend/bin/schematic2
+- Backend Binary (Windows): backend/bin/schematics2.exe
+- Backend Binary (Linux): backend/bin/schematics2
 - Frontend Dist: frontend/dist
 - Embedded Frontend fuer Backend: backend/internal/webclient/dist
 - TLS-Zertifikate: backend/configs/cert/server.crt und backend/configs/cert/server.key
@@ -46,7 +46,7 @@ Hinweis:
 
 ```bash
 cd backend
-go build -ldflags="-s -w" -o ./bin/schematic2 ./cmd/server
+go build -ldflags="-s -w" -o ./bin/schematics2 ./cmd/server
 ```
 
 ## Komplett-Build (Windows)
@@ -82,7 +82,7 @@ make build
 ```
 
 Wichtiger Hinweis:
-- Das vorhandene backend/scripts/Makefile stammt in Teilen noch aus einem aelteren Projekt und enthaelt derzeit Targets/Binaernamen, die nicht komplett zu schematic2 passen.
+- Das vorhandene backend/scripts/Makefile stammt in Teilen noch aus einem aelteren Projekt und enthaelt derzeit Targets/Binaernamen, die nicht komplett zu schematics2 passen.
 - Fuer den regulaeren Build sollten bevorzugt scripts/build.cmd oder scripts/build.sh genutzt werden.
 
 ## Docker Build
@@ -91,7 +91,7 @@ Das Dockerfile baut Frontend und Backend in Multi-Stage und erzeugt im Build auc
 
 ```bash
 cd backend
-docker build -f ./build/package/Dockerfile ../ -t schematic2:latest
+docker build -f ./build/package/Dockerfile ../ -t schematics2:latest
 ```
 
 Warum ../ als Context:
@@ -100,13 +100,13 @@ Warum ../ als Context:
 Container starten:
 
 ```bash
-docker run -p 8080:8080 -p 8443:8443 -v "${PWD}/configs:/app/configs" schematic2:latest
+docker run -p 8080:8080 -p 8443:8443 -v "${PWD}/configs:/app/configs" schematics2:latest
 ```
 
 PowerShell Beispiel:
 
 ```powershell
-docker run -p 8080:8080 -p 8443:8443 -v ${PWD}\configs:/app/configs schematic2:latest
+docker run -p 8080:8080 -p 8443:8443 -v ${PWD}\configs:/app/configs schematics2:latest
 ```
 
 ## Healthcheck
@@ -123,4 +123,4 @@ Im Container ist folgender Healthcheck konfiguriert:
    - Windows: backend/scripts/build.cmd
    - Linux/macOS: backend/scripts/build.sh
 3. Optional Docker Image bauen:
-   - docker build -f backend/build/package/Dockerfile . -t schematic2:latest (vom Repo-Root)
+   - docker build -f backend/build/package/Dockerfile . -t schematics2:latest (vom Repo-Root)

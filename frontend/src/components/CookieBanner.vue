@@ -27,7 +27,7 @@ import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import Button from 'primevue/button'
 
-const COOKIE_CONSENT_KEY = 'schematic2_cookie_consent'
+const COOKIE_CONSENT_KEY = 'schematics2_cookie_consent'
 const cookiesAccepted = ref(true) // Standard: akzeptiert
 
 onMounted(() => {

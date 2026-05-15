@@ -15,6 +15,6 @@ template-schema: '{{.Template}}.schema.json'
 template-data:
   unroll-variadic: true
 packages:
-  github.com/willie68/schematic2/backend:
+  github.com/willie68/schematics2/backend:
     config:
       all: true

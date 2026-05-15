@@ -6,9 +6,9 @@ import (
 	"strconv"
 
 	"dario.cat/mergo"
-	"github.com/willie68/schematic2/backend/internal/logging"
-	"github.com/willie68/schematic2/backend/internal/services/health"
-	"github.com/willie68/schematic2/backend/internal/services/shttp"
+	"github.com/willie68/schematics2/backend/internal/logging"
+	"github.com/willie68/schematics2/backend/internal/services/health"
+	"github.com/willie68/schematics2/backend/internal/services/shttp"
 	"gopkg.in/yaml.v3"
 )
 

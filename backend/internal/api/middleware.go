@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/willie68/schematic2/backend/internal/auth"
+	"github.com/willie68/schematics2/backend/internal/auth"
 )
 
 type ctxSubjectKey struct{}

@@ -8,7 +8,7 @@ adminpass: ${ADMIN_PASS}
 # http service definition
 http:
   # name of this service
-  servicename: schematic2
+  servicename: schematics2
   # port of the http server
   port: 8080
   # port of the https server for payload only

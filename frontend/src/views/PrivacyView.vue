@@ -40,8 +40,8 @@
         Diese Webseite verwendet Browser LocalStorage ausschließlich für technisch notwendige Daten:
       </p>
       <ul>
-        <li><code>schematic2_token</code> – Ihr Authentifizierungs-Token (JWT) zur Aufrechterhaltung der Sitzung</li>
-        <li><code>schematic2_cookie_consent</code> – Ihre Zustimmung zu dieser Datenschutzerklärung</li>
+        <li><code>schematics2_token</code> – Ihr Authentifizierungs-Token (JWT) zur Aufrechterhaltung der Sitzung</li>
+        <li><code>schematics2_cookie_consent</code> – Ihre Zustimmung zu dieser Datenschutzerklärung</li>
       </ul>
       <p>
         Diese Daten werden <strong>nur lokal in Ihrem Browser</strong> gespeichert und nicht an externe Server übertragen (außer dem notwendigen API-Token für Authentifizierung).

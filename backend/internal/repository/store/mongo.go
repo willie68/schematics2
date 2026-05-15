@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/samber/do/v2"
-	"github.com/willie68/schematic2/backend/internal/config"
-	"github.com/willie68/schematic2/backend/internal/domain/model"
-	"github.com/willie68/schematic2/backend/internal/logging"
+	"github.com/willie68/schematics2/backend/internal/config"
+	"github.com/willie68/schematics2/backend/internal/domain/model"
+	"github.com/willie68/schematics2/backend/internal/logging"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"

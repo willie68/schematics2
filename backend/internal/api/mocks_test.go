@@ -8,8 +8,8 @@ import (
 	"context"
 
 	mock "github.com/stretchr/testify/mock"
-	"github.com/willie68/schematic2/backend/internal/domain/model"
-	"github.com/willie68/schematic2/backend/internal/services/users"
+	"github.com/willie68/schematics2/backend/internal/domain/model"
+	"github.com/willie68/schematics2/backend/internal/services/users"
 )
 
 // newMockdocumentStore creates a new instance of mockdocumentStore. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

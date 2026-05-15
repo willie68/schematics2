@@ -12,7 +12,7 @@ let errorHandlers = {
 }
 
 api.interceptors.request.use((cfg) => {
-  const token = localStorage.getItem('schematic2_token')
+  const token = localStorage.getItem('schematics2_token')
   if (token) {
     cfg.headers.Authorization = `Bearer ${token}`
   }

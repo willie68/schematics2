@@ -20,7 +20,7 @@ if errorlevel 1 (
 echo TLS certificate generation complete!
 echo.
 echo Step 3: Building Go binaries...
-go build -ldflags="-s -w" -o ./bin/schematic2.exe ./cmd/server
+go build -ldflags="-s -w" -o ./bin/schematics2.exe ./cmd/server
 if errorlevel 1 (
     echo Error building server!
     exit /b 1

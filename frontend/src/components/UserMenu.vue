@@ -13,14 +13,14 @@
 
     <Dialog
       v-model:visible="infoVisible"
-      header="Über Schematic2"
+      header="Über Schematics2"
       :modal="true"
       :closable="true"
       style="width: 420px"
     >
-      <p><strong>Schematic2</strong> ist der Nachfolger von WilliesSchematicsWorld.</p>
+      <p><strong>Schematics2</strong></p>
       <p>Es ermöglicht das Indexieren, Suchen und Verwalten von Schaltplan-Dokumenten und Effektbeschreibungen.</p>
-      <p style="margin-top:1rem; font-size:0.85rem; color:#888">App Version: {{ APP_VERSION }}, Backend: {{ info.version }}</p>
+      <p style="margin-top:1rem; font-size:0.85rem; color:#888">Versionen: App {{ APP_VERSION }}, Backend {{ info.version }}</p>
       <p>Status: {{ info.status }}</p>
     </Dialog>
 
