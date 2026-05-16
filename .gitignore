@@ -36,3 +36,5 @@ dev_data/
 backend/configs/cert/
 
 schematics2.code-workspace
+
+backend/scripts/

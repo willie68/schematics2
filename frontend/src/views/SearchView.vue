@@ -442,13 +442,33 @@ function isImageFile(file) {
 
 async function loadFileData(file) {
   try {
-    const { data } = await api.get(`/api/v1/documents/${selectedDocument.value.id}/files/${encodeURIComponent(file.name)}`)
+    let url = `/api/v1/documents/${selectedDocument.value.id}/files/${encodeURIComponent(file.name)}`
+    
+    // Request PNG conversion for TIFF files (viewer only)
+    if (isTiffFile(file)) {
+      url += '?format=png'
+    }
+    
+    const { data } = await api.get(url)
     if (data && data.data) {
       file.data = data.data
+      // Update mimetype if it changed (e.g., TIFF converted to PNG)
+      if (data.mimetype) {
+        file.mimetype = data.mimetype
+      }
     }
   } catch (err) {
     info('Fehler beim Laden der Datei')
   }
+}
+
+function isTiffFile(file) {
+  if (!file) return false
+  const tiffMimes = ['image/tiff', 'image/x-tiff', 'image/vnd.tiff']
+  const tiffExts = ['.tif', '.tiff']
+  
+  if (tiffMimes.includes(file.mimetype)) return true
+  return tiffExts.some(ext => file.name?.toLowerCase().endsWith(ext))
 }
 
 function getFilePreviewUrl(file) {
@@ -469,14 +489,27 @@ function initImageZoom() {
 }
 
 function downloadImage() {
-  if (!selectedFile.value || !selectedFile.value.data) return
+  if (!selectedFile.value) return
   
-  const link = document.createElement('a')
-  link.href = 'data:' + selectedFile.value.mimetype + ';base64,' + selectedFile.value.data
-  link.download = selectedFile.value.name
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+  // For TIFF files, load the original file without conversion
+  const downloadData = async () => {
+    try {
+      let url = `/api/v1/documents/${selectedDocument.value.id}/files/${encodeURIComponent(selectedFile.value.name)}`
+      // Don't use format=png for downloads - get original file
+      const { data } = await api.get(url)
+      
+      const link = document.createElement('a')
+      link.href = 'data:' + data.mimetype + ';base64,' + data.data
+      link.download = data.name
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } catch (err) {
+      info('Fehler beim Herunterladen der Datei')
+    }
+  }
+  
+  downloadData()
 }
 
 async function confirmDeleteDocument() {

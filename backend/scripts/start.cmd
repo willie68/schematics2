@@ -1,3 +1,0 @@
-@echo off
-echo Starting Schematics2 server...
-.\bin\schematics2.exe -c ./configs/service_local.yaml

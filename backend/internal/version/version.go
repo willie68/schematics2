@@ -3,7 +3,7 @@ package version
 
 var (
 	// Version is the application version. Should be synced with ../../HISTORY.md
-	Version = "0.2.30"
+	Version = "0.2.33"
 
 	// BuildTime is set during build with -ldflags "-X internal/version.BuildTime=..."
 	BuildTime = ""

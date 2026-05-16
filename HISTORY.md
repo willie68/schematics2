@@ -1,5 +1,38 @@
 # History
 
+## 0.2.33 - 2026-05-16 (Backend)
+
+- **Unit Tests für TIFF-Konvertierung**: Umfangreiche Test-Suite hinzugefügt
+  - `converter_test.go`: 11 Unit Tests für `convertTiffToPng()` und `isTiffMimeType()`
+    - Tests für erfolgreiche Konvertierung, ungültige Daten, Corrupted data
+    - Tests für verschiedene TIFF-MIME-Type-Varianten
+    - Tests für Größen, Farbtreue und Performance
+  - `download_handler_test.go`: 5 Integrations-Tests für downloadFile-Endpoint
+    - Tests für ?format=png Parameter
+    - Tests für alle TIFF-MIME-Type-Varianten
+    - Tests für Non-TIFF Dateien (sollten nicht konvertiert werden)
+    - Tests für Fehlerfall bei korrupten TIFF-Daten
+  - **Alle 16 Tests bestehen erfolgreich**
+
+## 0.2.32 - 2026-05-16 (Backend & Frontend)
+
+- **TIFF-Viewer-Unterstützung**: Automatische Konvertierung TIFF→PNG für Viewer
+  - Backend: Neue `convertTiffToPng()` Funktion mit `golang.org/x/image/tiff` Dekodierung
+  - Backend: `downloadFile` Endpoint unterstützt `?format=png` Query-Parameter
+  - Frontend: `SearchView.loadFileData()` verwendet `?format=png` für TIFF-Dateien
+  - Frontend: `downloadImage()` lädt Original-TIFF für Download (keine Konvertierung)
+  - **Ergebnis**: TIFF-Dateien werden im Viewer als PNG angezeigt, bleiben aber beim Download original
+
+## 0.2.31 - 2026-05-16 (Frontend)
+
+- **TIF/TIFF Datei-Unterstützung**: Vollständige Unterstützung für TIFF-Dateien hinzugefügt
+  - `UploadDialog`: Accept-Attribut erweitert um `.tif` und `.tiff` Dateitypen
+  - `UploadDialog`: Robuste `getMimeTypeFromFilename()` Funktion hinzugefügt
+    - Bestimmt MIME-Type basierend auf Dateiendung (Fallback bei Browser-Inkompatibilität)
+    - Unterstützt: PDF, JPEG, PNG, GIF, BMP, TIF/TIFF
+  - `SearchView`: Viewer nutzt bereits alle TIFF-MIME-Type-Varianten (`image/tiff`, `image/x-tiff`, `image/vnd.tiff`)
+  - Dokumentation aktualisiert
+
 ## 0.2.30 - 2026-05-15 (Backend & Frontend)
 
 - **AppFooter**: Version-Information hinzugefügt

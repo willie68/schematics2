@@ -83,7 +83,7 @@
           @select="onFileSelect"
           :show-upload-button="false"
           :show-cancel-button="false"
-          accept=".pdf,.jpg,.jpeg,.png,.gif"
+          accept=".pdf,.jpg,.jpeg,.png,.gif,.tif,.tiff,.bmp"
           multiple
           style="width:100%"
         />
@@ -311,6 +311,26 @@ function removeTag(tag) {
   selectedTags.value = selectedTags.value.filter((entry) => normalizeTag(entry).toLowerCase() !== needle)
 }
 
+function getMimeTypeFromFilename(filename) {
+  if (!filename) {
+    return 'application/octet-stream'
+  }
+
+  const ext = filename.toLowerCase().substring(filename.lastIndexOf('.'))
+  const mimeTypes = {
+    '.pdf': 'application/pdf',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.gif': 'image/gif',
+    '.bmp': 'image/bmp',
+    '.tif': 'image/tiff',
+    '.tiff': 'image/tiff',
+  }
+
+  return mimeTypes[ext] || 'application/octet-stream'
+}
+
 async function onFileSelect(event) {
   const newFiles = event.files || []
   
@@ -321,10 +341,12 @@ async function onFileSelect(event) {
   for (const file of newFiles) {
     if (!existingNames.has(file.name)) {
       const data = await fileToBase64(file)
+      // Use file.type if available, otherwise determine from filename
+      const mimetype = file.type && file.type !== '' ? file.type : getMimeTypeFromFilename(file.name)
       form.value.files.push({
         name: file.name,
         page: 1,
-        mimetype: file.type,
+        mimetype: mimetype,
         type: '', // User must select
         data,
         isNew: true,

@@ -1,11 +1,13 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"image/png"
 	"io"
 	"log/slog"
 	"net/http"
@@ -24,6 +26,7 @@ import (
 	"github.com/willie68/schematics2/backend/internal/repository/connector"
 	"github.com/willie68/schematics2/backend/internal/services/users"
 	"github.com/willie68/schematics2/backend/internal/version"
+	"golang.org/x/image/tiff"
 )
 
 type documentStore interface {
@@ -659,6 +662,29 @@ func decodeBase64File(input string) ([]byte, error) {
 	return base64.StdEncoding.DecodeString(encoded)
 }
 
+// convertTiffToPng converts TIFF image data to PNG format
+func convertTiffToPng(tiffData []byte) ([]byte, error) {
+	// Decode TIFF using golang.org/x/image/tiff
+	img, err := tiff.Decode(bytes.NewReader(tiffData))
+	if err != nil {
+		return nil, fmt.Errorf("decode tiff: %w", err)
+	}
+
+	// Encode to PNG
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, img); err != nil {
+		return nil, fmt.Errorf("encode png: %w", err)
+	}
+
+	return buf.Bytes(), nil
+}
+
+// isTiffMimeType checks if a MIME type is TIFF
+func isTiffMimeType(mimeType string) bool {
+	mimeType = strings.ToLower(strings.TrimSpace(mimeType))
+	return mimeType == "image/tiff" || mimeType == "image/x-tiff" || mimeType == "image/vnd.tiff"
+}
+
 func (h *Handler) searchDocuments(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	tags := r.URL.Query()["tag"]
@@ -764,12 +790,28 @@ func (h *Handler) downloadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if conversion is requested (only for viewer, not for download)
+	format := r.URL.Query().Get("format")
+	mimetype := file.MIMEType
+
+	if format == "png" && isTiffMimeType(file.MIMEType) {
+		// Convert TIFF to PNG for viewer
+		convertedData, err := convertTiffToPng(data)
+		if err != nil {
+			h.log.Warn("failed to convert tiff to png", "error", err, "filename", file.Name)
+			// Fall back to returning original TIFF data
+		} else {
+			data = convertedData
+			mimetype = "image/png"
+		}
+	}
+
 	// Return as JSON with base64-encoded data
 	w.Header().Set("Content-Type", "application/json")
 	response := map[string]any{
 		"name":     file.Name,
 		"type":     file.Type,
-		"mimetype": file.MIMEType,
+		"mimetype": mimetype,
 		"page":     file.Page,
 		"data":     base64.StdEncoding.EncodeToString(data),
 	}
