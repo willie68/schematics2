@@ -84,6 +84,30 @@
         />
       </div>
 
+      <!-- Drop Zone -->
+      <div
+        @dragover.prevent="isDragging = true"
+        @dragleave.prevent="isDragging = false"
+        @drop.prevent="onFileDrop"
+        :style="{
+          border: isDragging ? '2px solid #3b82f6' : '2px dashed #d1d5db',
+          borderRadius: '8px',
+          padding: '2rem',
+          textAlign: 'center',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          backgroundColor: isDragging ? '#eff6ff' : '#f9fafb',
+        }"
+      >
+        <div style="display:flex; flex-direction:column; align-items:center; gap:0.5rem;">
+          <i class="pi pi-cloud-upload" :style="{ fontSize: isDragging ? '2rem' : '1.5rem', color: isDragging ? '#3b82f6' : '#9ca3af', transition: 'all 0.2s ease' }"></i>
+          <div>
+            <div style="font-weight:500; color:#1f2937;">Dateien hier ablegen</div>
+            <small style="color:#6b7280;">oder mit dem Button oben auswählen</small>
+          </div>
+        </div>
+      </div>
+
       <!-- File List with Types -->
       <div v-if="form.files.length > 0">
         <label style="display:block; margin-bottom:0.5rem; font-size:0.85rem">Dateitypen *</label>
@@ -151,6 +175,7 @@ const suggestedTags = ref([])
 const selectedTags = ref([])
 const currentTagQuery = ref('')
 const suggestedManufacturers = ref([])
+const isDragging = ref(false)
 
 const docTypes = [
   { label: 'Schaltplan', value: 'schematic' },
@@ -305,6 +330,43 @@ async function onFileSelect(event) {
   
   // Only add files that are not already in the list
   for (const file of newFiles) {
+    if (!existingNames.has(file.name)) {
+      const data = await fileToBase64(file)
+      // Use file.type if available, otherwise determine from filename
+      const mimetype = file.type && file.type !== '' ? file.type : getMimeTypeFromFilename(file.name)
+      form.value.files.push({
+        name: file.name,
+        page: 1,
+        mimetype: mimetype,
+        type: '', // User must select
+        data,
+      })
+      existingNames.add(file.name)
+    }
+  }
+}
+
+async function onFileDrop(event) {
+  isDragging.value = false
+  const files = event.dataTransfer?.files || []
+  
+  if (files.length === 0) {
+    return
+  }
+
+  // Get list of file names already added
+  const existingNames = new Set(form.value.files.map(f => f.name))
+  
+  // Only add files that are not already in the list
+  for (const file of files) {
+    // Check if file type is allowed
+    const ext = file.name.toLowerCase().substring(file.name.lastIndexOf('.'))
+    const allowedExts = ['.pdf', '.jpg', '.jpeg', '.png', '.gif', '.tif', '.tiff', '.bmp']
+    if (!allowedExts.includes(ext)) {
+      errorMessage.value = `Dateiformat "${ext}" nicht unterstützt. Erlaubt: PDF, JPG, PNG, GIF, TIF, BMP`
+      continue
+    }
+
     if (!existingNames.has(file.name)) {
       const data = await fileToBase64(file)
       // Use file.type if available, otherwise determine from filename
