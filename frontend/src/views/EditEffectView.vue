@@ -121,6 +121,31 @@
               {{ newImageFileName || 'keine Datei gewählt' }}
             </small>
           </div>
+
+          <!-- Drop Zone for Image -->
+          <div
+            @dragover.prevent="isDraggingImage = true"
+            @dragleave.prevent="isDraggingImage = false"
+            @drop.prevent="onImageDrop"
+            :style="{
+              border: isDraggingImage ? '2px solid #3b82f6' : '2px dashed #d1d5db',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              textAlign: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              backgroundColor: isDraggingImage ? '#eff6ff' : '#f9fafb',
+              marginTop: '0.5rem'
+            }"
+          >
+            <div style="display:flex; flex-direction:column; align-items:center; gap:0.5rem;">
+              <i class="pi pi-image" :style="{ fontSize: isDraggingImage ? '1.5rem' : '1.2rem', color: isDraggingImage ? '#3b82f6' : '#9ca3af', transition: 'all 0.2s ease' }"></i>
+              <div>
+                <div style="font-weight:500; color:#1f2937; font-size:0.9rem;">Bild hier ablegen</div>
+                <small style="color:#6b7280;">oder mit dem Button oben auswählen</small>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Submit Buttons -->
@@ -177,6 +202,7 @@ const connectorOptions = ref(['HI-A+', 'HI+A-', '3.5mm', 'USB', 'XLR', 'RJ45'])
 const newImage = ref(null)
 const newImageFileName = ref('')
 const fileInput = ref(null)
+const isDraggingImage = ref(false)
 
 const form = ref({
   effectType: '',
@@ -257,6 +283,18 @@ const onImageSelected = (event) => {
   if (file) {
     newImage.value = file
     newImageFileName.value = file.name
+  }
+}
+
+const onImageDrop = (event) => {
+  isDraggingImage.value = false
+  const files = event.dataTransfer?.files
+  if (files && files.length > 0) {
+    const file = files[0]
+    if (file.type.startsWith('image/')) {
+      newImage.value = file
+      newImageFileName.value = file.name
+    }
   }
 }
 

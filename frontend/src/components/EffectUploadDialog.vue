@@ -68,10 +68,35 @@
           @change="onFileSelected"
           style="width:100%;"
         />
-        <small style="color:#999; display:block; margin-top:0.25rem;" v-if="form.imageFileName">
-          Datei: {{ form.imageFileName }}
-        </small>
       </div>
+
+      <!-- Drop Zone for Image -->
+      <div
+        @dragover.prevent="isDraggingImage = true"
+        @dragleave.prevent="isDraggingImage = false"
+        @drop.prevent="onImageDrop"
+        :style="{
+          border: isDraggingImage ? '2px solid #3b82f6' : '2px dashed #d1d5db',
+          borderRadius: '8px',
+          padding: '1.5rem',
+          textAlign: 'center',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          backgroundColor: isDraggingImage ? '#eff6ff' : '#f9fafb',
+        }"
+      >
+        <div style="display:flex; flex-direction:column; align-items:center; gap:0.5rem;">
+          <i class="pi pi-image" :style="{ fontSize: isDraggingImage ? '1.5rem' : '1.2rem', color: isDraggingImage ? '#3b82f6' : '#9ca3af', transition: 'all 0.2s ease' }"></i>
+          <div>
+            <div style="font-weight:500; color:#1f2937; font-size:0.9rem;">Bild hier ablegen</div>
+            <small style="color:#6b7280;">oder mit dem Button oben auswählen</small>
+          </div>
+        </div>
+      </div>
+
+      <small style="color:#999; display:block; margin-top:0.25rem;" v-if="form.imageFileName">
+        Datei: {{ form.imageFileName }}
+      </small>
 
       <div style="color:#e74c3c; font-size:0.9em;" v-if="errorMessage">{{ errorMessage }}</div>
 
@@ -113,6 +138,7 @@ const fileInput = ref(null)
 const uploading = ref(false)
 const errorMessage = ref('')
 const manufacturerSuggestions = ref([])
+const isDraggingImage = ref(false)
 
 const connectorOptions = [
   'HI-A+',
@@ -171,6 +197,20 @@ const onFileSelected = (event) => {
   if (file) {
     form.value.imageFile = file
     form.value.imageFileName = file.name
+  }
+}
+
+const onImageDrop = (event) => {
+  isDraggingImage.value = false
+  const files = event.dataTransfer?.files
+  if (files && files.length > 0) {
+    const file = files[0]
+    if (file.type.startsWith('image/')) {
+      form.value.imageFile = file
+      form.value.imageFileName = file.name
+    } else {
+      errorMessage.value = 'Bitte wählen Sie eine Bilddatei aus'
+    }
   }
 }
 
