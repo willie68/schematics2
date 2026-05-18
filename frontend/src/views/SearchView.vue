@@ -331,36 +331,38 @@ async function onTagSuggest(event) {
 }
 
 function onLimitChange() {
-  currentSkip.value = 0
   search()
 }
 
 function onSort(event) {
   sortField.value = event.sortField
   sortOrder.value = event.sortOrder
-  currentSkip.value = 0
   search()
 }
 
 function prevPage() {
   currentSkip.value = Math.max(0, currentSkip.value - selectedLimit.value)
-  search()
+  search(false)
 }
 
 function nextPage() {
   currentSkip.value = currentSkip.value + selectedLimit.value
-  search()
+  search(false)
 }
 
 function togglePrivateAndSearch() {
   privateOnly.value = !privateOnly.value
-  currentSkip.value = 0
   search()
 }
 
-async function search() {
+async function search(resetPage = true) {
   try {
     isSearching.value = true
+    
+    // Reset pagination when starting a new search
+    if (resetPage) {
+      currentSkip.value = 0
+    }
     
     // Reset detail panel when searching
     selectedDocument.value = null
