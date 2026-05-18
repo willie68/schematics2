@@ -129,7 +129,7 @@ go run cmd/import-all/main.go -base-dir ./testdata -schematics=false -effecttype
 - `GET /api/v1/tags` - Liste alle Tags auf
 - `GET /api/v1/tags/suggest?q=<prefix>&limit=<n>` - Schlag Tags vor (Prefix-Match, case-insensitiv, normalisiert)
 - `GET /api/v1/manufacturers/suggest?q=<prefix>&limit=<n>` - Schlag Hersteller vor (Prefix-Match, case-insensitiv, case-preserved)
-- `POST /api/v1/documents/index` (auth required) - Indexiere ein Dokument mit Tags
+- `POST /api/v1/documents` (auth required) - Erzeuge ein neues Dokument mit Tags
 - `GET /api/v1/documents/search?q=<query>&tag=<t1>&tag=<t2>` (auth required) - Suche mit Volltext und Tags
 
 ### Effects API

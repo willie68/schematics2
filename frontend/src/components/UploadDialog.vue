@@ -447,7 +447,7 @@ async function submit() {
       files: form.value.files,
     }
 
-    await api.post('/api/v1/documents/index', doc)
+    await api.post('/api/v1/documents', doc)
     close()
     emit('uploaded')
   } catch (err) {

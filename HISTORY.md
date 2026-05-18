@@ -1,5 +1,12 @@
 # History
 
+## 0.2.36 - 2026-05-18 (Backend & Frontend)
+
+- **REST-konforme API**: Dokumenten-Erstellungs-Endpoint standardisiert
+  - Backend: `POST /api/v1/documents` für Dokumentenerstellung (REST-konform)
+  - Frontend: Entsprechende Anpassung in Upload-Dialog
+  - **Ergebnis**: API folgt jetzt konsistent RESTful-Konventionen
+
 ## 0.2.33 - 2026-05-16 (Backend)
 
 - **Unit Tests für TIFF-Konvertierung**: Umfangreiche Test-Suite hinzugefügt

@@ -126,26 +126,35 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 
 	r.Route("/api/v1", func(api chi.Router) {
 		api.Get("/info", h.info)
+
 		api.Post("/auth/login", h.login)
 		api.Post("/auth/register", h.register)
+
 		api.Get("/tags", h.listTags)
 		api.Get("/tags/suggest", h.suggestTags)
+
 		api.Get("/manufacturers/suggest", h.suggestManufacturers)
+
 		api.Get("/effecttypes", h.listEffectTypes)
+
 		api.Get("/documents/search", h.searchDocuments)
 		api.Get("/documents/{id}/files/{filename}", h.downloadFile)
+
 		api.Get("/effects/search", h.searchEffects)
 		api.Get("/effects/{id}/image", h.getEffectImage)
 		api.Get("/effects/{id}", h.getEffect)
+
 		api.Get("/connectors/{name}", h.getConnectorImage)
 
 		api.Group(func(protected chi.Router) {
 			protected.Use(h.authMiddleware)
 			protected.Get("/users/me", h.me)
 			protected.Post("/users/change-password", h.changePassword)
-			protected.Post("/documents/index", h.indexDocument)
+
+			protected.Post("/documents", h.createDocument)
 			protected.Patch("/documents/{id}", h.updateDocument)
 			protected.Delete("/documents/{id}", h.deleteDocument)
+
 			protected.Post("/effects", h.createEffect)
 			protected.Patch("/effects/{id}", h.updateEffect)
 			protected.Delete("/effects/{id}", h.deleteEffect)
@@ -344,7 +353,7 @@ func (h *Handler) changePassword(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *Handler) indexDocument(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) createDocument(w http.ResponseWriter, r *http.Request) {
 	var payload map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		respondError(w, http.StatusBadRequest, "invalid payload")
