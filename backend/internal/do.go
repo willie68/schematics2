@@ -10,11 +10,11 @@ import (
 	"github.com/samber/do/v2"
 	"github.com/willie68/schematics2/backend/internal/api"
 	"github.com/willie68/schematics2/backend/internal/config"
+	"github.com/willie68/schematics2/backend/internal/domain/index"
 	"github.com/willie68/schematics2/backend/internal/logging"
 	"github.com/willie68/schematics2/backend/internal/repository/blob"
 	"github.com/willie68/schematics2/backend/internal/repository/store"
 	"github.com/willie68/schematics2/backend/internal/services/health"
-	"github.com/willie68/schematics2/backend/internal/services/index"
 	"github.com/willie68/schematics2/backend/internal/services/shttp"
 	"github.com/willie68/schematics2/backend/internal/services/users"
 	"github.com/willie68/schematics2/backend/internal/version"
@@ -47,11 +47,11 @@ func InitServices(inj do.Injector, cfg config.Config) error {
 	if err = newDocumentStore(inj); err != nil {
 		return err
 	}
-	do.ProvideValue(inj, index.NewMongoIndex(inj))
 
 	if err = newUserService(inj); err != nil {
 		return err
 	}
+	do.ProvideValue(inj, index.New(inj))
 
 	return InitRESTService(inj, cfg)
 }

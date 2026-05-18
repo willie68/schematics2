@@ -58,7 +58,7 @@ type userStore interface {
 }
 
 type documentIndex interface {
-	Search(query string, tags []string, skip, limit int64, sortField string, sortOrder int, privateOnly, isAuthenticated bool, username string) model.PagedSearchResult
+	Search(query model.Query) model.PagedSearchResult
 }
 
 type blobStore interface {
@@ -721,13 +721,31 @@ func (h *Handler) searchDocuments(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	paged := h.index.Search(query, tags, skip, limit, sortField, sortOrder, privateOnly, isAuthenticated, username)
+	tags = normTags(tags)
+
+	queryObj := model.Query{
+		Query: query,
+		Tags:  tags,
+		Pagination: model.Pagination{
+			Skip:  skip,
+			Limit: limit,
+		},
+		Sort: model.Sort{
+			Field: sortField,
+			Order: sortOrder,
+		},
+		PrivateOnly:     privateOnly,
+		IsAuthenticated: isAuthenticated,
+		Username:        username,
+	}
+
+	paged := h.index.Search(queryObj)
 	respondJSON(w, http.StatusOK, map[string]any{
 		"results": paged.Results,
 		"count":   len(paged.Results),
 		"total":   paged.Total,
-		"skip":    paged.Skip,
-		"limit":   paged.Limit,
+		"skip":    paged.Pagination.Skip,
+		"limit":   paged.Pagination.Limit,
 	})
 }
 
@@ -898,8 +916,8 @@ func (h *Handler) searchEffects(w http.ResponseWriter, r *http.Request) {
 		"results": result.Items,
 		"count":   len(result.Items),
 		"total":   result.Total,
-		"skip":    result.Skip,
-		"limit":   result.Limit,
+		"skip":    result.Pagination.Skip,
+		"limit":   result.Pagination.Limit,
 	})
 }
 
@@ -1222,4 +1240,15 @@ func (h *Handler) deleteEffect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusOK, map[string]any{"status": "deleted", "id": effectID})
+}
+
+func normTags(tags []string) []string {
+	normTags := make([]string, 0, len(tags))
+	for _, t := range tags {
+		trimmed := strings.ToLower(strings.TrimSpace(t))
+		if trimmed != "" {
+			normTags = append(normTags, trimmed)
+		}
+	}
+	return normTags
 }

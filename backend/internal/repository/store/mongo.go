@@ -140,9 +140,22 @@ func (s *MongoStore) ensureIndexes() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
+	// Indices for documents collection
+	// Using B-tree indices for regex-based search (not text search)
 	indexes := []mongo.IndexModel{
+		// Search fields - used for prefix matching and term search with $regex
+		{Keys: bson.D{{Key: "manufacturer", Value: 1}}},
+		{Keys: bson.D{{Key: "model", Value: 1}}},
+		{Keys: bson.D{{Key: "subtitle", Value: 1}}},
+		{Keys: bson.D{{Key: "description", Value: 1}}},
 		{Keys: bson.D{{Key: "tags", Value: 1}}},
-		{Keys: bson.D{{Key: "manufacturer", Value: "text"}, {Key: "model", Value: "text"}, {Key: "subtitle", Value: "text"}, {Key: "description", Value: "text"}, {Key: "files.name", Value: "text"}, {Key: "files.type", Value: "text"}}},
+
+		// Access control fields
+		{Keys: bson.D{{Key: "privateFile", Value: 1}}},
+		{Keys: bson.D{{Key: "owner", Value: 1}}},
+
+		// Compound index for private file + owner queries
+		{Keys: bson.D{{Key: "privateFile", Value: 1}, {Key: "owner", Value: 1}}},
 	}
 
 	_, err := s.col.Indexes().CreateMany(ctx, indexes)
@@ -518,8 +531,9 @@ func (s *MongoStore) List() []model.Document {
 	return out
 }
 
-// Search executes a full-text and tag-based search using MongoDB queries
-func (s *MongoStore) Search(filter model.SearchFilter) model.PagedSearchResult {
+// Search executes a search using parsed query terms with regex and tag-based filtering.
+// Supports prefix matching, AND/OR/NOT operators, and tag filters.
+func (s *MongoStore) SearchStore(filter model.Query) model.PagedSearchResult {
 	if s.col == nil {
 		return model.PagedSearchResult{Results: []model.SearchResult{}}
 	}
@@ -527,106 +541,33 @@ func (s *MongoStore) Search(filter model.SearchFilter) model.PagedSearchResult {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// Build MongoDB filter
-	var mongoFilter bson.D
-
-	if filter.Query == "" && len(filter.Tags) == 0 {
-		mongoFilter = bson.D{}
-	} else if filter.Query == "" && len(filter.Tags) > 0 {
-		mongoFilter = bson.D{
-			{Key: "tags", Value: bson.D{
-				{Key: "$all", Value: filter.Tags},
-			}},
-		}
-	} else if filter.Query != "" && len(filter.Tags) == 0 {
-		mongoFilter = bson.D{
-			{Key: "$text", Value: bson.D{
-				{Key: "$search", Value: filter.Query},
-			}},
-		}
-	} else {
-		mongoFilter = bson.D{
-			{Key: "$and", Value: []bson.D{
-				{
-					{Key: "$text", Value: bson.D{
-						{Key: "$search", Value: filter.Query},
-					}},
-				},
-				{
-					{Key: "tags", Value: bson.D{
-						{Key: "$all", Value: filter.Tags},
-					}},
-				},
-			}},
-		}
-	}
-
-	// Add privateFile filter based on authentication and privateOnly flag
-	// Guests: only public documents (privateFile != true)
-	// Authenticated with privateOnly=false: public documents + own private documents
-	// Authenticated with privateOnly=true: only own private documents
-	var privateFileFilter bson.D
-	if !filter.IsAuthenticated {
-		// Guests: only public documents
-		privateFileFilter = bson.D{{Key: "privateFile", Value: bson.D{{Key: "$ne", Value: true}}}}
-	} else if filter.PrivateOnly {
-		// Authenticated with private filter ON: only own private documents
-		privateFileFilter = bson.D{
-			{Key: "$and", Value: []bson.D{
-				{{Key: "privateFile", Value: true}},
-				{{Key: "owner", Value: filter.Username}},
-			}},
-		}
-	} else {
-		// Authenticated with private filter OFF: public documents + own private documents
-		privateFileFilter = bson.D{
-			{Key: "$or", Value: []bson.D{
-				{{Key: "privateFile", Value: bson.D{{Key: "$ne", Value: true}}}},
-				{
-					{Key: "$and", Value: []bson.D{
-						{{Key: "privateFile", Value: true}},
-						{{Key: "owner", Value: filter.Username}},
-					}},
-				},
-			}},
-		}
-	}
-
-	if len(mongoFilter) == 0 {
-		mongoFilter = privateFileFilter
-	} else {
-		mongoFilter = bson.D{
-			{Key: "$and", Value: []bson.D{
-				mongoFilter,
-				privateFileFilter,
-			}},
-		}
-	}
+	// Build MongoDB filter from parsed query terms
+	mongoFilterM := s.buildMongoFilterFromParsedQuery(filter)
 
 	// Count total matching documents
-	total, err := s.col.CountDocuments(ctx, mongoFilter)
+	total, err := s.col.CountDocuments(ctx, mongoFilterM)
 	if err != nil {
 		s.logger.Error("count search results failed", "error", err)
 		return model.PagedSearchResult{Results: []model.SearchResult{}}
 	}
 
 	sortField := "_id"
-	if filter.SortField != "" {
-		sortField = filter.SortField
+	if filter.Sort.Field != "" {
+		sortField = filter.Sort.Field
 	}
-	sortOrder := 1
-	if filter.SortOrder == -1 {
+	sortOrder := int32(1)
+	if filter.Sort.Order == -1 {
 		sortOrder = -1
 	}
 	opts := options.Find().SetSort(bson.D{{Key: sortField, Value: sortOrder}})
-	if filter.Skip > 0 {
-		opts.SetSkip(filter.Skip)
+	if filter.Pagination.Skip > 0 {
+		opts.SetSkip(filter.Pagination.Skip)
 	}
-	if filter.Limit > 0 {
-		opts.SetLimit(filter.Limit)
+	if filter.Pagination.Limit > 0 {
+		opts.SetLimit(filter.Pagination.Limit)
 	}
 
-	cur, err := s.col.Find(ctx, mongoFilter, opts)
+	cur, err := s.col.Find(ctx, mongoFilterM, opts)
 	if err != nil {
 		s.logger.Error("search documents failed", "error", err)
 		return model.PagedSearchResult{Results: []model.SearchResult{}}
@@ -659,10 +600,123 @@ func (s *MongoStore) Search(filter model.SearchFilter) model.PagedSearchResult {
 	}
 
 	return model.PagedSearchResult{
-		Results: out,
-		Total:   total,
-		Skip:    filter.Skip,
-		Limit:   filter.Limit,
+		Results:    out,
+		Total:      total,
+		Pagination: filter.Pagination,
+	}
+}
+
+// buildMongoFilterFromParsedQuery constructs a MongoDB filter from the parsed query.
+// It combines required terms (AND), optional terms (OR), excluded terms (NOT), and tag filters.
+func (s *MongoStore) buildMongoFilterFromParsedQuery(filter model.Query) bson.M {
+	var conditions []bson.M
+
+	parsed := filter.ParsedQuery
+
+	// Build filter for required terms (ALL must match - AND logic)
+	if len(parsed.Required) > 0 {
+		for _, term := range parsed.Required {
+			conditions = append(conditions, s.buildRegexFilterForTerm(term))
+		}
+	}
+
+	// Build filter for optional terms (AT LEAST ONE must match - OR logic)
+	if len(parsed.Optional) > 0 {
+		var optionalConditions []bson.M
+		for _, term := range parsed.Optional {
+			optionalConditions = append(optionalConditions, s.buildRegexFilterForTerm(term))
+		}
+		if len(optionalConditions) > 0 {
+			conditions = append(conditions, bson.M{"$or": optionalConditions})
+		}
+	}
+
+	// Build filter for excluded terms (NONE must match - NOT logic)
+	if len(parsed.Excluded) > 0 {
+		for _, term := range parsed.Excluded {
+			exclusionFilter := s.buildRegexFilterForTerm(term)
+			// Negate the filter using $nor
+			conditions = append(conditions, bson.M{
+				"$nor": []bson.M{exclusionFilter},
+			})
+		}
+	}
+
+	// Build filter for tag filters (ALL tags must be present - AND logic)
+	if len(parsed.TagFilters) > 0 {
+		conditions = append(conditions, bson.M{
+			"tags": bson.M{"$all": parsed.TagFilters},
+		})
+	}
+
+	// Add privateFile filter based on authentication and privateOnly flag
+	privateFileFilter := s.buildPrivateFileFilter(filter.IsAuthenticated, filter.PrivateOnly, filter.Username)
+	if len(privateFileFilter) > 0 {
+		conditions = append(conditions, privateFileFilter)
+	}
+
+	// Combine all conditions with $and
+	if len(conditions) == 0 {
+		return bson.M{}
+	}
+	if len(conditions) == 1 {
+		return conditions[0]
+	}
+	return bson.M{"$and": conditions}
+}
+
+// buildRegexFilterForTerm builds a regex filter that matches the term in any searchable field.
+// Searches in: manufacturer, model, subtitle, description, and tags.
+// Prefix match if term.IsPrefix is true (uses ^), otherwise full-word match.
+func (s *MongoStore) buildRegexFilterForTerm(term model.QueryTerm) bson.M {
+	pattern := term.Value
+	if term.IsPrefix {
+		pattern = "^" + term.Value
+	}
+
+	regexFilter := bson.M{"$regex": pattern, "$options": "i"} // case-insensitive
+
+	// Match in any of these fields (OR logic)
+	return bson.M{
+		"$or": []bson.M{
+			{"manufacturer": regexFilter},
+			{"model": regexFilter},
+			{"subtitle": regexFilter},
+			{"description": regexFilter},
+			{"tags": regexFilter},
+		},
+	}
+}
+
+// buildPrivateFileFilter constructs the filter for private/public document access.
+// Guests: only public documents (privateFile != true)
+// Authenticated with privateOnly=false: public documents + own private documents
+// Authenticated with privateOnly=true: only own private documents
+func (s *MongoStore) buildPrivateFileFilter(isAuthenticated, privateOnly bool, username string) bson.M {
+	if !isAuthenticated {
+		// Guests: only public documents
+		return bson.M{"privateFile": bson.M{"$ne": true}}
+	}
+	if privateOnly {
+		// Authenticated with private filter ON: only own private documents
+		return bson.M{
+			"$and": []bson.M{
+				{"privateFile": true},
+				{"owner": username},
+			},
+		}
+	}
+	// Authenticated with private filter OFF: public documents + own private documents
+	return bson.M{
+		"$or": []bson.M{
+			{"privateFile": bson.M{"$ne": true}},
+			{
+				"$and": []bson.M{
+					{"privateFile": true},
+					{"owner": username},
+				},
+			},
+		},
 	}
 }
 

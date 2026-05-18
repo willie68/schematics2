@@ -1,6 +1,6 @@
 {
   "name": "schematics2-frontend",
-  "version": "0.2.36",
+  "version": "0.2.38",
   "private": true,
   "type": "module",
   "scripts": {

@@ -1,7 +1,7 @@
 <template>
   <section class="card">
     <h2>Dokumentsuche</h2>
-    <p class="muted">Durchsuche Schaltpläne, Dokumentationen und PDFs über Tags und Volltext.</p>
+    <p class="muted">Durchsuche Schaltpläne, Dokumentationen und PDFs über Tags und Volltext.<br/> Suchoperatoren: <code>+Begriff</code> (erforderlich), <code>-Begriff</code> (ausschließen), <code>Begriff*</code> (Prefix-Matching). Mehrere Begriffe (ohne + oder -) werden als ODER verknüpft. <br/>Tags werden immer UND verknüpft.</p>
 
     <div style="display:grid; gap:0.8rem; margin-bottom:1rem;">
       <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem; align-items:center;">

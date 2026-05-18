@@ -1,5 +1,34 @@
 # History
 
+## 0.2.38 - 2026-05-18 (Backend & Frontend)
+
+- **Suchfunktion vollständig integriert**: Indizes in Applikation + benutzerfreundliche Dokumentation
+  - **Backend**: MongoDB B-tree Indizes in `ensureIndexes()` integriert statt separates Init-Skript
+    - Automatische Index-Erstellung beim App-Start (Prepare-Methode)
+    - Indizes auf: manufacturer, model, subtitle, description, tags, privateFile, owner, compound (privateFile+owner)
+  - **Frontend**: Erweiterte Such-Hilfetext mit Syntax-Erklärung in SearchView
+    - Nutzer sehen direkt alle Operatoren: `+Begriff` (UND), `-Begriff` (NOT), `Begriff*` (Prefix)
+    - Hinweis auf OR-Verknüpfung von Leerzeichen und UND-Verknüpfung von Tags
+  - **Dokumentation**: `backend/SEARCH.md` enthält vollständige API-Spezifikation und Performance-Tipps
+  - **Ergebnis**: Suchfunktion ist vollständig dokumentiert und produktionsreif
+
+## 0.2.37 - 2026-05-18 (Backend)
+
+- **Erweiterte Suchfunktion mit Prefix- und Operatoren-Unterstützung**: Flexible Query-Verarbeitung
+  - Query-Parser: Unterstützt Prefix-Matching (`fend*`), AND-Operator (`+term`), OR-Operator (Leerzeichen), NOT-Operator (`-term`)
+  - MongoDB Filter-Builder: Nutzt `$regex` statt `$text` für bessere Performance und Flexibilität
+  - Neue Typen: `ParsedQuery`, `QueryTerm` in `domain/model/index.go`
+  - Parser-Logik: `parseQuery()` in `domain/index/index.go` mit umfassender Dokumentation
+  - Filter-Builder: `buildMongoFilterFromParsedQuery()`, `buildRegexFilterForTerm()`, `buildPrivateFileFilter()` in `repository/store/mongo.go`
+  - **Unit Tests**: 34 Tests für Query-Parser und Filter-Builder (alle bestanden ✅)
+  - **Indizes**: MongoDB B-tree Indizes auf manufacturer, model, subtitle, description, tags
+  - **Dokumentation**: `SEARCH.md` mit Beispielen, Performance-Tipps, Index-Management
+  - **Beispiel-Queries**: 
+    - `"fend*"` → Prefix-Match (fender, fendora, etc.)
+    - `"fender +bassman"` → Beide Begriffe müssen vorhanden sein (UND)
+    - `"fend* +bassm*"` → Prefix mit UND-Verknüpfung
+    - `"+tube -broken"` → Muss "tube" haben, darf nicht "broken" haben
+
 ## 0.2.36 - 2026-05-18 (Backend & Frontend)
 
 - **REST-konforme API**: Dokumenten-Erstellungs-Endpoint standardisiert

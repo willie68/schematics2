@@ -76,8 +76,10 @@ func (m *MongoStore) SearchEffects(ctx context.Context, query string, skip, limi
 	return model.PagedEffects{
 		Items: effects,
 		Total: total,
-		Skip:  skip,
-		Limit: limit,
+		Pagination: model.Pagination{
+			Skip:  skip,
+			Limit: limit,
+		},
 	}, nil
 }
 

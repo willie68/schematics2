@@ -4,11 +4,17 @@ Schematics2 ist der Nachfolger von WilliesSchematicsWorld als Monorepo.
 
 Das Repository ist mit GitHub unter https://github.com/willie68/schematic verknüpft.
 
-**Version: Backend 0.2.32, Frontend 0.2.31**
+**Version: Backend 0.2.38, Frontend 0.2.38**
 
 ## Features
 
 - **Dokumentsuche**: Web-Frontend zur Suche in Schaltplänen, Dokumentationen und weiteren Dateien (PNG, JPG, PDF, TIF/TIFF, ...)
+  - **Erweiterte Such-Syntax**: Unterstützung für Operatoren und Prefix-Matching
+    - `+Begriff` für UND-Verknüpfung (erforderlich)
+    - `-Begriff` zum Ausschließen (NOT-Operator)
+    - `Begriff*` für Prefix-Matching (z.B. "LM*" findet LM358, LM339...)
+    - Mehrere Begriffe ohne Operator werden mit OR verknüpft
+  - **Flexible Indizierung**: MongoDB B-tree Indizes auf Hersteller, Modell, Untertitel, Beschreibung und Tags
 - **Tag-System**: Vorindizierung über Tags und Volltextsuche über indizierte Inhalte
 - **Image Viewer**: Native Zoom, Pan, Rotate, und Download für Bilddateien mit automatischer TIFF→PNG-Konvertierung für Viewer
   - Unterstützte Formate: PNG, JPG, GIF, BMP, TIF/TIFF
