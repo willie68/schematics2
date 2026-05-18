@@ -1,5 +1,11 @@
 # History
 
+## 0.2.39 - 2026-05-18 (Frontend)
+
+- **ZIP-Datei-Upload**: Unterstützung für ZIP-Archiv-Uploads hinzugefügt
+  - Frontend: ZIP in accept-Attribut und MIME-Type Mapping erweitert
+  - Ermöglicht das Hochladen von komprimierten Dokumenten
+
 ## 0.2.38 - 2026-05-18 (Backend & Frontend)
 
 - **Suchfunktion vollständig integriert**: Indizes in Applikation + benutzerfreundliche Dokumentation
