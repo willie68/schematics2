@@ -83,7 +83,7 @@
           @select="onFileSelect"
           :show-upload-button="false"
           :show-cancel-button="false"
-          accept=".pdf,.jpg,.jpeg,.png,.gif,.tif,.tiff,.bmp"
+          accept=".pdf,.jpg,.jpeg,.png,.gif,.tif,.tiff,.bmp,.zip"
           multiple
           style="width:100%"
         />
@@ -352,6 +352,7 @@ function getMimeTypeFromFilename(filename) {
     '.bmp': 'image/bmp',
     '.tif': 'image/tiff',
     '.tiff': 'image/tiff',
+    '.zip': 'application/zip',
   }
 
   return mimeTypes[ext] || 'application/octet-stream'
