@@ -30,11 +30,12 @@
       </p>
     </Fieldset>
     <div style="display:grid; gap:0.8rem; margin-bottom:1rem;">
-      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem; align-items:center;">
+      <div class="search-controls" style="display:grid; grid-template-columns:1fr 1fr auto; gap:0.5rem; align-items:center;">
         <InputText 
           v-model="query" 
           placeholder="Suche nach Begriffen"
           @keydown.enter="search"
+          class="search-query"
           style="width:100%"
         />
         <AutoComplete
@@ -44,9 +45,10 @@
           placeholder="Tags auswählen"
           multiple
           forceSelection
+          class="search-tags"
           style="width:100%"
         />
-        <div style="display:flex; gap:0.5rem; justify-content:flex-end; align-items:center;">
+        <div class="search-actions" style="display:flex; gap:0.5rem; justify-content:flex-end; align-items:center;">
           <Button v-if="isLoggedIn"
             icon="pi pi-lock" 
             :disabled="!isLoggedIn"
@@ -457,7 +459,7 @@ const query = ref('')
 const selectedTags = ref([])
 const suggestedTags = ref([])
 const results = ref([])
-const showHelpPanel = ref(false) // Collapsed by default on mobile
+const showHelpPanel = ref(true) // collapsed=true → zugeklappt beim Start
 const showUploadDialog = ref(false)
 const showEditDialog = ref(false)
 const selectedDocument = ref(null)
@@ -913,6 +915,16 @@ async function onDocumentUpdated() {
 
 /* On mobile, show fieldset and hide desktop text */
 @media (max-width: 767px) {
+  .search-controls {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto !important;
+    gap: 0.5rem !important;
+  }
+
+  .search-actions {
+    justify-content: flex-start !important;
+    gap: 0.5rem !important;
+  }
+
   .doc-type-icon {
     width: 1.2rem;
     height: 1.2rem;

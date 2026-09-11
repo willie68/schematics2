@@ -1,18 +1,22 @@
 # History
 
-<<<<<<< Updated upstream
-## 0.3.9 - 2026-08-11 (Backend)
+## 0.3.10 - 2026-09-11 (Backend & Frontend)
 
-- **GELF via TCP**: `logging.go` unterstützt jetzt GELF-Versand via TCP (zusätzlich zu UDP).
+- **Frontend**: App-Logo und Favicon (SVG/PNG) im Header und in `index.html`.
+- **Frontend**: Mobile Suchzeile — Search-Feld breiter, Lücke vor dem Suchbutton geschlossen.
+- **Frontend**: Hilfe in der mobilen Suche startet zugeklappt.
+- **HISTORY.md**: Merge-Konflikt in 0.3.9 bereinigt.
+- **Backend**: API-Mocks (`mocks_test.go`) aktualisiert.
+- **Tooling**: Cursor Release-Skill unter `.cursor/skills/release/`.
+- **Frontend/Backend**: Versionsstände auf `0.3.10` angehoben.
+
+## 0.3.9 - 2026-08-23 (Backend & Frontend)
+
+- **GELF via TCP**: `logging.go` unterstützt GELF-Versand via TCP (zusätzlich zu UDP).
   - Neue Config-Option `logging.gelf-protocol: tcp` (Standard: `udp`).
-  - Nutzt Bibliothek `github.com/slukits/graylog`.
+- **Backend**: Nil-Pointer-Check in `GetHash()` ergänzt, Absturz bei fehlendem Container verhindert.
+- **Frontend/Backend**: Versionsstände auf `0.3.9` angehoben.
 
-=======
-## 0.3.9 - 2026-07-02 (Backend & Frontend)
-- **Frontend**: Version auf 0.3.9 angehoben
-- **Backend**: Version auf 0.3.9 angehoben
-  - Nil pointer check in `GetHash()` hinzugefügt, um Absturz bei fehlendem Container zu verhindern
->>>>>>> Stashed changes
 ## 0.3.8 - 2026-07-01 (Backend & Frontend)
 
 - **NS_ERROR_NET_RESET Fehler bei Upload/Presence/PATCH behoben**:

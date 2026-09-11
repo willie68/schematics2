@@ -2,7 +2,8 @@
   <div class="shell">
     <header class="card app-header" :class="{ 'hide-on-secondary-mobile': hideHeaderOnMobile }" style="margin-bottom: 1rem">
       <div class="app-header-content" style="display:flex; align-items:center; justify-content:space-between; gap: 1rem; flex-wrap: wrap;">
-        <div>
+        <div class="brand">
+          <img class="brand-logo" :src="logoUrl" width="40" height="40" alt="" />
           <h1 style="margin-bottom:0.2rem">Schematics2</h1>
         </div>
         <nav style="display:flex; align-items:center; gap:0.6rem;">
@@ -71,6 +72,7 @@ const router = useRouter()
 const route = useRoute()
 const { isLoggedIn, logout } = useAuth()
 const { error: showError } = useToast()
+const logoUrl = `${import.meta.env.BASE_URL}logo.svg`
 
 // Hide header on search and effects pages on mobile devices
 const hideHeaderOnMobile = computed(() => {
@@ -100,6 +102,20 @@ onMounted(() => {
 
 .app-header-content {
   gap: 1rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.brand-logo {
+  width: 2.4rem;
+  height: 2.4rem;
+  flex-shrink: 0;
+  border-radius: 0.55rem;
+  display: block;
 }
 
 .home-avatar {
@@ -143,6 +159,11 @@ onMounted(() => {
     height: 2rem;
     font-size: 0.85rem;
   }
+
+  .brand-logo {
+    width: 2rem;
+    height: 2rem;
+  }
 }
 
 /* Mobile responsive - landscape (576px - 767px) */
@@ -160,6 +181,11 @@ onMounted(() => {
     width: 2.2rem;
     height: 2.2rem;
     font-size: 0.9rem;
+  }
+
+  .brand-logo {
+    width: 2.2rem;
+    height: 2.2rem;
   }
 }
 </style>

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Schematics2">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="68%">
+      <stop offset="0%" stop-color="#2aa8e0"/>
+      <stop offset="55%" stop-color="#0077b6"/>
+      <stop offset="100%" stop-color="#0a4d68"/>
+    </radialGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+  <!-- Document outline -->
+  <path
+    d="M34 28h46l14 14v58a8 8 0 0 1-8 8H34a8 8 0 0 1-8-8V36a8 8 0 0 1 8-8z"
+    fill="none"
+    stroke="#fff"
+    stroke-width="7"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M80 28v12a6 6 0 0 0 6 6h12"
+    fill="none"
+    stroke="#fff"
+    stroke-width="7"
+    stroke-linejoin="round"
+  />
+  <!-- Circuit traces -->
+  <g fill="none" stroke="#fff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- left vertical into pads -->
+    <path d="M46 52v36"/>
+    <path d="M46 70h16"/>
+    <!-- resistor zigzag -->
+    <path d="M62 54h6l4-7 5 14 5-14 4 7h6"/>
+    <!-- diode -->
+    <path d="M88 54v14"/>
+    <path d="M82 61h12"/>
+    <path d="M82 61l6 7 6-7z" fill="#fff" stroke="none"/>
+    <!-- right branch -->
+    <path d="M92 68v10H62v10"/>
+  </g>
+  <!-- Pads -->
+  <g fill="#fff">
+    <circle cx="46" cy="52" r="4.5"/>
+    <circle cx="46" cy="88" r="4.5"/>
+    <circle cx="62" cy="88" r="4.5"/>
+    <circle cx="92" cy="54" r="4.5"/>
+  </g>
+</svg>
