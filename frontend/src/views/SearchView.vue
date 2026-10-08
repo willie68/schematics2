@@ -400,14 +400,15 @@
       <div class="mobile-file-viewer-header">
         <div class="mobile-file-viewer-title">{{ selectedFile.name }}</div>
         <div style="display:flex; gap:0.35rem; align-items:center;">
+          <Button v-if="isPdfFile(selectedFile) && selectedFile.data" icon="pi pi-external-link" severity="secondary" text @click="openCurrentFile()" v-tooltip.bottom="'PDF öffnen'" />
           <Button v-if="isImageFile(selectedFile)" icon="pi pi-download" severity="secondary" text @click="downloadImage()" />
           <Button icon="pi pi-times" severity="secondary" text @click="showMobileFileViewer = false" />
         </div>
       </div>
 
       <div class="mobile-file-viewer-content">
-        <div v-if="isPdfFile(selectedFile)" style="width:100%; height:100%; display:flex; flex-direction:column;">
-          <embed v-if="selectedFile.data" :src="'data:application/pdf;base64,' + selectedFile.data" type="application/pdf" style="flex:1; width:100%; border:none;" />
+        <div v-if="isPdfFile(selectedFile)" class="mobile-pdf-frame">
+          <iframe v-if="mobilePreviewUrl" :src="mobilePreviewUrl" title="PDF-Vorschau" />
           <div v-else class="mobile-file-viewer-placeholder">PDF wird geladen...</div>
         </div>
 
@@ -466,6 +467,7 @@ const selectedDocument = ref(null)
 const selectedFile = ref(null)
 const activeShareToken = ref('')
 const showMobileFileViewer = ref(false)
+const mobilePreviewUrl = ref('')
 const showDetailPanel = ref(false)
 const expandDetailPanel = ref(false)
 const hideSearchResults = ref(false)
@@ -487,6 +489,48 @@ const isMobileView = ref(false)
 
 function updateViewportState() {
   isMobileView.value = window.innerWidth <= 767
+}
+
+function layoutSharedDocument() {
+  hideSearchResults.value = true
+  if (isMobileView.value) {
+    expandDetailPanel.value = false
+    showDetailPanel.value = true
+    showMobileFileViewer.value = !!selectedFile.value
+    return
+  }
+  showMobileFileViewer.value = false
+  expandDetailPanel.value = !!selectedFile.value
+  showDetailPanel.value = false
+}
+
+function revokeMobilePreviewUrl() {
+  if (!mobilePreviewUrl.value) return
+  URL.revokeObjectURL(mobilePreviewUrl.value)
+  mobilePreviewUrl.value = ''
+}
+
+function base64ToObjectUrl(base64, mimeType) {
+  const binary = atob(base64)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i)
+  }
+  return URL.createObjectURL(new Blob([bytes], { type: mimeType || 'application/octet-stream' }))
+}
+
+function refreshMobilePreviewUrl() {
+  revokeMobilePreviewUrl()
+  const file = selectedFile.value
+  if (!isMobileView.value || !file?.data || !isPdfFile(file)) return
+  mobilePreviewUrl.value = base64ToObjectUrl(file.data, 'application/pdf')
+}
+
+function openCurrentFile() {
+  const file = selectedFile.value
+  if (!file?.data) return
+  const url = mobilePreviewUrl.value || base64ToObjectUrl(file.data, file.mimetype || 'application/pdf')
+  window.open(url, '_blank', 'noopener')
 }
 
 function toTags() {
@@ -574,9 +618,7 @@ onMounted(async () => {
           selectedFile.value = data.files[0]
           await loadFileData(selectedFile.value)
         }
-        expandDetailPanel.value = true
-        hideSearchResults.value = true
-        showDetailPanel.value = false
+        layoutSharedDocument()
       }
     } catch (err) {
       console.error('Geteiltes Dokument nicht gefunden:', err)
@@ -606,6 +648,17 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', updateViewportState)
+  revokeMobilePreviewUrl()
+})
+
+watch(isMobileView, () => {
+  refreshMobilePreviewUrl()
+  if (!activeShareToken.value || !selectedDocument.value) return
+  layoutSharedDocument()
+})
+
+watch(() => selectedFile.value?.data, () => {
+  refreshMobilePreviewUrl()
 })
 
 async function onTagSuggest(event) {
@@ -963,6 +1016,20 @@ async function onDocumentUpdated() {
     flex: 1;
     min-height: 0;
     display: flex;
+  }
+
+  .mobile-pdf-frame {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+  }
+
+  .mobile-pdf-frame iframe {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    border: none;
   }
 
   .mobile-file-viewer-placeholder {

@@ -4,7 +4,7 @@ Schematics2 ist der Nachfolger von WilliesSchematicsWorld als Monorepo.
 
 Das Repository ist mit GitHub unter https://github.com/willie68/schematics2 verknüpft.
 
-**Version: Backend 0.3.10, Frontend 0.3.10**
+**Version: Backend 0.3.11, Frontend 0.3.11**
 
 ## Features
 
@@ -23,6 +23,8 @@ Das Repository ist mit GitHub unter https://github.com/willie68/schematics2 verk
 - **Authentifizierung**: Eigener Authentifizierungs- und Autorisierungsdienst mit User Registration
 - **Private Documents**: Unterstützung für private und öffentliche Dokumente
 - **Share-Links**: Zeitlich begrenzte Freigaben für Dokumente und Dateien über öffentliche Share-URLs
+  - Auf kleinen Auflösungen öffnet der Share-Link die mobile Vollbildansicht direkt
+  - PDF-Vorschau im mobilen Viewer; zusätzlich lässt sich die Datei im Browser öffnen
 - **Upload-Duplikatprüfung**: Beim Hinzufügen von Dateien wird per Presence-Check geprüft, ob dieselbe Datei bereits vorhanden ist (Hash-basiert)
 - **Datenschutz & Rechtliches**: Cookie-Hinweis, Datenschutz, Impressum und Haftungsausschluss im Frontend
 - **Effektdatenbank**: Verwaltung und Suche von Effekten mit Sortierung
@@ -38,7 +40,7 @@ Das Repository ist mit GitHub unter https://github.com/willie68/schematics2 verk
 
 ## Monorepo-Struktur
 
-- `backend/`: Go REST API (go-micro-orientierter Aufbau mit `internal/` und DI über `do`)
+- `backend/`: Go REST API (go-micro-orientierter Aufbau mit `internal/` und DI über `internal/bootstrap`)
 - `frontend/`: Vue 3.5 + PrimeVue 3.53 Web-Frontend
 - `docs/`: Projekt- und Architekturdokumentation
 
@@ -213,6 +215,7 @@ Content-Type: application/json
 ## Blob-Speicherung (Dateien)
 
 - Dateien werden in rotierenden Container-Dateien (`*.cnt`) im Repository-Verzeichnis gespeichert.
+- Beim Start werden Anzahl der Container, der aktuelle Schreibcontainer und die Gesamtgröße protokolliert.
 - Container-Format: `[4-byte original-length][1-byte compression-type][variable-length data]`
 - Container rotieren, wenn die konfigurierte maximale Groesse erreicht wird.
 - Komprimierung ist optional und pro Datei konfigurierbar:

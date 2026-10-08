@@ -90,7 +90,11 @@ func (s *Service) Prepare() error {
 
 	if len(nums) == 0 {
 		s.currentNum = 1
-		return s.createNewContainer()
+		if err := s.createNewContainer(); err != nil {
+			return err
+		}
+		s.logContainerStatus()
+		return nil
 	}
 
 	s.currentNum = nums[len(nums)-1]
@@ -111,10 +115,55 @@ func (s *Service) Prepare() error {
 	if s.currentSize >= s.maxSizeBytes {
 		_ = f.Close()
 		s.currentNum++
-		return s.createNewContainer()
+		if err := s.createNewContainer(); err != nil {
+			return err
+		}
 	}
 
+	s.logContainerStatus()
 	return nil
+}
+
+func (s *Service) logContainerStatus() {
+	nums, err := s.listContainerNumbers()
+	if err != nil {
+		s.log.Warn("container status unavailable", "err", err)
+		return
+	}
+
+	var totalBytes int64
+	for _, n := range nums {
+		info, statErr := os.Stat(filepath.Join(s.dir, fmt.Sprintf("%d.cnt", n)))
+		if statErr != nil {
+			s.log.Warn("container status unavailable", "container", n, "err", statErr)
+			return
+		}
+		totalBytes += info.Size()
+	}
+
+	s.log.Info("blob containers ready",
+		"count", len(nums),
+		"writeContainer", fmt.Sprintf("%d.cnt", s.currentNum),
+		"totalBytes", totalBytes,
+		"totalSize", formatBytes(totalBytes),
+	)
+}
+
+func formatBytes(n int64) string {
+	if n < 1024 {
+		return fmt.Sprintf("%d B", n)
+	}
+	units := []string{"KB", "MB", "GB", "TB"}
+	value := float64(n)
+	unit := "B"
+	for _, next := range units {
+		if value < 1024 {
+			break
+		}
+		value /= 1024
+		unit = next
+	}
+	return fmt.Sprintf("%.1f %s", value, unit)
 }
 
 func (s *Service) Save(data []byte, mimeType, filename string) (*model.ContainerInfo, error) {

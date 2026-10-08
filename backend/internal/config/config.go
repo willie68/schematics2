@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const defaultConfigFile = "configs/service.yaml"
+var File = "configs/service.yaml"
 
 // Config contains runtime configuration for the backend service.
 // It follows the go-micro style service.yaml structure.
@@ -79,7 +79,7 @@ type MongoDB struct {
 // Environment variables can be referenced in the YAML using ${VAR_NAME} syntax.
 func LoadFromEnv() Config {
 	cfg := defaultConfig()
-	_ = cfg.loadFromFile(defaultConfigFile)
+	_ = cfg.loadFromFile(File)
 	cfg.finalize()
 	return cfg
 }

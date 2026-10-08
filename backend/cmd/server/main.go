@@ -9,7 +9,8 @@ import (
 	"syscall"
 
 	"github.com/samber/do/v2"
-	"github.com/willie68/schematics2/backend/internal"
+	flag "github.com/spf13/pflag"
+	"github.com/willie68/schematics2/backend/internal/bootstrap"
 	"github.com/willie68/schematics2/backend/internal/config"
 	"github.com/willie68/schematics2/backend/internal/logging"
 	"github.com/willie68/schematics2/backend/internal/services/health"
@@ -17,8 +18,9 @@ import (
 )
 
 var (
-	inj    = do.New()
-	logger *slog.Logger
+	inj        = do.New()
+	logger     *slog.Logger
+	configFile string
 )
 
 type shttpsrv interface {
@@ -30,7 +32,18 @@ type backupService interface {
 	Start() error
 }
 
+func init() {
+	// variables for parameter override
+	logging.Root.Info("init service")
+	flag.StringVarP(&configFile, "config", "c", config.File, "this is the path and filename to the config file")
+}
+
 func main() {
+	flag.Parse()
+
+	if configFile != "" {
+		config.File = configFile
+	}
 	cfg := config.LoadFromEnv()
 
 	// Initialize logging first
@@ -53,12 +66,12 @@ func main() {
 		"admin_pass_masked", maskedPass,
 	)
 
-	err := internal.InitServices(inj, cfg)
+	err := bootstrap.InitServices(inj, cfg)
 	if err != nil {
 		log.Fatalf("init services: %v", err)
 	}
 
-	router, err := internal.NewRouter(inj)
+	router, err := bootstrap.NewRouter(inj)
 	if err != nil {
 		log.Fatalf("create router: %v", err)
 	}

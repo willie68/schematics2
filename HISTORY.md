@@ -1,5 +1,12 @@
 # History
 
+## 0.3.11 - 2026-10-08 (Backend & Frontend)
+
+- **Backend**: Service-Bootstrap von `internal/do.go` nach `internal/bootstrap` verschoben.
+- **Backend**: Der Blob-Service protokolliert beim Start die Anzahl der Container, den aktuellen Schreibcontainer und die Gesamtgröße.
+- **Frontend**: Geteilte Dokumente öffnen auf kleinen Auflösungen die mobile Vollbildansicht statt einer leeren Fläche. PDFs nutzen dort eine Blob-URL; über das Öffnen-Symbol lässt sich die Datei im Browser anzeigen.
+- **Frontend/Backend**: Versionsstände auf `0.3.11` angehoben.
+
 ## 0.3.10 - 2026-09-11 (Backend & Frontend)
 
 - **Frontend**: App-Logo und Favicon (SVG/PNG) im Header und in `index.html`.

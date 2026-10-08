@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/samber/do/v2"
-	"github.com/willie68/schematics2/backend/internal"
+	"github.com/willie68/schematics2/backend/internal/bootstrap"
 	"github.com/willie68/schematics2/backend/internal/config"
 	"github.com/willie68/schematics2/backend/internal/services/users"
 )
@@ -63,11 +63,11 @@ func main() {
 
 	// Initialize DI container with all services
 	inj := do.New()
-	err := internal.InitServices(inj, cfg)
+	err := bootstrap.InitServices(inj, cfg)
 	if err != nil {
 		log.Fatalf("Failed to initialize services: %v", err)
 	}
-	defer internal.ShutdownServices(inj)
+	defer bootstrap.ShutdownServices(inj)
 
 	// Get user service (handles password hashing automatically)
 	userSvc := do.MustInvoke[*users.Service](inj)
